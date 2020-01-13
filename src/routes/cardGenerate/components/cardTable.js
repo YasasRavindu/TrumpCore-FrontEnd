@@ -1,67 +1,26 @@
 import React from 'react';
-import { Table, Icon, Input, Button, Modal, AutoComplete, Form } from 'antd';
-import DEMO from 'constants/demoData';
+import { Table, Icon, Input, Button, Modal, AutoComplete, Form, Tag, Divider } from 'antd';
 const Search = Input.Search;
-const FormItem = Form.Item;
-const dataSource = ['1234-87275-2354', '1234-87575-7588', '1234-28645-8624'];
-const formItemLayout = {
-  labelCol: { span: 6 },
-  wrapperCol: { span: 14 },
-};
-
-const columns = [
-  {
-    title: 'Create Date',
-    dataIndex: 'createDate',
-    key: 'createDate',
-  },
-  {
-    title: 'Card Count',
-    dataIndex: 'count',
-    key: 'count',
-  },
-  {
-    title: 'Card Type',
-    dataIndex: 'type',
-    key: 'type',
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-  },
-  {
-    title: 'Action',
-    key: 'action',
-    render: (text, record) => (
-      <span>
-        <a href={DEMO.link}>
-          <Icon type="edit" />
-        </a>
-        <span className="ant-divider" />
-        <a href={DEMO.link}>
-          <Icon type="delete" />
-        </a>
-      </span>
-    ),
-  },
-];
+const { Column, ColumnGroup } = Table;
 
 const tableData = [
   {
-    key: '1',
-    posid: '123424443uur',
-    accountid: '1234-87275-2354',
+    createDate: '123424443uur',
+    count: '1234-87275-2354',
+    type: 'credit',
+    status: 'INITIATED',
   },
   {
-    key: '2',
-    posid: '123424443Ate',
-    accountid: '1234-87575-7588',
+    createDate: '123424443uur',
+    count: '1234-87275-2354',
+    type: 'debit',
+    status: 'DOWNLOADED',
   },
   {
-    key: '3',
-    posid: '12344we43ee',
-    accountid: '1234-28645-8624',
+    createDate: '123424443uur',
+    count: '1234-87275-2354',
+    type: 'debit',
+    status: 'ACTIVATED',
   },
 ];
 
@@ -77,7 +36,38 @@ class Data extends React.Component {
           style={{ width: 400 }}
         />
         <article className="article mt-2">
-          <Table columns={columns} dataSource={tableData} className="ant-table-v1" />
+          {/* <Table columns={columns} dataSource={tableData} className="ant-table-v1" /> */}
+
+          <Table dataSource={tableData}>
+            <Column title="Create Date" dataIndex="createDate" key="createDate" />
+            <Column title="Card Count" dataIndex="count" key="count" />
+            <Column title="Card Type" dataIndex="type" key="type" />
+            <Column
+              title="Status"
+              dataIndex="status"
+              key="status"
+              //   render={status => (
+              //     <span>
+              //       {status.map(s => (
+              //         <Tag color="blue" key={s}>
+              //           {s}
+              //         </Tag>
+              //       ))}
+              //     </span>
+              //   )}
+            />
+            <Column
+              title="Action"
+              key="action"
+              render={(text, record) => (
+                <span>
+                  <a>Invite {record.lastName}</a>
+                  <Divider type="vertical" />
+                  <a>Delete</a>
+                </span>
+              )}
+            />
+          </Table>
         </article>
       </React.Fragment>
     );
