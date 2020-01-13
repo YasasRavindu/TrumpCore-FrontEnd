@@ -11,14 +11,24 @@ const formItemLayout = {
 
 const columns = [
   {
-    title: 'POS ID',
-    dataIndex: 'posid',
-    key: 'posid',
+    title: 'Create Date',
+    dataIndex: 'createDate',
+    key: 'createDate',
   },
   {
-    title: 'Account ID',
-    dataIndex: 'accountid',
-    key: 'accountid',
+    title: 'Card Count',
+    dataIndex: 'count',
+    key: 'count',
+  },
+  {
+    title: 'Card Type',
+    dataIndex: 'type',
+    key: 'type',
+  },
+  {
+    title: 'Status',
+    dataIndex: 'status',
+    key: 'status',
   },
   {
     title: 'Action',
@@ -56,83 +66,19 @@ const tableData = [
 ];
 
 class Data extends React.Component {
-  state = { visible: false, result: [] };
-  check = () => {
-    this.props.form.validateFields(err => {
-      if (!err) {
-        console.info('success');
-      }
-    });
-  };
-  showModal = () => {
-    this.setState({
-      visible: true,
-    });
-  };
-  handleOk = e => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
-  };
-  handleCancel = e => {
-    console.log(e);
-    this.setState({
-      visible: false,
-    });
-  };
+  state = {};
 
   render() {
-    const { getFieldDecorator } = this.props.form;
     return (
       <React.Fragment>
-        <Button type="primary" icon="plus" className="float-right" onClick={this.showModal}>
-          Add
-        </Button>
-        <Modal
-          visible={this.state.visible}
-          onCancel={this.handleCancel}
-          footer={null}
-          //   className="custom-modal-v1"
-          centered
-        >
-          <Form>
-            <FormItem {...formItemLayout} label="POS ID">
-              {getFieldDecorator('posid', {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your POS ID',
-                  },
-                ],
-              })(<Input placeholder="Please input your POS ID" />)}
-            </FormItem>
-            <FormItem {...formItemLayout} label="Account ID">
-              {getFieldDecorator('accountId', {
-                rules: [
-                  {
-                    required: true,
-                    message: 'Please input your account ID',
-                  },
-                ],
-              })(
-                <AutoComplete
-                  //style={{ width: 200 }}
-                  dataSource={dataSource}
-                  placeholder="Type account number here"
-                  filterOption={(inputValue, option) =>
-                    option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                  }
-                />
-              )}
-            </FormItem>
-            <FormItem>
-              <Button style={{ float: 'right' }} type="primary" onClick={this.check}>
-                Submit
-              </Button>
-            </FormItem>
-          </Form>
-        </Modal>
+        <Search
+          placeholder="Search"
+          onSearch={value => console.log(value)}
+          style={{ width: 400 }}
+        />
+        <article className="article mt-2">
+          <Table columns={columns} dataSource={tableData} className="ant-table-v1" />
+        </article>
       </React.Fragment>
     );
   }
@@ -144,13 +90,7 @@ const cardTable = () => (
   <div className="box box-default">
     {/* <div className="box-header">Add POS ID with Account ID</div> */}
     <div className="box-body">
-      <Search placeholder="Search" onSearch={value => console.log(value)} style={{ width: 400 }} />
       <WrappedData />
-      <br />
-      <br />
-      <article className="article">
-        <Table columns={columns} dataSource={tableData} className="ant-table-v1" />
-      </article>
     </div>
   </div>
 );
