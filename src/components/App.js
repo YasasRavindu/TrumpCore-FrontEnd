@@ -5,34 +5,32 @@ import LoadingComponent from 'components/Loading';
 
 // 3rd
 import 'styles/antd.less';
-import 'styles/bootstrap/bootstrap.scss'
+import 'styles/bootstrap/bootstrap.scss';
 // custom
-import "styles/layout.scss"
-import "styles/theme.scss"
-import "styles/ui.scss"
-import "styles/vendors.scss"
-
+import 'styles/layout.scss';
+import 'styles/theme.scss';
+import 'styles/ui.scss';
+import 'styles/vendors.scss';
 
 let AsyncAppLayout = loadable({
   loader: () => import('components/Layout/AppLayout/'),
-  loading: LoadingComponent
-})
+  loading: LoadingComponent,
+});
 let AsyncException = loadable({
   loader: () => import('routes/exception/'),
-  loading: LoadingComponent
-})
+  loading: LoadingComponent,
+});
 let AsyncAccount = loadable({
   loader: () => import('routes/user/'),
-  loading: LoadingComponent
-})
-
+  loading: LoadingComponent,
+});
 
 class App extends React.Component {
   render() {
     const { match, location } = this.props;
     const isRoot = location.pathname === '/' ? true : false;
     if (isRoot) {
-      return ( <Redirect to={'/app/dashboard'}/> );
+      return <Redirect to={'/app/dashboard'} />;
     }
 
     return (

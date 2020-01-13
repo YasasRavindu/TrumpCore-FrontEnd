@@ -22,8 +22,17 @@ class NormalLoginForm extends React.Component {
         <h2>Login to Continue</h2>
         <p className="lead">Welcome back, sign in with your {APPCONFIG.brand} account</p>
 
+        <a href={DEMO.link} className="btn btn-block icon-btn-v2 bg-facebook mb-2">
+          <Icon type="facebook" theme="filled" />
+          <span className="btn-text">Login with Facebook</span>
+        </a>
+        <a href={DEMO.link} className="btn btn-block icon-btn-v2 bg-twitter">
+          <Icon type="twitter" />
+          <span className="btn-text">Login with Twitter</span>
+        </a>
+
         <div className="divider divider-with-content my-4">
-          <span className="divider-inner-content" />
+          <span className="divider-inner-content">OR</span>
         </div>
         <Form onSubmit={this.handleSubmit} className="form-v1">
           <FormItem>
@@ -62,12 +71,10 @@ class NormalLoginForm extends React.Component {
           </FormItem>
         </Form>
         <p className="additional-info">
-          {/* Don't have an account yet? <a href={DEMO.signUp}>Sign up</a> */}
-          Don't have an account yet? <a>Sign up</a>
+          Don't have an account yet? <a href={DEMO.signUp}>Sign up</a>
         </p>
         <p className="additional-info">
-          {/* Forgot your username or password? <a href={DEMO.forgotPassword}>Reset password</a> */}
-          Forgot your username or password? <a>Reset password</a>
+          Forgot your username or password? <a href={DEMO.forgotPassword}>Reset password</a>
         </p>
       </section>
     );
