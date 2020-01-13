@@ -1,7 +1,26 @@
 import React from 'react';
-import { Table, Icon, Input, Button, Modal, AutoComplete, Form, Tag, Divider } from 'antd';
+import {
+  Table,
+  Icon,
+  Input,
+  Button,
+  Modal,
+  AutoComplete,
+  Form,
+  Tag,
+  Divider,
+  Row,
+  Col,
+  Select,
+} from 'antd';
 const Search = Input.Search;
+const FormItem = Form.Item;
+const { Option } = Select;
 const { Column, ColumnGroup } = Table;
+const formItemLayout = {
+  labelCol: { span: 10 },
+  wrapperCol: { span: 14 },
+};
 
 const tableData = [
   {
@@ -30,14 +49,35 @@ class Data extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <Search
-          placeholder="Search"
-          onSearch={value => console.log(value)}
-          style={{ width: 400 }}
-        />
-        <article className="article mt-2">
-          {/* <Table columns={columns} dataSource={tableData} className="ant-table-v1" /> */}
+        <Form>
+          <Row gutter={24}>
+            <Col span={6} order={3}>
+              {/* <Search
+              placeholder="Search"
+              onSearch={value => console.log(value)}
+              style={{ width: 400 }}
+            /> */}
+            </Col>
+            <Col span={6} order={2}>
+              <FormItem {...formItemLayout} label="Card Type">
+                <Select style={{ width: 120 }}>
+                  <Option value="CASH">Cash</Option>
+                  <Option value="DEBIT">Debit</Option>
+                </Select>
+              </FormItem>
+            </Col>
+            <Col span={6} order={1}>
+              <FormItem {...formItemLayout} label="Status">
+                <Select style={{ width: 120 }}>
+                  <Option value="CASH">Cash</Option>
+                  <Option value="DEBIT">Debit</Option>
+                </Select>
+              </FormItem>
+            </Col>
+          </Row>
+        </Form>
 
+        <article className="article mt-2">
           <Table dataSource={tableData}>
             <Column title="Create Date" dataIndex="createDate" key="createDate" />
             <Column title="Card Count" dataIndex="count" key="count" />
