@@ -23,7 +23,7 @@ class CardGenerator extends React.Component {
           () => {
             // console.info('success', this.state);
             axios
-              .put(environment.baseUrl + 'card/batch/generate', {
+              .post(environment.baseUrl + 'card/batch/generate', {
                 count: this.state.count,
                 type: this.state.type,
                 effectivePeriod: this.state.effectivePeriod,
