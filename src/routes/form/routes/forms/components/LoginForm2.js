@@ -18,34 +18,30 @@ class NormalLoginForm extends React.Component {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
-        // this.setState(
-        //   {
-        //     username: values.username,
-        //     password: values.password,
-        //   },
-        //   () => {
-        //     axios
-        //       .post(environment.baseUrl + 'platform-users/login', {
-        //         username: this.state.username,
-        //         password: this.state.password,
-        //       })
-        //       .then(response => {
-        //         const userDetails = response.data.content;
-        //         userDetailsAll = {
-        //           accName: userDetails.accName,
-        //           email: userDetails.email,
-        //         };
-        //         Object.assign(currentUser, userDetailsAll);
-        //         console.log('------------------- response - ', response);
-        //         //return response;
-        //       })
-        //       .catch(error => {
-        //         console.log('------------------- error - ', error);
-        //         //return error;
-        //       });
-        //   }
-        // );
-        this.props.history.push(DEMO.home2);
+        this.setState(
+          {
+            username: values.username,
+            password: values.password,
+          },
+          () => {
+            axios
+              .post(environment.baseUrl + 'platform-users/login', {
+                username: this.state.username,
+                password: this.state.password,
+              })
+              .then(response => {
+                if (response.status == 200) {
+                }
+                console.log('------------------- response - ', response);
+                //return response;
+              })
+              .catch(error => {
+                console.log('------------------- error - ', error);
+                //return error;
+              });
+          }
+        );
+        //this.props.history.push(DEMO.home2);
       }
     });
   };
