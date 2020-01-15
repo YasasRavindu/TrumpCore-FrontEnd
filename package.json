@@ -2,7 +2,7 @@
   "name": "ant",
   "version": "1.2.0",
   "private": true,
-  "homepage": "https://trumpcore.github.io/trumpcore-frontend/",
+  "homepage": "https://trumpcore.github.io/TrumpCore-FrontEnd/",
   "dependencies": {
     "antd": "^3.10.3",
     "axios": "^0.19.1",
