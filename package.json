@@ -2,13 +2,14 @@
   "name": "ant",
   "version": "1.2.0",
   "private": true,
-  "homepage": "",
+  "homepage": "https://trumpcore.github.io/TrumpCore-FrontEnd/",
   "dependencies": {
     "antd": "^3.10.3",
     "axios": "^0.19.1",
     "classnames": "^2.2.6",
     "echarts": "^4.1.0",
     "echarts-for-react": "^2.0.14",
+    "gh-pages": "^2.2.0",
     "rc-queue-anim": "^1.6.7",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
@@ -26,7 +27,9 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test --env=jsdom",
     "eject": "react-scripts eject",
-    "prettier": "prettier --write ./src/**/**/**/*"
+    "prettier": "prettier --write ./src/**/**/**/*",
+    "deploy": "gh-pages -d build",
+    "predeploy": "npm run build"
   },
   "browserslist": [
     ">0.2%",
