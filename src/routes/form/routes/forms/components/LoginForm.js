@@ -41,8 +41,13 @@ class NormalLoginForm extends React.Component {
       error.response.data.validationFailures[0] &&
       error.response.data.validationFailures[0].code
     ) {
+      
       let errorCode = error.response.data.validationFailures[0].code;
       msg = CUSTOM_MESSAGE.LOGIN_ERROR[errorCode];
+      if(msg === undefined){
+        msg = CUSTOM_MESSAGE.LOGIN_ERROR['defaultError'];
+      }
+      
     } else {
       msg = CUSTOM_MESSAGE.LOGIN_ERROR['defaultError'];
     }
