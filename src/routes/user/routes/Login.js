@@ -1,6 +1,6 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import LoginForm2 from 'routes/form/routes/forms/components/LoginForm2';
+import LoginForm from 'routes/form/routes/forms/components/LoginForm';
 
 const FormCard = () => (
   <section className="form-card-page form-card row no-gutters">
@@ -14,7 +14,7 @@ const FormCard = () => (
       }}
     />
     <div className="form-card__body col-lg-6 p-5 px-lg-8 d-flex align-items-center">
-      <LoginForm2 />
+      <LoginForm />
     </div>
   </section>
 );
