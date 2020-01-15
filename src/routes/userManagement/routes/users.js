@@ -22,9 +22,11 @@ import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 
 const userStatus = {
-  ACTIVE: { color: '' },
-  DOWNLOADED: { color: 'blue' },
-  ACTIVATED: { color: 'magenta' },
+  ACTIVE: { color: '' , label: "ACTIVE"},
+  INACTIVE: { color: 'blue' , label: "INACTIVE"},
+  DELETED: { color: 'magenta' , label: "DELETED"},
+  PENDING_ACTIVATION: { color: 'magenta' , label: "PENDING"},
+  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta' , label: "LOCKED"},
 };
 
 // ACTIVE("Active", "A"),
@@ -245,7 +247,7 @@ class Data extends React.Component {
                       title="Status"
                       dataIndex="status"
                       key="status"
-                      render={status => <Tag color={userStatus[status].color}>{status}</Tag>}
+                      render={status => <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>}
                     />
                     <Column
                       title="Role"
