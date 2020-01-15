@@ -6,6 +6,7 @@ import APPCONFIG from 'constants/appConfig';
 import DEMO from 'constants/demoData';
 import { toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import {
+  USER_MANAGEMENT,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -30,6 +31,7 @@ class AppMenu extends React.Component {
     '/app/calendar',
     '/app/devices',
     '/app/cardGenerate',
+    '/app/userManagement',
   ];
   rootSubmenuKeys = [
     '/app/card',
@@ -158,6 +160,18 @@ class AppMenu extends React.Component {
             <span className="nav-text">POS Devices</span>
           </a>
         </Menu.Item>
+        <SubMenu
+           key="/app/userManagement"
+          title={
+            <span>
+              <Icon type="user" />
+              <span className="nav-text">User Management</span>
+            </span>
+          }
+        >
+          {this.getNavMenuItems(USER_MANAGEMENT)}
+        </SubMenu>
+        
         {/* <Menu.Divider /> */}
         {/* ========= */}
         {/* <Menu.Item key="/app/dashboard">

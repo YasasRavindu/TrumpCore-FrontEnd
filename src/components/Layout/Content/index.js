@@ -66,6 +66,10 @@ let AsyncCardGenerate = loadable({
   loader: () => import('routes/cardGenerate/'),
   loading: LoadingComponent,
 });
+let AsyncUserManagement = loadable({
+  loader: () => import('routes/userManagement/'),
+  loading: LoadingComponent,
+});
 
 class AppContent extends React.Component {
   render() {
@@ -88,6 +92,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/exception`} component={AsyncException} />
         <Route path={`${match.url}/devices`} component={AsyncDevices} />
         <Route path={`${match.url}/cardGenerate`} component={AsyncCardGenerate} />
+        <Route path={`${match.url}/userManagement`} component={AsyncUserManagement} />
       </Content>
     );
   }
