@@ -29,7 +29,7 @@ Thumbs.db
 linters/
 
 # compiled output
-/build
+#/build
 /Release
 /dist
 /dll
