@@ -6,7 +6,6 @@ import {
   Input,
   Button,
   Modal,
-  AutoComplete,
   Form,
   Tag,
   Divider,
@@ -15,11 +14,13 @@ import {
   Select,
   InputNumber,
   DatePicker,
+  message,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
+const confirm = Modal.confirm;
 
 const batchStatus = {
   INITIATED: { color: '' },
@@ -55,8 +56,11 @@ class Data extends React.Component {
 
   async componentDidMount() {
     const { searchType, searchStatus } = this.state;
+    this.loadTable(searchType, searchStatus);
+  }
+  loadTable = (type, status) => {
     axios
-      .get(environment.baseUrl + 'card/batch/search/' + searchType + '/' + searchStatus)
+      .get(environment.baseUrl + 'card/batch/search/' + type + '/' + status)
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const cardBatchList = response.data.content.map(cardBatch => {
@@ -71,7 +75,7 @@ class Data extends React.Component {
       .catch(error => {
         console.log('------------------- error - ', error);
       });
-  }
+  };
 
   searchDateHandler = (date, dateString) => {
     this.dataFilter('searchDate', dateString);
@@ -120,9 +124,61 @@ class Data extends React.Component {
     );
   };
 
+  batchDelete(id) {
+    let current = this;
+    confirm({
+      title: 'Are you sure you want to delete batch?',
+      content: 'Clicking on OK will delete the entire card batch',
+      onOk() {
+        // return new Promise((resolve, reject) => {
+        //   setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
+        // }).catch(() => console.log('Oops errors!'));
+        axios
+          .delete(environment.baseUrl + 'card/batch/delete/' + id)
+          .then(response => {
+            console.log('------------------- response - ', response);
+            message.success('Successfully Deleted');
+            current.refresh();
+          })
+          .catch(error => {
+            console.log('------------------- error - ', error);
+            message.warning('Somthing Wrong');
+          });
+      },
+      onCancel() {},
+    });
+  }
+
+  refresh = () => {
+    const { searchType, searchStatus } = this.state;
+    this.loadTable(searchType, searchStatus);
+  };
+
+  downloadCsv(id) {
+    axios
+      .get(environment.baseUrl + 'file/download/batch/' + id)
+      .then(response => {
+        console.log('------------------- response - ', response);
+        message.success('Successfully Downloaded');
+        const type = response.headers['content-type'];
+        const blob = new Blob([response.data], { type: type, encoding: 'UTF-8' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'CardNumbers_' + id + '.csv';
+        link.click();
+
+        const { searchType, searchStatus } = this.state;
+        this.loadTable(searchType, searchStatus);
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+        message.warning('Somthing Wrong');
+      });
+  }
+
   submit = e => {
     console.log(this.state);
-
+    e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
         this.setState(
@@ -133,6 +189,7 @@ class Data extends React.Component {
           },
           () => {
             // console.info('success', this.state);
+
             axios
               .post(environment.baseUrl + 'card/batch/generate', {
                 count: this.state.count,
@@ -140,6 +197,15 @@ class Data extends React.Component {
                 effectivePeriod: this.state.effectivePeriod,
               })
               .then(response => {
+                message.success('Succesfully Generated Card Batch');
+                const { searchType, searchStatus } = this.state;
+                this.loadTable(searchType, searchStatus);
+
+                this.setState({
+                  count: '',
+                  type: '',
+                  effectivePeriod: '',
+                });
                 console.log('------------------- response - ', response);
                 return response;
               })
@@ -170,7 +236,6 @@ class Data extends React.Component {
                         {getFieldDecorator('count', {
                           rules: [
                             {
-                              type: 'integer',
                               required: true,
                               message: 'Please input your card count',
                             },
@@ -223,7 +288,7 @@ class Data extends React.Component {
               <div className="box-body">
                 <Form>
                   <Row gutter={24}>
-                    <Col span={6} order={3}>
+                    <Col span={8} order={3}>
                       <FormItem {...formItemLayout} label="Date Range">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
@@ -277,9 +342,21 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          <a>Invite {record.lastName}</a>
+                          {record.status && record.status !== 'ACTIVATED' ? (
+                            <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                          ) : (
+                            <Icon type="delete" hidden />
+                          )}
+
                           <Divider type="vertical" />
-                          <a>Delete</a>
+                          {record.status && record.status === 'INITIATED' ? (
+                            <Icon
+                              onClick={() => this.downloadCsv(record.id, record.createDate)}
+                              type="download"
+                            />
+                          ) : (
+                            <Icon type="download" hidden />
+                          )}
                         </span>
                       )}
                     />

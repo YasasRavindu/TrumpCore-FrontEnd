@@ -146,21 +146,21 @@ class AppMenu extends React.Component {
         selectedKeys={[currentPathname]}
       >
         {/* ==== New section ===*/}
-        <Menu.Item key="/app/devices">
-          <a href="#/app/devices">
-            <Icon type="mobile" />
-            <span className="nav-text">POS Devices</span>
-          </a>
-        </Menu.Item>
         <Menu.Item key="/app/cardGenerate">
           <a href="#/app/cardGenerate">
             <Icon type="credit-card" />
             <span className="nav-text">Card Generate</span>
           </a>
         </Menu.Item>
-        <Menu.Divider />
+        <Menu.Item key="/app/devices">
+          <a href="#/app/devices">
+            <Icon type="mobile" />
+            <span className="nav-text">POS Devices</span>
+          </a>
+        </Menu.Item>
+        {/* <Menu.Divider /> */}
         {/* ========= */}
-        <Menu.Item key="/app/dashboard">
+        {/* <Menu.Item key="/app/dashboard">
           <a href="#/app/dashboard">
             <Icon type="dashboard" />
             <span className="nav-text">Dashboard</span>
@@ -345,7 +345,7 @@ class AppMenu extends React.Component {
             <Icon type="link" />
             <span className="nav-text">Landing Page</span>
           </a>
-        </Menu.Item>
+        </Menu.Item> */}
       </Menu>
     );
   }

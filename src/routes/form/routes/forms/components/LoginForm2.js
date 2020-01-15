@@ -3,14 +3,48 @@ import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { withRouter } from 'react-router-dom';
 import APPCONFIG from 'constants/appConfig';
 import DEMO from 'constants/demoData';
+import { environment, commonUrl } from '../../../../../environments';
+import axios from 'axios';
 const FormItem = Form.Item;
 
 class NormalLoginForm extends React.Component {
+  state = {
+    username: '',
+    password: '',
+  };
+
   handleSubmit = e => {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
+        // this.setState(
+        //   {
+        //     username: values.username,
+        //     password: values.password,
+        //   },
+        //   () => {
+        //     axios
+        //       .post(environment.baseUrl + 'platform-users/login', {
+        //         username: this.state.username,
+        //         password: this.state.password,
+        //       })
+        //       .then(response => {
+        //         const userDetails = response.data.content;
+        //         userDetailsAll = {
+        //           accName: userDetails.accName,
+        //           email: userDetails.email,
+        //         };
+        //         Object.assign(currentUser, userDetailsAll);
+        //         console.log('------------------- response - ', response);
+        //         //return response;
+        //       })
+        //       .catch(error => {
+        //         console.log('------------------- error - ', error);
+        //         //return error;
+        //       });
+        //   }
+        // );
         this.props.history.push(DEMO.home2);
       }
     });
@@ -27,7 +61,7 @@ class NormalLoginForm extends React.Component {
         </div>
         <Form onSubmit={this.handleSubmit} className="form-v1">
           <FormItem>
-            {getFieldDecorator('login2-username', {
+            {getFieldDecorator('username', {
               rules: [{ required: true, message: 'Please input your username!' }],
             })(
               <Input
@@ -38,7 +72,7 @@ class NormalLoginForm extends React.Component {
             )}
           </FormItem>
           <FormItem>
-            {getFieldDecorator('login2-password', {
+            {getFieldDecorator('password', {
               rules: [{ required: true, message: 'Please input your Password!' }],
             })(
               <Input
@@ -49,12 +83,12 @@ class NormalLoginForm extends React.Component {
               />
             )}
           </FormItem>
-          <FormItem className="form-v1__remember">
+          {/* <FormItem className="form-v1__remember">
             {getFieldDecorator('login2-remember', {
               valuePropName: 'checked',
               initialValue: true,
             })(<Checkbox>Remember me</Checkbox>)}
-          </FormItem>
+          </FormItem> */}
           <FormItem>
             <Button type="primary" htmlType="submit" className="btn-cta btn-block">
               Log in
