@@ -30,7 +30,8 @@ class App extends React.Component {
     const { match, location } = this.props;
     const isRoot = location.pathname === '/' ? true : false;
     if (isRoot) {
-      return <Redirect to={'/app/dashboard'} />;
+      // return <Redirect to={'/app/dashboard'} />;
+      return <Redirect to={'/user/login'} />;
     }
 
     return (
