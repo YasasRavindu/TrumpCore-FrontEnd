@@ -15,6 +15,26 @@ export const USER_MANAGEMENT = [
     path: '/app/userManagement/roles',
   },
 ];
+export const POS_DEVICES = [
+  {
+    name: 'POS Devices - Registration',
+    menuName: 'Registration',
+    desc: 'POS Devices - Registration - Description',
+    path: '/app/devices/registration',
+  },
+  {
+    name: 'POS Devices - Management',
+    menuName: 'Management',
+    desc: 'POS Devices - Management - Description',
+    path: '/app/devices/management',
+  },
+  {
+    name: 'POS Devices - Remove',
+    menuName: 'Remove',
+    desc: 'POS Devices - Remove - Description',
+    path: '/app/devices/remove',
+  },
+];
 
 export const CARDS = [
   {
