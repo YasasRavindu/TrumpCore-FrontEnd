@@ -34,77 +34,58 @@ const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
 
+const tableData = [
+  {
+    key: '1',
+    serialNo: '123424443uur',
+    date: '2013-02-09',
+    status: 'Registerd',
+  },
+  {
+    key: '2',
+    serialNo: '123424443Ate',
+    date: '2013-02-09',
+    status: 'Removed',
+  },
+  {
+    key: '3',
+    serialNo: '12344we43ee',
+    date: '2013-02-09',
+    status: 'Registerd',
+  },
+];
+
 class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      userList: [],
-      userRole: [],
+      loadDevices: [],
+      loadFilterDevices: [],
+      search: '',
     };
   }
 
   async componentDidMount() {
-    this.loadTable();
-    axios
-      .get(environment.baseUrl + 'role')
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        this.setState({
-          userRole: response.data.content,
-        });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
+    this.setState({
+      loadDevices: tableData,
+      loadFilterDevices: tableData,
+    });
   }
 
-  loadTable = () => {
-    axios
-      .get(environment.baseUrl + 'platform-users')
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        const userList = response.data.content.map(user => {
-          user.key = user.id;
-          return user;
-        });
-        this.setState({
-          userList: userList,
-        });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
-  };
+  onChange = e => {
+    console.log(this.state.loadFilterDevices);
 
-  submit = e => {
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'platform-users', {
-            accName: values.accountName,
-            email: values.email,
-            password: values.password,
-            role: {
-              id: values.role,
-            },
-          })
-          .then(response => {
-            message.success('User Account Successfully Created');
-            console.log('------------------- response - ', response);
-            this.loadTable();
-            this.props.form.resetFields();
-          })
-          .catch(error => {
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-            if (msg === undefined) {
-              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-            }
-            message.error(msg);
-            console.log('------------------- error - ', error);
-          });
-      }
+    this.setState({ search: e.target.value }, () => {
+      let data = this.state.loadDevices.filter(d => {
+        return (
+          d.serialNo.toLowerCase().includes(this.state.search.toLowerCase()) ||
+          d.status.toLowerCase().includes(this.state.search.toLowerCase())
+        );
+      });
+
+      this.setState({
+        loadFilterDevices: data,
+      });
     });
   };
 
@@ -147,17 +128,14 @@ class Data extends React.Component {
             <div className="box box-default">
               <div className="box-header">Search Devices</div>
               <div className="box-body">
-                {/* <Form>
+                <Form>
                   <Row gutter={24}>
                     <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
-                          format={dateFormat}
-                        />
+                      <FormItem>
+                        <Input placeholder="Serial number" onChange={this.onChange} />
                       </FormItem>
                     </Col>
-                    <Col span={6} order={2}>
+                    {/* <Col span={6} order={2}>
                       <FormItem {...formItemLayout} label="Card Type">
                         <Select
                           style={{ width: 120 }}
@@ -183,20 +161,20 @@ class Data extends React.Component {
                           <Option value="activated">Activated</Option>
                         </Select>
                       </FormItem>
-                    </Col>
+                    </Col> */}
                   </Row>
-                </Form> */}
+                </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={userList}>
-                    <Column title="Serial Number" dataIndex="serialnumber" key="serialNumber" />
+                  <Table dataSource={this.state.loadFilterDevices}>
+                    <Column title="Serial Number" dataIndex="serialNo" key="serialNumber" />
                     <Column
                       title="Status"
                       dataIndex="status"
                       key="status"
-                      render={status => (
-                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
-                      )}
+                      // render={status => (
+                      //   <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                      // )}
                     />
                   </Table>
                 </article>
