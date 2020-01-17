@@ -151,7 +151,7 @@ class AppMenu extends React.Component {
         <Menu.Item key="/app/cardGenerate">
           <a href="#/app/cardGenerate">
             <Icon type="credit-card" />
-            <span className="nav-text">Card Generate</span>
+            <span className="nav-text">Card Generation</span>
           </a>
         </Menu.Item>
         <Menu.Item key="/app/devices">

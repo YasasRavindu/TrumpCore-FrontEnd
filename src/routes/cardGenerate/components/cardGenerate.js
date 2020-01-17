@@ -18,6 +18,7 @@ import {
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
+import CUSTOM_MESSAGE from 'constants/notification/message';
 import axios from 'axios';
 import moment from 'moment';
 const confirm = Modal.confirm;
@@ -58,6 +59,7 @@ class Data extends React.Component {
     const { searchType, searchStatus } = this.state;
     this.loadTable(searchType, searchStatus);
   }
+
   loadTable = (type, status) => {
     axios
       .get(environment.baseUrl + 'card/batch/search/' + type + '/' + status)
@@ -130,9 +132,6 @@ class Data extends React.Component {
       title: 'Are you sure you want to delete batch?',
       content: 'Clicking on OK will delete the entire card batch',
       onOk() {
-        // return new Promise((resolve, reject) => {
-        //   setTimeout(Math.random() > 0.5 ? resolve : reject, 1000);
-        // }).catch(() => console.log('Oops errors!'));
         axios
           .delete(environment.baseUrl + 'card/batch/delete/' + id)
           .then(response => {
@@ -172,7 +171,7 @@ class Data extends React.Component {
       })
       .catch(error => {
         console.log('------------------- error - ', error);
-        message.warning('Somthing Wrong');
+        message.warning('Something Wrong');
       });
   }
 
@@ -181,43 +180,36 @@ class Data extends React.Component {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        this.setState(
-          {
+        axios
+          .post(environment.baseUrl + 'card/batch/generate', {
             count: values.count,
             type: values.type,
             effectivePeriod: values.effectivePeriod,
-          },
-          () => {
-            // console.info('success', this.state);
+          })
+          .then(response => {
+            message.success('Congratulations! You have successfully generated a card batch.');
+            const { searchType, searchStatus } = this.state;
+            this.loadTable(searchType, searchStatus);
+            this.props.form.resetFields();
+            console.log('------------------- response - ', response);
+          })
+          .catch(error => {
+            console.log('------------------- error - ', error);
 
-            axios
-              .post(environment.baseUrl + 'card/batch/generate', {
-                count: this.state.count,
-                type: this.state.type,
-                effectivePeriod: this.state.effectivePeriod,
-              })
-              .then(response => {
-                message.success('Succesfully Generated Card Batch');
-                const { searchType, searchStatus } = this.state;
-                this.loadTable(searchType, searchStatus);
-
-                this.setState({
-                  count: '',
-                  type: '',
-                  effectivePeriod: '',
-                });
-                console.log('------------------- response - ', response);
-                return response;
-              })
-              .catch(error => {
-                console.log('------------------- error - ', error);
-                return error;
-              });
-          }
-        );
+            let errorCode = error.response.data.validationFailures[0].code;
+            let msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR[errorCode];
+            if (msg === undefined) {
+              msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
+            }
+            message.error(msg);
+          });
       }
     });
   };
+  //   Card count - Please add your card count
+  // Card type - Please select your card type
+  // Effective period - Please enter a valid effective period
+  // Card count exceed - You have reached the maximum count allowed
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -237,7 +229,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input your card count',
+                              message: 'Please add your card count.',
                             },
                           ],
                         })(<InputNumber min={1} />)}
@@ -249,7 +241,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input your card type',
+                              message: 'Please select your card type.',
                             },
                           ],
                         })(
@@ -266,7 +258,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input months',
+                              message: 'Please enter a valid effective period.',
                             },
                           ],
                         })(<InputNumber min={1} />)}
@@ -284,8 +276,9 @@ class Data extends React.Component {
           </div>
           <div key="2">
             <div className="box box-default">
-              {/* <div className="box-header">Add POS ID with Account ID</div> */}
+              
               <div className="box-body">
+                
                 <Form>
                   <Row gutter={24}>
                     <Col span={8} order={3}>
@@ -328,7 +321,7 @@ class Data extends React.Component {
 
                 <article className="article mt-2">
                   <Table dataSource={this.state.batchFilteredList}>
-                    <Column title="Create Date" dataIndex="createDate" key="createDate" />
+                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
                     <Column title="Card Count" dataIndex="count" key="count" />
                     <Column title="Card Type" dataIndex="type" key="type" />
                     <Column
@@ -342,20 +335,17 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status !== 'ACTIVATED' ? (
+                          {record.status && record.status !== 'ACTIVATED' && (
                             <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
-                          ) : (
-                            <Icon type="delete" hidden />
                           )}
-
-                          <Divider type="vertical" />
-                          {record.status && record.status === 'INITIATED' ? (
-                            <Icon
-                              onClick={() => this.downloadCsv(record.id, record.createDate)}
-                              type="download"
-                            />
-                          ) : (
-                            <Icon type="download" hidden />
+                          {record.status && record.status === 'INITIATED' && (
+                            <>
+                              <Divider type="vertical" />
+                              <Icon
+                                onClick={() => this.downloadCsv(record.id, record.createDate)}
+                                type="download"
+                              />
+                            </>
                           )}
                         </span>
                       )}
