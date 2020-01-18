@@ -52,6 +52,7 @@ class Data extends React.Component {
       searchDate: ['', ''],
       searchType: 'all',
       searchStatus: 'all',
+      loading: false,
     };
   }
 
@@ -177,6 +178,7 @@ class Data extends React.Component {
 
   submit = e => {
     console.log(this.state);
+    this.setState({ loading: true });
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
@@ -191,6 +193,7 @@ class Data extends React.Component {
             const { searchType, searchStatus } = this.state;
             this.loadTable(searchType, searchStatus);
             this.props.form.resetFields();
+            this.setState({ loading: false });
             console.log('------------------- response - ', response);
           })
           .catch(error => {
@@ -202,6 +205,7 @@ class Data extends React.Component {
               msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
             }
             message.error(msg);
+            this.setState({ loading: false });
           });
       }
     });
@@ -265,7 +269,12 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={1} order={4}>
-                      <Button type="primary" className="float-right" onClick={this.submit}>
+                      <Button
+                        type="primary"
+                        loading={this.state.loading}
+                        className="float-right"
+                        onClick={this.submit}
+                      >
                         Submit
                       </Button>
                     </Col>
@@ -276,9 +285,7 @@ class Data extends React.Component {
           </div>
           <div key="2">
             <div className="box box-default">
-              
               <div className="box-body">
-                
                 <Form>
                   <Row gutter={24}>
                     <Col span={8} order={3}>
