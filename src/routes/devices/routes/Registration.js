@@ -76,10 +76,21 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-            if (msg === undefined) {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
+              }
+            } else {
               msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
             }
             message.error(msg);
