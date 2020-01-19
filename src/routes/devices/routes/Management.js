@@ -62,7 +62,7 @@ class Data extends React.Component {
     axios
       .get(environment.baseUrl + 'device/search/register')
       .then(response => {
-        console.log('------------------- response - ', response.data.content);
+        // console.log('------------------- response - ', response.data.content);
         const deviceList = response.data.content.map(device => {
           device.key = device.id;
           return device;
@@ -77,7 +77,7 @@ class Data extends React.Component {
     axios
       .get(environment.baseUrl + 'device/search/assign')
       .then(response => {
-        console.log('------------------- response - ', response.data.content);
+        // console.log('------------------- response - ', response.data.content);
         const deviceList = response.data.content.map(device => {
           device.key = device.id;
           return device;
@@ -97,7 +97,7 @@ class Data extends React.Component {
         cardAssigned: '',
       })
       .then(response => {
-        console.log('------------------- response - ', response.data.content);
+        // console.log('------------------- response - ', response.data.content);
         this.setState({
           accountList: response.data.content,
         });
@@ -111,7 +111,7 @@ class Data extends React.Component {
     axios
       .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + deviceStatus[value].value)
       .then(response => {
-        console.log('------------------- response - ', response.data.content);
+        // console.log('------------------- response - ', response.data.content);
         this.loadData();
       })
       .catch(error => {
