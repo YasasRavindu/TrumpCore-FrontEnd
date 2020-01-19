@@ -1,34 +1,13 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import {
-  Table,
-  Icon,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Tag,
-  Divider,
-  Row,
-  Col,
-  Select,
-  InputNumber,
-  DatePicker,
-  message,
-} from 'antd';
+import { Table, Icon, Input, Form, Row, Col, Select, DatePicker, message, Popconfirm } from 'antd';
 
-import { environment, commonUrl } from '../../../environments';
+import { environment } from '../../../environments';
 import axios from 'axios';
-import Password from 'antd/lib/input/Password';
+import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
-
-const userStatus = {
-  ACTIVE: { color: '', label: 'ACTIVE' },
-  INACTIVE: { color: 'blue', label: 'INACTIVE' },
-  DELETED: { color: 'magenta', label: 'DELETED' },
-  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
-};
+const Search = Input.Search;
+const dateFormat = 'YYYY-MM-DD';
 
 const formItemLayout = {
   labelCol: { span: 10 },
@@ -43,37 +22,29 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      userList: [],
-      userRole: [],
+      inactiveList: [],
+      inactiveFieldList: [],
+      searchText: '',
+      searchDate: ['', ''],
     };
   }
 
   async componentDidMount() {
     this.loadTable();
-    axios
-      .get(environment.baseUrl + 'role')
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        this.setState({
-          userRole: response.data.content,
-        });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
   }
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'platform-users')
+      .get(environment.baseUrl + 'device/search/remove')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const userList = response.data.content.map(user => {
-          user.key = user.id;
-          return user;
+        const inactiveList = response.data.content.map(inactive => {
+          inactive.key = inactive.id;
+          return inactive;
         });
         this.setState({
-          userList: userList,
+          inactiveList: inactiveList,
+          inactiveFieldList: inactiveList,
         });
       })
       .catch(error => {
@@ -81,114 +52,138 @@ class Data extends React.Component {
       });
   };
 
-  submit = e => {
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'platform-users', {
-            accName: values.accountName,
-            email: values.email,
-            password: values.password,
-            role: {
-              id: values.role,
-            },
-          })
-          .then(response => {
-            message.success('User Account Successfully Created');
-            console.log('------------------- response - ', response);
-            this.loadTable();
-            this.props.form.resetFields();
-          })
-          .catch(error => {
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-            if (msg === undefined) {
-              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+  devicesDelete = id => {
+    console.log('id=======', id);
+    axios
+      .delete(environment.baseUrl + 'device/' + id)
+      .then(response => {
+        message.success('Devices  successfully removed');
+        console.log('------------------- response - ', response);
+        this.loadTable();
+      })
+      .catch(error => {
+        let msg = null;
+        if (
+          error &&
+          error.response &&
+          error.response.data &&
+          error.response.data.validationFailures &&
+          error.response.data.validationFailures[0] &&
+          error.response.data.validationFailures[0].code
+        ) {
+          let errorCode = error.response.data.validationFailures[0].code;
+          msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR[errorCode];
+          if (msg === undefined) {
+            msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR['defaultError'];
+          }
+        } else {
+          msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR['defaultError'];
+        }
+        message.error(msg);
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  searchDateHandler = (date, dateString) => {
+    this.dataFilter('searchDate', dateString);
+  };
+
+  searchTextHandler = e => {
+    this.dataFilter('searchText', e.target.value);
+  };
+
+  dataFilter = (key, value) => {
+    this.setState(
+      {
+        [key]: value,
+      },
+      () => {
+        let data = this.state.inactiveList;
+        let searchDate = this.state.searchDate;
+        let searchText = this.state.searchText;
+
+        if (searchText) {
+          data = data.filter(d => {
+            if (d.account !== null) {
+              return (
+                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+              );
+            } else {
+              return d.serial.toLowerCase().includes(searchText.toLowerCase());
             }
-            message.error(msg);
-            console.log('------------------- error - ', error);
           });
+        }
+        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+          var startDate = moment(searchDate[0]);
+          var endDate = moment(searchDate[1]);
+          data = data.filter(d => {
+            var date = moment(d.createDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
+        }
+        this.setState({
+          inactiveFieldList: data,
+        });
       }
-    });
+    );
   };
 
   render() {
-    const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
-
     return (
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Search Devices</div>
+              <div className="box-header">Remove device from account</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={24}>
                     <Col span={8} order={3}>
+                      <FormItem>
+                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
+                        <Search
+                          placeholder="input search text"
+                          onChange={this.searchTextHandler}
+                          style={{ width: 200 }}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col span={8} order={3}>
                       <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker onChange={this.searchDateHandler} />
+                        <DatePicker.RangePicker
+                          onChange={this.searchDateHandler}
+                          format={dateFormat}
+                        />
                       </FormItem>
                     </Col>
-                    {/* <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="cash">Cash</Option>
-                          <Option value="debit">Debit</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <FormItem {...formItemLayout} label="Status">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="initiated">Initiated</Option>
-                          <Option value="downloaded">Downloaded</Option>
-                          <Option value="activated">Activated</Option>
-                        </Select>
-                      </FormItem>
-                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={userList}>
-                    <Column title="Serial Number" dataIndex="serialnumber" key="serialNumber" />
+                  <Table dataSource={this.state.inactiveFieldList}>
+                    <Column title="Serial Number" dataIndex="serial" key="serial" />
+                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
                     <Column
-                      title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => (
-                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
-                      )}
+                      title="Account Number"
+                      dataIndex="account.accountNumber"
+                      key="accountNumber"
                     />
+                    <Column title="Account Holder" dataIndex="account.holder" key="holder" />
                     <Column
                       title="Action"
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status !== 'ACTIVATED' && (
-                            <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
-                          )}
-                          {record.status && record.status === 'INITIATED' && (
-                            <>
-                              <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.downloadCsv(record.id, record.createDate)}
-                                type="download"
-                              />
-                            </>
-                          )}
+                          <Popconfirm
+                            title="Are you sure delete this assignment?"
+                            onConfirm={() => this.devicesDelete(record.id)}
+                            okText="Yes"
+                            cancelText="No"
+                          >
+                            <Icon type="delete" />
+                          </Popconfirm>
                         </span>
                       )}
                     />

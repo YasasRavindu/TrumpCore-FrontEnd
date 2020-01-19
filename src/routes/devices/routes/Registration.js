@@ -1,25 +1,9 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import {
-  Table,
-  Icon,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Tag,
-  Divider,
-  Row,
-  Col,
-  Select,
-  InputNumber,
-  DatePicker,
-  message,
-} from 'antd';
-import { environment, commonUrl } from '../../../environments';
+import { Table, Input, Button, Form, Tag, Row, Col, Select, DatePicker, message } from 'antd';
+import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
-import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const Search = Input.Search;
@@ -150,7 +134,6 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">
