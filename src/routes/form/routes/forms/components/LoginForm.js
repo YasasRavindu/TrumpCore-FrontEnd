@@ -63,6 +63,8 @@ class NormalLoginForm extends React.Component {
           })
           .then(response => {
             console.log('------------------- response - ', response);
+            let currentUser = response.data.content;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             this.openNotificationWithIcon('success', 'Welcome To TrumpCore!');
             this.props.history.push('/app/cardGenerate');

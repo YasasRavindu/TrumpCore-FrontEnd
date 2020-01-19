@@ -20,6 +20,15 @@ const CUSTOM_MESSAGE = {
     accountNotExists: 'Account Not Exists!',
     defaultError: 'Something went wrong please try again!',
   },
+  DIVICES_REGISTRATION_ERROR: {
+    alreadyRegistered: 'Device already registered!',
+    issueInRegister: 'Something wrong!',
+    defaultError: 'Something went wrong please try again!',
+  },
+  DIVICES_REMOVE_ERROR: {
+    notExists: 'This Assignment not exists!',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export default CUSTOM_MESSAGE;

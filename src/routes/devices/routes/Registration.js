@@ -1,59 +1,26 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import {
-  Table,
-  Icon,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Tag,
-  Divider,
-  Row,
-  Col,
-  Select,
-  InputNumber,
-  DatePicker,
-  message,
-} from 'antd';
-
-import { environment, commonUrl } from '../../../environments';
+import { Table, Input, Button, Form, Tag, Row, Col, Select, DatePicker, message } from 'antd';
+import { environment } from '../../../environments';
 import axios from 'axios';
-import Password from 'antd/lib/input/Password';
+import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
+const Search = Input.Search;
 const userStatus = {
-  ACTIVE: { color: '', label: 'ACTIVE' },
-  INACTIVE: { color: 'blue', label: 'INACTIVE' },
-  DELETED: { color: 'magenta', label: 'DELETED' },
-  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
+  REGISTERED: { color: '', label: 'REGISTERED' },
+  REMOVED: { color: 'magenta', label: 'DELETED' },
+};
+const dateFormat = 'YYYY-MM-DD';
+
+const formItemLayout = {
+  labelCol: { span: 10 },
+  wrapperCol: { span: 14 },
 };
 
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
-
-const tableData = [
-  {
-    key: '1',
-    serialNo: '123424443uur',
-    date: '2013-02-09',
-    status: 'Registerd',
-  },
-  {
-    key: '2',
-    serialNo: '123424443Ate',
-    date: '2013-02-09',
-    status: 'Removed',
-  },
-  {
-    key: '3',
-    serialNo: '12344we43ee',
-    date: '2013-02-09',
-    status: 'Registerd',
-  },
-];
 
 class Data extends React.Component {
   constructor(props) {
@@ -61,37 +28,123 @@ class Data extends React.Component {
     this.state = {
       loadDevices: [],
       loadFilterDevices: [],
-      search: '',
+      loading: false,
+      searchDate: ['', ''],
+      searchText: '',
     };
   }
 
   async componentDidMount() {
-    this.setState({
-      loadDevices: tableData,
-      loadFilterDevices: tableData,
-    });
+    this.loadTable();
   }
 
-  onChange = e => {
-    console.log(this.state.loadFilterDevices);
+  loadTable = () => {
+    axios
+      .get(environment.baseUrl + 'device/search/register')
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const devicesList = response.data.content.map(regDevices => {
+          regDevices.key = regDevices.id;
+          return regDevices;
+        });
 
-    this.setState({ search: e.target.value }, () => {
-      let data = this.state.loadDevices.filter(d => {
-        return (
-          d.serialNo.toLowerCase().includes(this.state.search.toLowerCase()) ||
-          d.status.toLowerCase().includes(this.state.search.toLowerCase())
-        );
+        this.setState({
+          loadDevices: devicesList,
+          loadFilterDevices: devicesList,
+        });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
       });
+  };
 
-      this.setState({
-        loadFilterDevices: data,
-      });
+  submit = e => {
+    this.setState({ loading: true });
+    e.preventDefault();
+    this.props.form.validateFields((err, values) => {
+      if (!err) {
+        axios
+          .post(environment.baseUrl + 'device', {
+            serial: values.SerialNumber,
+          })
+          .then(response => {
+            message.success('Congratulations! Your device successfully registered.');
+            this.loadTable();
+            this.props.form.resetFields();
+            this.setState({ loading: false });
+            console.log('------------------- response - ', response);
+          })
+          .catch(error => {
+            console.log('------------------- error - ', error);
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
+              }
+            } else {
+              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
+            }
+            message.error(msg);
+            this.setState({ loading: false });
+          });
+      }
     });
+  };
+
+  searchDateHandler = (date, dateString) => {
+    this.dataFilter('searchDate', dateString);
+  };
+
+  searchTextHandler = e => {
+    this.dataFilter('searchText', e.target.value);
+  };
+
+  dataFilter = (key, value) => {
+    this.setState(
+      {
+        [key]: value,
+      },
+      () => {
+        let data = this.state.loadDevices;
+        let searchDate = this.state.searchDate;
+        let searchText = this.state.searchText;
+
+        if (searchText) {
+          data = data.filter(d => {
+            return (
+              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.status.toLowerCase().includes(searchText.toLowerCase())
+            );
+          });
+        }
+
+        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+          var startDate = moment(searchDate[0]);
+          var endDate = moment(searchDate[1]);
+          data = data.filter(d => {
+            var date = moment(d.createDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
+        }
+
+        this.setState({
+          loadFilterDevices: data,
+        });
+      }
+    );
   };
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">
@@ -104,7 +157,7 @@ class Data extends React.Component {
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6} order={2}>
                       <FormItem>
-                        {getFieldDecorator('Serial number', {
+                        {getFieldDecorator('SerialNumber', {
                           rules: [
                             {
                               required: true,
@@ -115,7 +168,12 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6} order={1}>
-                      <Button type="primary" className="float-right" onClick={this.submit}>
+                      <Button
+                        type="primary"
+                        loading={this.state.loading}
+                        className="float-right"
+                        onClick={this.submit}
+                      >
                         Submit
                       </Button>
                     </Col>
@@ -132,49 +190,36 @@ class Data extends React.Component {
                   <Row gutter={24}>
                     <Col span={8} order={3}>
                       <FormItem>
-                        <Input placeholder="Serial number" onChange={this.onChange} />
+                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
+                        <Search
+                          placeholder="input search text"
+                          onChange={this.searchTextHandler}
+                          style={{ width: 200 }}
+                        />
                       </FormItem>
                     </Col>
-                    {/* <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="cash">Cash</Option>
-                          <Option value="debit">Debit</Option>
-                        </Select>
+                    <Col span={8} order={3}>
+                      <FormItem {...formItemLayout} label="Date Range">
+                        <DatePicker.RangePicker
+                          onChange={this.searchDateHandler}
+                          format={dateFormat}
+                        />
                       </FormItem>
                     </Col>
-                    <Col span={6} order={1}>
-                      <FormItem {...formItemLayout} label="Status">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="initiated">Initiated</Option>
-                          <Option value="downloaded">Downloaded</Option>
-                          <Option value="activated">Activated</Option>
-                        </Select>
-                      </FormItem>
-                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
                   <Table dataSource={this.state.loadFilterDevices}>
-                    <Column title="Serial Number" dataIndex="serialNo" key="serialNumber" />
+                    <Column title="Serial Number" dataIndex="serial" key="serial" />
+                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
                     <Column
                       title="Status"
                       dataIndex="status"
                       key="status"
-                      // render={status => (
-                      //   <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
-                      // )}
+                      render={status => (
+                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                      )}
                     />
                   </Table>
                 </article>
