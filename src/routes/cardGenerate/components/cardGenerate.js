@@ -104,20 +104,18 @@ class Data extends React.Component {
         let searchDate = this.state.searchDate;
 
         if (searchType !== 'ALL') {
-          data = searchType ? data.filter(d => d.type === searchType) : data;
+          data = data.filter(d => d.type === searchType);
         }
         if (searchStatus !== 'ALL') {
-          data = searchStatus ? data.filter(d => d.status === searchStatus) : data;
+          data = data.filter(d => d.status === searchStatus);
         }
         if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
           var startDate = moment(searchDate[0]);
           var endDate = moment(searchDate[1]);
-          data = searchStatus
-            ? data.filter(d => {
-                var date = moment(d.createDate);
-                return date.isAfter(startDate) && date.isBefore(endDate);
-              })
-            : data;
+          data = data.filter(d => {
+            var date = moment(d.createDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
         }
 
         this.setState({
@@ -199,9 +197,21 @@ class Data extends React.Component {
           .catch(error => {
             console.log('------------------- error - ', error);
 
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR[errorCode];
-            if (msg === undefined) {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
+              }
+            } else {
               msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
             }
             message.error(msg);
@@ -307,37 +317,40 @@ class Data extends React.Component {
                   </FormItem>
                 </Form>
 
-                <Table dataSource={this.state.batchFilteredList}>
-                  <Column title="Created Date" dataIndex="createDate" key="createDate" />
-                  <Column title="Card Count" dataIndex="count" key="count" />
-                  <Column title="Card Type" dataIndex="type" key="type" />
-                  <Column
-                    title="Status"
-                    dataIndex="status"
-                    key="status"
-                    render={status => <Tag color={batchStatus[status].color}>{status}</Tag>}
-                  />
-                  <Column
-                    title="Action"
-                    key="action"
-                    render={(text, record) => (
-                      <span>
-                        {record.status && record.status !== 'ACTIVATED' && (
-                          <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
-                        )}
-                        {record.status && record.status === 'INITIATED' && (
-                          <>
-                            <Divider type="vertical" />
+                <article className="article mt-2">
+                  <Table dataSource={this.state.batchFilteredList}>
+                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
+                    <Column title="Card Count" dataIndex="count" key="count" />
+                    <Column title="Card Type" dataIndex="type" key="type" />
+                    <Column
+                      title="Status"
+                      dataIndex="status"
+                      key="status"
+                      render={status => <Tag color={batchStatus[status].color}>{status}</Tag>}
+                    />
+                    <Column
+                      title="Action"
+                      key="action"
+                      render={(text, record) => (
+                        <span>
+                          {record.status && record.status !== 'ACTIVATED' && (
                             <Icon
                               onClick={() => this.downloadCsv(record.id, record.createDate)}
                               type="download"
                             />
-                          </>
-                        )}
-                      </span>
-                    )}
-                  />
-                </Table>
+                          )}
+                          {record.status && record.status === 'INITIATED' && (
+                            <>
+                              {/* <Icon onClick={() => this.batchDelete(record.id)} type="delete" /> */}
+                              <Divider type="vertical" />
+                              <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                            </>
+                          )}
+                        </span>
+                      )}
+                    />
+                  </Table>
+                </article>
               </div>
             </div>
           </div>
