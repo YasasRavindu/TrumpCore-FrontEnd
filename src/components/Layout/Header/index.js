@@ -10,12 +10,12 @@ const { Header } = Layout;
 
 const avatarDropdown = (
   <Menu className="app-header-dropdown">
-    <Menu.Item key="4" className="d-block d-md-none">
+    {/* <Menu.Item key="4" className="d-block d-md-none">
       {' '}
       Signed in as <strong>{DEMO.user}</strong>{' '}
     </Menu.Item>
-    <Menu.Divider className="d-block d-md-none" />
-    <Menu.Item key="1" disabled>
+    <Menu.Divider className="d-block d-md-none" /> */}
+    {/* <Menu.Item key="1" disabled>
       {' '}
       <Icon type="setting" />
       Settings{' '}
@@ -34,7 +34,7 @@ const avatarDropdown = (
         Need Help?
       </a>{' '}
     </Menu.Item>
-    <Menu.Divider />
+    <Menu.Divider /> */}
     <Menu.Item key="3">
       {' '}
       <a href={DEMO.headerLink.signOut}>
@@ -46,6 +46,10 @@ const avatarDropdown = (
 );
 
 class AppHeader extends React.Component {
+  constructor(props) {
+    super(props);
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  }
   onToggleCollapsedNav = () => {
     const { handleToggleCollapsedNav, collapsedNav } = this.props;
     handleToggleCollapsedNav(!collapsedNav);
@@ -102,7 +106,7 @@ class AppHeader extends React.Component {
 
           <div className="header-right">
             <div className="list-unstyled list-inline">
-              <li className="list-inline-item search-box seach-box-right d-none d-md-inline-block">
+              {/* <li className="list-inline-item search-box seach-box-right d-none d-md-inline-block">
                 <div className="search-box-inner">
                   <div className="search-box-icon">
                     <Icon type="search" />
@@ -122,7 +126,7 @@ class AppHeader extends React.Component {
                     <Icon type="bell" className="list-notification-icon" />
                   </Badge>
                 </a>
-              </Popover>
+              </Popover> */}
               <Dropdown
                 className="list-inline-item"
                 overlay={avatarDropdown}
@@ -130,8 +134,12 @@ class AppHeader extends React.Component {
                 placement="bottomRight"
               >
                 <a className="ant-dropdown-link no-link-style" href={DEMO.link}>
-                  <Avatar src="assets/images-demo/avatars/4.jpg" size="small" />
-                  <span className="avatar-text d-none d-md-inline">{DEMO.user}</span>
+                  <Avatar src="assets/images-demo/avatars/6.png" size="small" />
+                  <span className="avatar-text d-none d-md-inline">
+                    {this.currentUser && this.currentUser.accName
+                      ? this.currentUser.accName
+                      : 'user'}
+                  </span>
                 </a>
               </Dropdown>
             </div>
@@ -157,7 +165,4 @@ const mapDispatchToProps = dispatch => ({
   },
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AppHeader);
+export default connect(mapStateToProps, mapDispatchToProps)(AppHeader);
