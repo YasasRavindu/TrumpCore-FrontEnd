@@ -17,6 +17,7 @@ import {
   message,
   Badge,
   AutoComplete,
+  Tooltip,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -224,107 +225,98 @@ class Data extends React.Component {
             <div className="box box-default mb-4">
               <div className="box-header">Assign Devices</div>
               <div className="box-body">
-                <Form>
-                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6} order={4}>
-                      <FormItem>
-                        {getFieldDecorator('serialNumber', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter your Serial number',
-                            },
-                          ],
-                        })(
-                          // (<Input placeholder="Serial Number" />)
-                          <AutoComplete
-                            dataSource={optionsDevices}
-                            style={{ width: 200 }}
-                            onBlur={inputValue => {
-                              let keyCard = false;
-                              registeredDeviceList.map(device => {
-                                if (
-                                  inputValue !== undefined &&
-                                  device.serial.toUpperCase() === inputValue.toUpperCase()
-                                ) {
-                                  keyCard = true;
-                                }
-                              });
-                              if (!keyCard) {
-                                this.props.form.setFieldsValue({
-                                  serialNumber: '',
-                                });
-                              }
-                            }}
-                            placeholder="Serial Number"
-                            filterOption={(inputValue, option) =>
-                              option.props.children
-                                .toUpperCase()
-                                .indexOf(inputValue.toUpperCase()) !== -1
+                <Form layout="inline">
+                  <FormItem>
+                    {getFieldDecorator('serialNumber', {
+                      rules: [
+                        {
+                          required: true,
+                          message: 'Please enter your Serial number',
+                        },
+                      ],
+                    })(
+                      // (<Input placeholder="Serial Number" />)
+                      <AutoComplete
+                        dataSource={optionsDevices}
+                        style={{ width: 200 }}
+                        onBlur={inputValue => {
+                          let keyCard = false;
+                          registeredDeviceList.map(device => {
+                            if (
+                              inputValue !== undefined &&
+                              device.serial.toUpperCase() === inputValue.toUpperCase()
+                            ) {
+                              keyCard = true;
                             }
-                          />
-                        )}
-                      </FormItem>
-                    </Col>
-                    <Col span={3} order={3} justify="space-around" align="middle">
-                      <Badge
-                        count={'Assign to >'}
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#999',
-                          boxShadow: '0 0 0 1px #d9d9d9 inset',
-                          marginTop: '10px',
+                          });
+                          if (!keyCard) {
+                            this.props.form.setFieldsValue({
+                              serialNumber: '',
+                            });
+                          }
                         }}
+                        placeholder="Serial Number"
+                        filterOption={(inputValue, option) =>
+                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                          -1
+                        }
                       />
-                    </Col>
-                    <Col span={6} order={2}>
-                      <FormItem>
-                        {getFieldDecorator('accountNumber', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter your Account number',
-                            },
-                          ],
-                        })(
-                          // <Input placeholder="Account Number" />
-                          <AutoComplete
-                            dataSource={optionsAccounts}
-                            style={{ width: 200 }}
-                            onBlur={inputValue => {
-                              let keyCard = false;
-                              accountList.map(account => {
-                                if (
-                                  inputValue !== undefined &&
-                                  (account.accountNumber.toUpperCase() ===
-                                    inputValue.toUpperCase() ||
-                                    account.id.toUpperCase() === inputValue.toUpperCase())
-                                ) {
-                                  keyCard = true;
-                                }
-                              });
-                              if (!keyCard) {
-                                this.props.form.setFieldsValue({
-                                  accountNumber: '',
-                                });
-                              }
-                            }}
-                            placeholder="Account Number"
-                            filterOption={(inputValue, option) =>
-                              option.props.children
-                                .toUpperCase()
-                                .indexOf(inputValue.toUpperCase()) !== -1
+                    )}
+                  </FormItem>
+                  <FormItem>
+                    <Badge
+                      count={'Assign to >'}
+                      style={{
+                        backgroundColor: '#fff',
+                        color: '#999',
+                        boxShadow: '0 0 0 1px #d9d9d9 inset',
+                        marginTop: '10px',
+                      }}
+                    />
+                  </FormItem>
+
+                  <FormItem>
+                    {getFieldDecorator('accountNumber', {
+                      rules: [
+                        {
+                          required: true,
+                          message: 'Please enter your Account number',
+                        },
+                      ],
+                    })(
+                      // <Input placeholder="Account Number" />
+                      <AutoComplete
+                        dataSource={optionsAccounts}
+                        style={{ width: 200 }}
+                        onBlur={inputValue => {
+                          let keyCard = false;
+                          accountList.map(account => {
+                            if (
+                              inputValue !== undefined &&
+                              (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+                                account.id.toUpperCase() === inputValue.toUpperCase())
+                            ) {
+                              keyCard = true;
                             }
-                          />
-                        )}
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <Button type="primary" className="float-right" onClick={this.submit}>
-                        Assign
-                      </Button>
-                    </Col>
-                  </Row>
+                          });
+                          if (!keyCard) {
+                            this.props.form.setFieldsValue({
+                              accountNumber: '',
+                            });
+                          }
+                        }}
+                        placeholder="Account Number"
+                        filterOption={(inputValue, option) =>
+                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                          -1
+                        }
+                      />
+                    )}
+                  </FormItem>
+
+                  <Button type="primary" className="float-right" onClick={this.submit}>
+                    Assign
+                  </Button>
                 </Form>
               </div>
             </div>
@@ -385,50 +377,56 @@ class Data extends React.Component {
                         <span>
                           {record.status && record.status === 'ACTIVATED' && (
                             <>
-                              <Icon
-                                onClick={
-                                  () => this.handleStatus(record.id, 'INACTIVATED')
-                                  // this.handleStatus(record.id, deviceStatus['INACTIVATED'].value)
-                                }
-                                type="close-circle-o"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="Inactive">
+                                <Icon
+                                  onClick={
+                                    () => this.handleStatus(record.id, 'INACTIVATED')
+                                    // this.handleStatus(record.id, deviceStatus['INACTIVATED'].value)
+                                  }
+                                  type="close-circle-o"
+                                />
+                              </Tooltip>
                               <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'LOCKED')}
-                                type="lock"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="lock">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'LOCKED')}
+                                  type="lock"
+                                />
+                              </Tooltip>
                             </>
                           )}
                           {record.status && record.status === 'INACTIVATED' && (
                             <>
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
-                                type="check-circle-o"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="Active">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                  type="check-circle-o"
+                                />
+                              </Tooltip>
                               <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'LOCKED')}
-                                type="lock"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="Lock">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'LOCKED')}
+                                  type="lock"
+                                />
+                              </Tooltip>
                             </>
                           )}
                           {record.status && record.status === 'LOCKED' && (
                             <>
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'INACTIVATED')}
-                                type="close-circle-o"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="Inactive">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'INACTIVATED')}
+                                  type="close-circle-o"
+                                />
+                              </Tooltip>
                               <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
-                                type="unlock"
-                                style={{ fontSize: '20px' }}
-                              />
+                              <Tooltip title="Unlock">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                  type="unlock"
+                                />
+                              </Tooltip>
                             </>
                           )}
                         </span>

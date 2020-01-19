@@ -15,6 +15,7 @@ import {
   InputNumber,
   DatePicker,
   message,
+  Tooltip,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -334,16 +335,20 @@ class Data extends React.Component {
                       render={(text, record) => (
                         <span>
                           {record.status && record.status !== 'ACTIVATED' && (
-                            <Icon
-                              onClick={() => this.downloadCsv(record.id, record.createDate)}
-                              type="download"
-                            />
+                            <Tooltip title="Download">
+                              <Icon
+                                onClick={() => this.downloadCsv(record.id, record.createDate)}
+                                type="download"
+                              />
+                            </Tooltip>
                           )}
                           {record.status && record.status === 'INITIATED' && (
                             <>
                               {/* <Icon onClick={() => this.batchDelete(record.id)} type="delete" /> */}
                               <Divider type="vertical" />
-                              <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                              <Tooltip title="Delete">
+                                <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                              </Tooltip>
                             </>
                           )}
                         </span>

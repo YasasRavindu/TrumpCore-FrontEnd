@@ -1,6 +1,18 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import { Table, Icon, Input, Form, Row, Col, Select, DatePicker, message, Popconfirm } from 'antd';
+import {
+  Table,
+  Icon,
+  Input,
+  Form,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+  message,
+  Popconfirm,
+  Tooltip,
+} from 'antd';
 
 import { environment } from '../../../environments';
 import axios from 'axios';
@@ -181,7 +193,9 @@ class Data extends React.Component {
                             okText="Yes"
                             cancelText="No"
                           >
-                            <Icon type="delete" />
+                            <Tooltip title="Delete">
+                              <Icon type="delete" />
+                            </Tooltip>
                           </Popconfirm>
                         </span>
                       )}
