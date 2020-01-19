@@ -23,13 +23,19 @@ import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import moment from 'moment';
 
 const deviceStatus = {
   ACTIVATED: { color: 'blue', label: 'ACTIVATED', value: '1' },
   INACTIVATED: { color: '', label: 'INACTIVATED', value: '2' },
   LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
 };
+const dateFormat = 'YYYY-MM-DD';
 
+const formItemLayout = {
+  labelCol: { span: 10 },
+  wrapperCol: { span: 14 },
+};
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
@@ -38,6 +44,8 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      searchText: '',
+      searchStatus: 'ALL',
       registeredDeviceList: [],
       assignedDeviceList: [],
       filteredAssignedDeviceList: [],
@@ -108,6 +116,45 @@ class Data extends React.Component {
       .catch(error => {
         console.log('------------------- error - ', error);
       });
+  };
+
+  searchStatusHandler = v => {
+    this.dataFilter('searchStatus', v);
+  };
+
+  searchTextHandler = e => {
+    this.dataFilter('searchText', e.target.value);
+  };
+
+  dataFilter = (key, value) => {
+    this.setState(
+      {
+        [key]: value,
+      },
+      () => {
+        let data = this.state.assignedDeviceList;
+        let searchStatus = this.state.searchStatus.toUpperCase();
+        let searchText = this.state.searchText;
+
+        if (searchText) {
+          data = data.filter(d => {
+            return (
+              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+            );
+          });
+        }
+
+        if (searchStatus !== 'ALL') {
+          data = data.filter(d => d.status === searchStatus);
+        }
+
+        this.setState({
+          filteredAssignedDeviceList: data,
+        });
+      }
+    );
   };
 
   submit = e => {
@@ -285,45 +332,33 @@ class Data extends React.Component {
             <div className="box box-default">
               <div className="box-header">Device Management</div>
               <div className="box-body">
-                {/* <Form>
+                <Form>
                   <Row gutter={24}>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
-                          format={dateFormat}
+                    <Col span={8} order={1}>
+                      <FormItem>
+                        <Input.Search
+                          placeholder="input search text"
+                          onChange={this.searchTextHandler}
+                          style={{ width: 200 }}
                         />
                       </FormItem>
                     </Col>
                     <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="cash">Cash</Option>
-                          <Option value="debit">Debit</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <FormItem {...formItemLayout} label="Status">
+                      <FormItem {...formItemLayout} label="Device Status">
                         <Select
                           style={{ width: 120 }}
                           onChange={this.searchStatusHandler}
                           value={this.state.searchStatus}
                         >
                           <Option value="all">All</Option>
-                          <Option value="initiated">Initiated</Option>
-                          <Option value="downloaded">Downloaded</Option>
                           <Option value="activated">Activated</Option>
+                          <Option value="inactivated">Inactivated</Option>
+                          <Option value="locked">Locked</Option>
                         </Select>
                       </FormItem>
                     </Col>
                   </Row>
-                </Form> */}
+                </Form>
 
                 <article className="article mt-2">
                   <Table dataSource={filteredAssignedDeviceList}>

@@ -71,12 +71,12 @@ class Data extends React.Component {
           error.response.data.validationFailures[0].code
         ) {
           let errorCode = error.response.data.validationFailures[0].code;
-          msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR[errorCode];
+          msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR[errorCode];
           if (msg === undefined) {
-            msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR['defaultError'];
+            msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR['defaultError'];
           }
         } else {
-          msg = CUSTOM_MESSAGE.DIVICES_REMOVE_ERROR['defaultError'];
+          msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR['defaultError'];
         }
         message.error(msg);
         console.log('------------------- error - ', error);

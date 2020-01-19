@@ -96,9 +96,21 @@ class Data extends React.Component {
             this.props.form.resetFields();
           })
           .catch(error => {
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-            if (msg === undefined) {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+              }
+            } else {
               msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
             }
             message.error(msg);

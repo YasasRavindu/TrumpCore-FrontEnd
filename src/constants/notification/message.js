@@ -15,17 +15,17 @@ const CUSTOM_MESSAGE = {
     // invalidCount: 'Please check your card count!',
     defaultError: 'Something went wrong please try again!',
   },
+  DEVICES_REGISTRATION_ERROR: {
+    alreadyRegistered: 'Device already registered!',
+    issueInRegister: 'Something wrong!',
+    defaultError: 'Something went wrong please try again!',
+  },
   DEVICE_ASSIGN_ERROR: {
     deviceNotExists: 'Device Not Exists!',
     accountNotExists: 'Account Not Exists!',
     defaultError: 'Something went wrong please try again!',
   },
-  DIVICES_REGISTRATION_ERROR: {
-    alreadyRegistered: 'Device already registered!',
-    issueInRegister: 'Something wrong!',
-    defaultError: 'Something went wrong please try again!',
-  },
-  DIVICES_REMOVE_ERROR: {
+  DEVICES_REMOVE_ERROR: {
     notExists: 'This Assignment not exists!',
     defaultError: 'Something went wrong please try again!',
   },
