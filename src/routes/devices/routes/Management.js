@@ -140,8 +140,9 @@ class Data extends React.Component {
           data = data.filter(d => {
             return (
               d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+              (d.account &&
+                (d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())))
             );
           });
         }
