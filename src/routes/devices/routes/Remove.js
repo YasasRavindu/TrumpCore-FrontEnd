@@ -53,7 +53,6 @@ class Data extends React.Component {
   };
 
   devicesDelete = id => {
-    console.log('id=======', id);
     axios
       .delete(environment.baseUrl + 'device/' + id)
       .then(response => {
