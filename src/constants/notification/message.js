@@ -14,7 +14,12 @@ const CUSTOM_MESSAGE = {
   USER_SAVE_ERROR: {
     // invalidCount: 'Please check your card count!',
     defaultError: 'Something went wrong please try again!',
-  }
+  },
+  DEVICE_ASSIGN_ERROR: {
+    deviceNotExists: 'Device Not Exists!',
+    accountNotExists: 'Account Not Exists!',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export default CUSTOM_MESSAGE;

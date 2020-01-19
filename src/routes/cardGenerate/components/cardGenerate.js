@@ -103,20 +103,18 @@ class Data extends React.Component {
         let searchDate = this.state.searchDate;
 
         if (searchType !== 'ALL') {
-          data = searchType ? data.filter(d => d.type === searchType) : data;
+          data = data.filter(d => d.type === searchType);
         }
         if (searchStatus !== 'ALL') {
-          data = searchStatus ? data.filter(d => d.status === searchStatus) : data;
+          data = data.filter(d => d.status === searchStatus);
         }
         if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
           var startDate = moment(searchDate[0]);
           var endDate = moment(searchDate[1]);
-          data = searchStatus
-            ? data.filter(d => {
-                var date = moment(d.createDate);
-                return date.isAfter(startDate) && date.isBefore(endDate);
-              })
-            : data;
+          data = data.filter(d => {
+            var date = moment(d.createDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
         }
 
         this.setState({
@@ -276,9 +274,7 @@ class Data extends React.Component {
           </div>
           <div key="2">
             <div className="box box-default">
-              
               <div className="box-body">
-                
                 <Form>
                   <Row gutter={24}>
                     <Col span={8} order={3}>
@@ -336,15 +332,16 @@ class Data extends React.Component {
                       render={(text, record) => (
                         <span>
                           {record.status && record.status !== 'ACTIVATED' && (
-                            <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                            <Icon
+                              onClick={() => this.downloadCsv(record.id, record.createDate)}
+                              type="download"
+                            />
                           )}
                           {record.status && record.status === 'INITIATED' && (
                             <>
+                              {/* <Icon onClick={() => this.batchDelete(record.id)} type="delete" /> */}
                               <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.downloadCsv(record.id, record.createDate)}
-                                type="download"
-                              />
+                              <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
                             </>
                           )}
                         </span>

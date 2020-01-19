@@ -16,6 +16,7 @@ import {
   DatePicker,
   message,
   Badge,
+  AutoComplete,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -23,12 +24,10 @@ import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
-const userStatus = {
-  ACTIVE: { color: '', label: 'ACTIVE' },
-  INACTIVE: { color: 'blue', label: 'INACTIVE' },
-  DELETED: { color: 'magenta', label: 'DELETED' },
-  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
+const deviceStatus = {
+  ACTIVATED: { color: 'blue', label: 'ACTIVATED', value: '1' },
+  INACTIVATED: { color: '', label: 'INACTIVATED', value: '2' },
+  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
 };
 
 const FormItem = Form.Item;
@@ -39,38 +38,72 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      userList: [],
-      userRole: [],
+      registeredDeviceList: [],
+      assignedDeviceList: [],
+      filteredAssignedDeviceList: [],
+      accountList: [],
     };
   }
 
   async componentDidMount() {
-    this.loadTable();
+    this.loadData();
+  }
+
+  loadData = () => {
     axios
-      .get(environment.baseUrl + 'role')
+      .get(environment.baseUrl + 'device/search/register')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
+        const deviceList = response.data.content.map(device => {
+          device.key = device.id;
+          return device;
+        });
         this.setState({
-          userRole: response.data.content,
+          registeredDeviceList: deviceList,
         });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
-  }
-
-  loadTable = () => {
     axios
-      .get(environment.baseUrl + 'platform-users')
+      .get(environment.baseUrl + 'device/search/assign')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const userList = response.data.content.map(user => {
-          user.key = user.id;
-          return user;
+        const deviceList = response.data.content.map(device => {
+          device.key = device.id;
+          return device;
         });
         this.setState({
-          userList: userList,
+          assignedDeviceList: deviceList,
+          filteredAssignedDeviceList: deviceList,
         });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+    axios
+      .post(environment.baseUrl + 'account/filterSearch', {
+        status: '1',
+        context: '',
+        cardAssigned: '',
+      })
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        this.setState({
+          accountList: response.data.content,
+        });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  handleStatus = (id, value) => {
+    axios
+      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + deviceStatus[value].value)
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        this.loadData();
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -81,26 +114,37 @@ class Data extends React.Component {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
+        console.log(values);
         axios
-          .post(environment.baseUrl + 'platform-users', {
-            accName: values.accountName,
-            email: values.email,
-            password: values.password,
-            role: {
-              id: values.role,
+          .put(environment.baseUrl + 'device/assign', {
+            serial: values.serialNumber,
+            account: {
+              id: values.accountNumber,
             },
           })
           .then(response => {
-            message.success('User Account Successfully Created');
+            message.success('Device Successfully Assign to Account');
             console.log('------------------- response - ', response);
-            this.loadTable();
+            this.loadData();
             this.props.form.resetFields();
           })
           .catch(error => {
-            let errorCode = error.response.data.validationFailures[0].code;
-            let msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-            if (msg === undefined) {
-              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
+              }
+            } else {
+              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
             }
             message.error(msg);
             console.log('------------------- error - ', error);
@@ -111,7 +155,19 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
+    const { accountList, registeredDeviceList, filteredAssignedDeviceList } = this.state;
+
+    const optionsDevices = registeredDeviceList.map(device => (
+      <Option key={device.id} value={device.serial}>
+        {device.serial}
+      </Option>
+    ));
+
+    const optionsAccounts = accountList.map(account => (
+      <Option key={account.id} value={account.id}>
+        {account.accountNumber}
+      </Option>
+    ));
 
     return (
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">
@@ -124,14 +180,42 @@ class Data extends React.Component {
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6} order={4}>
                       <FormItem>
-                        {getFieldDecorator('Serial number', {
+                        {getFieldDecorator('serialNumber', {
                           rules: [
                             {
                               required: true,
                               message: 'Please enter your Serial number',
                             },
                           ],
-                        })(<Input placeholder="Serial Number" />)}
+                        })(
+                          // (<Input placeholder="Serial Number" />)
+                          <AutoComplete
+                            dataSource={optionsDevices}
+                            style={{ width: 200 }}
+                            onBlur={inputValue => {
+                              let keyCard = false;
+                              registeredDeviceList.map(device => {
+                                if (
+                                  inputValue !== undefined &&
+                                  device.serial.toUpperCase() === inputValue.toUpperCase()
+                                ) {
+                                  keyCard = true;
+                                }
+                              });
+                              if (!keyCard) {
+                                this.props.form.setFieldsValue({
+                                  serialNumber: '',
+                                });
+                              }
+                            }}
+                            placeholder="Serial Number"
+                            filterOption={(inputValue, option) =>
+                              option.props.children
+                                .toUpperCase()
+                                .indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                          />
+                        )}
                       </FormItem>
                     </Col>
                     <Col span={3} order={3} justify="space-around" align="middle">
@@ -147,14 +231,44 @@ class Data extends React.Component {
                     </Col>
                     <Col span={6} order={2}>
                       <FormItem>
-                        {getFieldDecorator('Account Number', {
+                        {getFieldDecorator('accountNumber', {
                           rules: [
                             {
                               required: true,
                               message: 'Please enter your Account number',
                             },
                           ],
-                        })(<Input placeholder="Account Number" />)}
+                        })(
+                          // <Input placeholder="Account Number" />
+                          <AutoComplete
+                            dataSource={optionsAccounts}
+                            style={{ width: 200 }}
+                            onBlur={inputValue => {
+                              let keyCard = false;
+                              accountList.map(account => {
+                                if (
+                                  inputValue !== undefined &&
+                                  (account.accountNumber.toUpperCase() ===
+                                    inputValue.toUpperCase() ||
+                                    account.id.toUpperCase() === inputValue.toUpperCase())
+                                ) {
+                                  keyCard = true;
+                                }
+                              });
+                              if (!keyCard) {
+                                this.props.form.setFieldsValue({
+                                  accountNumber: '',
+                                });
+                              }
+                            }}
+                            placeholder="Account Number"
+                            filterOption={(inputValue, option) =>
+                              option.props.children
+                                .toUpperCase()
+                                .indexOf(inputValue.toUpperCase()) !== -1
+                            }
+                          />
+                        )}
                       </FormItem>
                     </Col>
                     <Col span={6} order={1}>
@@ -212,15 +326,20 @@ class Data extends React.Component {
                 </Form> */}
 
                 <article className="article mt-2">
-                  <Table dataSource={userList}>
-                    <Column title="Serial Number" dataIndex="serialnumber" key="serialNumber" />
-                    <Column title="Account Number" dataIndex="accnumber" key="accNumber" />
+                  <Table dataSource={filteredAssignedDeviceList}>
+                    <Column title="Serial Number" dataIndex="serial" key="serial" />
+                    <Column title="Account Holder" dataIndex="account.holder" key="accountHolder" />
+                    <Column
+                      title="Account Number"
+                      dataIndex="account.accountNumber"
+                      key="accountNo"
+                    />
                     <Column
                       title="Status"
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
                       )}
                     />
                     <Column
@@ -228,15 +347,51 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status !== 'ACTIVATED' && (
-                            <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
-                          )}
-                          {record.status && record.status === 'INITIATED' && (
+                          {record.status && record.status === 'ACTIVATED' && (
                             <>
+                              <Icon
+                                onClick={
+                                  () => this.handleStatus(record.id, 'INACTIVATED')
+                                  // this.handleStatus(record.id, deviceStatus['INACTIVATED'].value)
+                                }
+                                type="close-circle-o"
+                                style={{ fontSize: '20px' }}
+                              />
                               <Divider type="vertical" />
                               <Icon
-                                onClick={() => this.downloadCsv(record.id, record.createDate)}
-                                type="download"
+                                onClick={() => this.handleStatus(record.id, 'LOCKED')}
+                                type="lock"
+                                style={{ fontSize: '20px' }}
+                              />
+                            </>
+                          )}
+                          {record.status && record.status === 'INACTIVATED' && (
+                            <>
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                type="check-circle-o"
+                                style={{ fontSize: '20px' }}
+                              />
+                              <Divider type="vertical" />
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'LOCKED')}
+                                type="lock"
+                                style={{ fontSize: '20px' }}
+                              />
+                            </>
+                          )}
+                          {record.status && record.status === 'LOCKED' && (
+                            <>
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'INACTIVATED')}
+                                type="close-circle-o"
+                                style={{ fontSize: '20px' }}
+                              />
+                              <Divider type="vertical" />
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                type="unlock"
+                                style={{ fontSize: '20px' }}
                               />
                             </>
                           )}
