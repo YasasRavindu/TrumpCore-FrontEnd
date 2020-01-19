@@ -225,60 +225,50 @@ class Data extends React.Component {
             <div className="box box-default mb-4">
               <div className="box-header">Generate Card Numbers</div>
               <div className="box-body">
-                <Form>
-                  <Row gutter={24}>
-                    <Col span={6} order={4}>
-                      <FormItem {...formItemLayout} label="Card Count">
-                        {getFieldDecorator('count', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please add your card count.',
-                            },
-                          ],
-                        })(<InputNumber min={1} />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={4}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        {getFieldDecorator('type', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please select your card type.',
-                            },
-                          ],
-                        })(
-                          <Select style={{ width: 120 }}>
-                            <Option value="DEBIT">Debit</Option>
-                            <Option value="CASH">Cash</Option>
-                          </Select>
-                        )}
-                      </FormItem>
-                    </Col>
-                    <Col span={11} order={4}>
-                      <FormItem {...formItemLayout} label="Effective Period (Months)">
-                        {getFieldDecorator('effectivePeriod', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter a valid effective period.',
-                            },
-                          ],
-                        })(<InputNumber min={1} />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={1} order={4}>
-                      <Button
-                        type="primary"
-                        loading={this.state.loading}
-                        className="float-right"
-                        onClick={this.submit}
-                      >
-                        Submit
-                      </Button>
-                    </Col>
-                  </Row>
+                <Form layout="inline">
+                  <FormItem label="Card Count">
+                    {getFieldDecorator('count', {
+                      rules: [
+                        {
+                          required: true,
+                          message: 'Please add your card count.',
+                        },
+                      ],
+                    })(<InputNumber min={1} />)}
+                  </FormItem>
+                  <FormItem label="Card Type">
+                    {getFieldDecorator('type', {
+                      rules: [
+                        {
+                          required: true,
+                          message: 'Please select your card type.',
+                        },
+                      ],
+                    })(
+                      <Select style={{ width: 120 }}>
+                        <Option value="DEBIT">Debit</Option>
+                        <Option value="CASH">Cash</Option>
+                      </Select>
+                    )}
+                  </FormItem>
+                  <FormItem label="Effective Period (Months)">
+                    {getFieldDecorator('effectivePeriod', {
+                      rules: [
+                        {
+                          required: true,
+                          message: 'Please enter a valid effective period.',
+                        },
+                      ],
+                    })(<InputNumber min={1} />)}
+                  </FormItem>
+                  <Button
+                    type="primary"
+                    loading={this.state.loading}
+                    className="float-right"
+                    onClick={this.submit}
+                  >
+                    Submit
+                  </Button>
                 </Form>
               </div>
             </div>
@@ -286,79 +276,68 @@ class Data extends React.Component {
           <div key="2">
             <div className="box box-default">
               <div className="box-body">
-                <Form>
-                  <Row gutter={24}>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
-                          format={dateFormat}
-                        />
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="cash">Cash</Option>
-                          <Option value="debit">Debit</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <FormItem {...formItemLayout} label="Status">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="initiated">Initiated</Option>
-                          <Option value="downloaded">Downloaded</Option>
-                          <Option value="activated">Activated</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                  </Row>
+                <Form layout="inline">
+                  <FormItem {...formItemLayout} label="Date Range">
+                    <DatePicker.RangePicker onChange={this.searchDateHandler} format={dateFormat} />
+                  </FormItem>
+
+                  <FormItem {...formItemLayout} label="Card Type">
+                    <Select
+                      style={{ width: 120 }}
+                      onChange={this.searchTypeHandler}
+                      value={this.state.searchType}
+                    >
+                      <Option value="all">All</Option>
+                      <Option value="cash">Cash</Option>
+                      <Option value="debit">Debit</Option>
+                    </Select>
+                  </FormItem>
+
+                  <FormItem {...formItemLayout} label="Status">
+                    <Select
+                      style={{ width: 120 }}
+                      onChange={this.searchStatusHandler}
+                      value={this.state.searchStatus}
+                    >
+                      <Option value="all">All</Option>
+                      <Option value="initiated">Initiated</Option>
+                      <Option value="downloaded">Downloaded</Option>
+                      <Option value="activated">Activated</Option>
+                    </Select>
+                  </FormItem>
                 </Form>
 
-                <article className="article mt-2">
-                  <Table dataSource={this.state.batchFilteredList}>
-                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
-                    <Column title="Card Count" dataIndex="count" key="count" />
-                    <Column title="Card Type" dataIndex="type" key="type" />
-                    <Column
-                      title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => <Tag color={batchStatus[status].color}>{status}</Tag>}
-                    />
-                    <Column
-                      title="Action"
-                      key="action"
-                      render={(text, record) => (
-                        <span>
-                          {record.status && record.status !== 'ACTIVATED' && (
-                            <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
-                          )}
-                          {record.status && record.status === 'INITIATED' && (
-                            <>
-                              <Divider type="vertical" />
-                              <Icon
-                                onClick={() => this.downloadCsv(record.id, record.createDate)}
-                                type="download"
-                              />
-                            </>
-                          )}
-                        </span>
-                      )}
-                    />
-                  </Table>
-                </article>
+                <Table dataSource={this.state.batchFilteredList}>
+                  <Column title="Created Date" dataIndex="createDate" key="createDate" />
+                  <Column title="Card Count" dataIndex="count" key="count" />
+                  <Column title="Card Type" dataIndex="type" key="type" />
+                  <Column
+                    title="Status"
+                    dataIndex="status"
+                    key="status"
+                    render={status => <Tag color={batchStatus[status].color}>{status}</Tag>}
+                  />
+                  <Column
+                    title="Action"
+                    key="action"
+                    render={(text, record) => (
+                      <span>
+                        {record.status && record.status !== 'ACTIVATED' && (
+                          <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
+                        )}
+                        {record.status && record.status === 'INITIATED' && (
+                          <>
+                            <Divider type="vertical" />
+                            <Icon
+                              onClick={() => this.downloadCsv(record.id, record.createDate)}
+                              type="download"
+                            />
+                          </>
+                        )}
+                      </span>
+                    )}
+                  />
+                </Table>
               </div>
             </div>
           </div>
