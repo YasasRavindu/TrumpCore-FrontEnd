@@ -5,7 +5,7 @@ const APPCONFIG = {
   brand: 'TrumpCore',
   year: year,
   AutoCloseMobileNav: true, // Boolean: true, false. Automatically close sidenav on route change (Mobile only)
-  customizer: true, // Boolean: true, false. Customizer will be removed completely when set to false
+  customizer: false, // Boolean: true, false. Customizer will be removed completely when set to false
   showCustomizer: false, // Boolean: true, false. Customizer will be opened (visible) first time app was loaded if set to true
   color: {
     primary: '#1890ff',

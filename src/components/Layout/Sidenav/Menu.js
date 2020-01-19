@@ -7,6 +7,7 @@ import DEMO from 'constants/demoData';
 import { toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import {
   USER_MANAGEMENT,
+  POS_DEVICES,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -151,17 +152,28 @@ class AppMenu extends React.Component {
         <Menu.Item key="/app/cardGenerate">
           <a href="#/app/cardGenerate">
             <Icon type="credit-card" />
-            <span className="nav-text">Card Generate</span>
+            <span className="nav-text">Card Generation</span>
           </a>
         </Menu.Item>
-        <Menu.Item key="/app/devices">
+        {/* <Menu.Item key="/app/devices">
           <a href="#/app/devices">
             <Icon type="mobile" />
             <span className="nav-text">POS Devices</span>
           </a>
-        </Menu.Item>
+        </Menu.Item> */}
         <SubMenu
-           key="/app/userManagement"
+          key="/app/devices"
+          title={
+            <span>
+              <Icon type="mobile" />
+              <span className="nav-text">POS Devices</span>
+            </span>
+          }
+        >
+          {this.getNavMenuItems(POS_DEVICES)}
+        </SubMenu>
+        <SubMenu
+          key="/app/userManagement"
           title={
             <span>
               <Icon type="user" />
@@ -171,7 +183,7 @@ class AppMenu extends React.Component {
         >
           {this.getNavMenuItems(USER_MANAGEMENT)}
         </SubMenu>
-        
+
         {/* <Menu.Divider /> */}
         {/* ========= */}
         {/* <Menu.Item key="/app/dashboard">
@@ -380,7 +392,4 @@ const mapDispatchToProps = dispatch => ({
   },
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AppMenu);
+export default connect(mapStateToProps, mapDispatchToProps)(AppMenu);

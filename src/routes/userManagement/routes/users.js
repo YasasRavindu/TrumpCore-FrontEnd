@@ -20,20 +20,15 @@ import {
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
+import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const userStatus = {
-  ACTIVE: { color: '' , label: "ACTIVE"},
-  INACTIVE: { color: 'blue' , label: "INACTIVE"},
-  DELETED: { color: 'magenta' , label: "DELETED"},
-  PENDING_ACTIVATION: { color: 'magenta' , label: "PENDING"},
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta' , label: "LOCKED"},
+  ACTIVE: { color: '', label: 'ACTIVE' },
+  INACTIVE: { color: 'blue', label: 'INACTIVE' },
+  DELETED: { color: 'magenta', label: 'DELETED' },
+  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
+  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
 };
-
-// ACTIVE("Active", "A"),
-// INACTIVE("Inactive", "I"),
-// DELETED("Deleted", "D"),
-// PENDING_ACTIVATION("Pending Activation", "PEA"),
-// TEMP_LOCKED_BAD_CREDENTIALS("Temp Locked Bad Credentials", "TELBC");
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -95,12 +90,30 @@ class Data extends React.Component {
             },
           })
           .then(response => {
-            message.success('User Account Successfully');
+            message.success('User Account Successfully Created');
             console.log('------------------- response - ', response);
             this.loadTable();
             this.props.form.resetFields();
           })
           .catch(error => {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+              }
+            } else {
+              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+            }
+            message.error(msg);
             console.log('------------------- error - ', error);
           });
       }
@@ -126,7 +139,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input your account name',
+                              message: 'Please enter your account name',
                             },
                           ],
                         })(<Input placeholder="Account Name" />)}
@@ -138,11 +151,11 @@ class Data extends React.Component {
                           rules: [
                             {
                               type: 'email',
-                              message: 'The input is not valid E-mail!',
+                              message: 'The email you entered is not in the right format.',
                             },
                             {
                               required: true,
-                              message: 'Please input your E-mail!',
+                              message: 'Please add your email.',
                             },
                             ,
                           ],
@@ -155,7 +168,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input your password',
+                              message: 'Please enter a password.',
                             },
                           ],
                         })(<Password placeholder="Password" />)}
@@ -167,7 +180,7 @@ class Data extends React.Component {
                           rules: [
                             {
                               required: true,
-                              message: 'Please input your role',
+                              message: 'Please select a user role.',
                             },
                           ],
                         })(
@@ -175,9 +188,11 @@ class Data extends React.Component {
                             {userRole &&
                               userRole.map(role => {
                                 if (role.name !== 'Super Admin') {
-                                 return <Option key={role.id} value={role.id}>
-                                    {role.name}
-                                  </Option>;
+                                  return (
+                                    <Option key={role.id} value={role.id}>
+                                      {role.name}
+                                    </Option>
+                                  );
                                 }
                               })}
                           </Select>
@@ -247,7 +262,9 @@ class Data extends React.Component {
                       title="Status"
                       dataIndex="status"
                       key="status"
-                      render={status => <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>}
+                      render={status => (
+                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                      )}
                     />
                     <Column
                       title="Role"
