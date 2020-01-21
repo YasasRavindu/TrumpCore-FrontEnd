@@ -27,8 +27,8 @@ import CUSTOM_MESSAGE from 'constants/notification/message';
 import moment from 'moment';
 
 const deviceStatus = {
-  ACTIVATED: { color: 'blue', label: 'ACTIVATED', value: '1' },
-  INACTIVATED: { color: '', label: 'INACTIVATED', value: '2' },
+  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
+  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
   LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
 };
 const dateFormat = 'YYYY-MM-DD';

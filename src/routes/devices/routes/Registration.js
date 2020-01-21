@@ -8,8 +8,8 @@ import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const Search = Input.Search;
 const userStatus = {
-  REGISTERED: { color: '', label: 'REGISTERED' },
-  REMOVED: { color: 'magenta', label: 'DELETED' },
+  REGISTER: { color: '', label: 'REGISTER' },
+  REMOVE: { color: 'magenta', label: 'DELETED' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
