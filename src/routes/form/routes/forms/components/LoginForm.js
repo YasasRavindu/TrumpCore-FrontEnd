@@ -67,7 +67,7 @@ class NormalLoginForm extends React.Component {
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             this.openNotificationWithIcon('success', 'Welcome To TrumpCore!');
-            this.props.history.push('/app/cardGenerate');
+            this.props.history.push('/app/cardManagement/generate');
           })
           .catch(error => {
             console.log('------------------- error - ', error);

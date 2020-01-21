@@ -35,6 +35,22 @@ export const POS_DEVICES = [
     path: '/app/devices/remove',
   },
 ];
+// TrumpCore cards
+export const CARD = [
+  {
+    name: 'Card - Generate',
+    menuName: 'Generate',
+    desc: 'Card - Generate - Description',
+    path: '/app/cardManagement/generate',
+  },
+  {
+    name: 'Card - Assign',
+    menuName: 'Assign',
+    desc: 'Card - Assign - Description',
+    path: '/app/cardManagement/assign',
+  },
+];
+//
 
 export const CARDS = [
   {

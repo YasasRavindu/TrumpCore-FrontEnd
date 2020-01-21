@@ -367,6 +367,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const cardGenerate = () => <WrappedData />;
+const Generate = () => <WrappedData />;
 
-export default cardGenerate;
+export default Generate;

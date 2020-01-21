@@ -29,6 +29,11 @@ const CUSTOM_MESSAGE = {
     notExists: 'This Assignment not exists!',
     defaultError: 'Something went wrong please try again!',
   },
+  CARD_ASSIGN_ERROR: {
+    accountAlreadyAssigned: 'This account already assigned!',
+    cardAlreadyAssigned: 'This card already assigned!',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export default CUSTOM_MESSAGE;

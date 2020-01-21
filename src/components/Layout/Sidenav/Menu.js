@@ -8,6 +8,8 @@ import { toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import {
   USER_MANAGEMENT,
   POS_DEVICES,
+  CARD,
+  ACCOUNT,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -30,8 +32,9 @@ class AppMenu extends React.Component {
     '/app/dashboard',
     '/app/ui-overview',
     '/app/calendar',
+    '/app/cards',
     '/app/devices',
-    '/app/cardGenerate',
+    // '/app/cardGenerate',
     '/app/userManagement',
   ];
   rootSubmenuKeys = [
@@ -149,18 +152,17 @@ class AppMenu extends React.Component {
         selectedKeys={[currentPathname]}
       >
         {/* ==== New section ===*/}
-        <Menu.Item key="/app/cardGenerate">
-          <a href="#/app/cardGenerate">
-            <Icon type="credit-card" />
-            <span className="nav-text">Card Generation</span>
-          </a>
-        </Menu.Item>
-        {/* <Menu.Item key="/app/devices">
-          <a href="#/app/devices">
-            <Icon type="mobile" />
-            <span className="nav-text">POS Devices</span>
-          </a>
-        </Menu.Item> */}
+        <SubMenu
+          key="/app/cardManagement"
+          title={
+            <span>
+              <Icon type="credit-card" />
+              <span className="nav-text">Cards</span>
+            </span>
+          }
+        >
+          {this.getNavMenuItems(CARD)}
+        </SubMenu>
         <SubMenu
           key="/app/devices"
           title={

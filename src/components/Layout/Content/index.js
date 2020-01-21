@@ -62,8 +62,8 @@ let AsyncDevices = loadable({
   loader: () => import('routes/devices/'),
   loading: LoadingComponent,
 });
-let AsyncCardGenerate = loadable({
-  loader: () => import('routes/cardGenerate/'),
+let AsyncCardManagement = loadable({
+  loader: () => import('routes/cardManagement/'),
   loading: LoadingComponent,
 });
 let AsyncUserManagement = loadable({
@@ -91,7 +91,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/ui-overview`} component={AsyncUIOverview} />
         <Route path={`${match.url}/exception`} component={AsyncException} />
         <Route path={`${match.url}/devices`} component={AsyncDevices} />
-        <Route path={`${match.url}/cardGenerate`} component={AsyncCardGenerate} />
+        <Route path={`${match.url}/cardManagement`} component={AsyncCardManagement} />
         <Route path={`${match.url}/userManagement`} component={AsyncUserManagement} />
       </Content>
     );
