@@ -25,9 +25,9 @@ import moment from 'moment';
 const confirm = Modal.confirm;
 
 const batchStatus = {
-  INITIATED: { color: '' },
-  DOWNLOADED: { color: 'blue' },
-  ACTIVATED: { color: 'magenta' },
+  INITIATE: { color: '' },
+  DOWNLOAD: { color: 'blue' },
+  ACTIVATE: { color: 'magenta' },
 };
 
 const dateFormat = 'YYYY-MM-DD';
