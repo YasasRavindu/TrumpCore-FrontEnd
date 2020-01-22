@@ -344,8 +344,8 @@ class Data extends React.Component {
                           value={this.state.searchStatus}
                         >
                           <Option value="all">All</Option>
-                          <Option value="activated">Activated</Option>
-                          <Option value="inactivated">Inactivated</Option>
+                          <Option value="active">Active</Option>
+                          <Option value="inactive">Inactive</Option>
                           <Option value="locked">Locked</Option>
                         </Select>
                       </FormItem>
@@ -375,13 +375,13 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status === 'ACTIVATED' && (
+                          {record.status && record.status === 'ACTIVE' && (
                             <>
                               <Tooltip title="Inactive">
                                 <Icon
                                   onClick={
-                                    () => this.handleStatus(record.id, 'INACTIVATED')
-                                    // this.handleStatus(record.id, deviceStatus['INACTIVATED'].value)
+                                    () => this.handleStatus(record.id, 'INACTIVE')
+                                    // this.handleStatus(record.id, deviceStatus['INACTIVE'].value)
                                   }
                                   type="close-circle-o"
                                 />
@@ -395,11 +395,11 @@ class Data extends React.Component {
                               </Tooltip>
                             </>
                           )}
-                          {record.status && record.status === 'INACTIVATED' && (
+                          {record.status && record.status === 'INACTIVE' && (
                             <>
                               <Tooltip title="Active">
                                 <Icon
-                                  onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                  onClick={() => this.handleStatus(record.id, 'ACTIVE')}
                                   type="check-circle-o"
                                 />
                               </Tooltip>
@@ -416,14 +416,14 @@ class Data extends React.Component {
                             <>
                               <Tooltip title="Inactive">
                                 <Icon
-                                  onClick={() => this.handleStatus(record.id, 'INACTIVATED')}
+                                  onClick={() => this.handleStatus(record.id, 'INACTIVE')}
                                   type="close-circle-o"
                                 />
                               </Tooltip>
                               <Divider type="vertical" />
                               <Tooltip title="Unlock">
                                 <Icon
-                                  onClick={() => this.handleStatus(record.id, 'ACTIVATED')}
+                                  onClick={() => this.handleStatus(record.id, 'ACTIVE')}
                                   type="unlock"
                                 />
                               </Tooltip>
