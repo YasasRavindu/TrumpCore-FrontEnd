@@ -25,9 +25,9 @@ import moment from 'moment';
 const confirm = Modal.confirm;
 
 const batchStatus = {
-  INITIATED: { color: '' },
-  DOWNLOADED: { color: 'blue' },
-  ACTIVATED: { color: 'magenta' },
+  INITIATE: { color: '' },
+  DOWNLOAD: { color: 'blue' },
+  ACTIVATE: { color: 'magenta' },
 };
 
 const dateFormat = 'YYYY-MM-DD';
@@ -311,9 +311,9 @@ class Data extends React.Component {
                       value={this.state.searchStatus}
                     >
                       <Option value="all">All</Option>
-                      <Option value="initiated">Initiated</Option>
-                      <Option value="downloaded">Downloaded</Option>
-                      <Option value="activated">Activated</Option>
+                      <Option value="initiate">Initiate</Option>
+                      <Option value="download">Download</Option>
+                      <Option value="active">Active</Option>
                     </Select>
                   </FormItem>
                 </Form>
@@ -334,7 +334,7 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status !== 'ACTIVATED' && (
+                          {record.status && record.status !== 'ACTIVE' && (
                             <Tooltip title="Download">
                               <Icon
                                 onClick={() => this.downloadCsv(record.id, record.createDate)}
@@ -342,7 +342,7 @@ class Data extends React.Component {
                               />
                             </Tooltip>
                           )}
-                          {record.status && record.status === 'INITIATED' && (
+                          {record.status && record.status === 'INITIATE' && (
                             <>
                               {/* <Icon onClick={() => this.batchDelete(record.id)} type="delete" /> */}
                               <Divider type="vertical" />
@@ -367,6 +367,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const cardGenerate = () => <WrappedData />;
+const Generate = () => <WrappedData />;
 
-export default cardGenerate;
+export default Generate;

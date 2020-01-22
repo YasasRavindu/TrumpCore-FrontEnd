@@ -29,9 +29,21 @@ class App extends React.Component {
   render() {
     const { match, location } = this.props;
     const isRoot = location.pathname === '/' ? true : false;
+    // const isLogin = location.pathname === '/user/login' ? true : false;
+    const isApp = location.pathname.match(/\/app\//g);
+    const isUser = location.pathname.match(/\/user\//g);
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
     if (isRoot) {
       //return <Redirect to={'/app/dashboard'} />;
       return <Redirect to={'/user/login'} />;
+    }
+
+    if (isApp && !currentUser) {
+      return <Redirect to={'/user/login'} />;
+    } else if (isUser && currentUser) {
+      return <Redirect to={'/app/cardGenerate'} />;
     }
 
     return (

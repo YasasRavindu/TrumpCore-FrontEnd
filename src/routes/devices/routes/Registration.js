@@ -7,9 +7,9 @@ import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const Search = Input.Search;
-const userStatus = {
-  REGISTERED: { color: '', label: 'REGISTERED' },
-  REMOVED: { color: 'magenta', label: 'DELETED' },
+const deviceStatus = {
+  REGISTER: { color: '', label: 'REGISTER' },
+  REMOVE: { color: 'magenta', label: 'DELETED' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -218,7 +218,7 @@ class Data extends React.Component {
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
                       )}
                     />
                   </Table>

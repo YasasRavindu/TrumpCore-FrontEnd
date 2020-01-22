@@ -4,52 +4,56 @@ import classnames from 'classnames';
 import DEMO from 'constants/demoData';
 import { Layout, Menu, Dropdown, Icon, Avatar, Badge, Tooltip, Popover, Divider } from 'antd';
 import Logo from 'components/Logo';
+import { push } from 'react-router-redux';
 import { toggleCollapsedNav, toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import Notifications from 'routes/layout/routes/header/components/Notifications';
+import { Route, Redirect } from 'react-router-dom';
 const { Header } = Layout;
-
-const avatarDropdown = (
-  <Menu className="app-header-dropdown">
-    {/* <Menu.Item key="4" className="d-block d-md-none">
-      {' '}
-      Signed in as <strong>{DEMO.user}</strong>{' '}
-    </Menu.Item>
-    <Menu.Divider className="d-block d-md-none" /> */}
-    {/* <Menu.Item key="1" disabled>
-      {' '}
-      <Icon type="setting" />
-      Settings{' '}
-    </Menu.Item>
-    <Menu.Item key="0">
-      {' '}
-      <a href={DEMO.headerLink.about}>
-        <Icon type="info-circle-o" />
-        About
-      </a>{' '}
-    </Menu.Item>
-    <Menu.Item key="2">
-      {' '}
-      <a href={DEMO.headerLink.help}>
-        <Icon type="question-circle-o" />
-        Need Help?
-      </a>{' '}
-    </Menu.Item>
-    <Menu.Divider /> */}
-    <Menu.Item key="3">
-      {' '}
-      <a href={DEMO.headerLink.signOut}>
-        <Icon type="logout" />
-        Sign out
-      </a>{' '}
-    </Menu.Item>
-  </Menu>
-);
 
 class AppHeader extends React.Component {
   constructor(props) {
     super(props);
     this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
   }
+
+  avatarDropdown1 = () => {
+    return (
+      <Menu className="app-header-dropdown">
+        {/* <Menu.Item key="4" className="d-block d-md-none">
+        {' '}
+        Signed in as <strong>{DEMO.user}</strong>{' '}
+      </Menu.Item>
+      <Menu.Divider className="d-block d-md-none" /> */}
+        {/* <Menu.Item key="1" disabled>
+        {' '}
+        <Icon type="setting" />
+        Settings{' '}
+      </Menu.Item>
+      <Menu.Item key="0">
+        {' '}
+        <a href={DEMO.headerLink.about}>
+          <Icon type="info-circle-o" />
+          About
+        </a>{' '}
+      </Menu.Item>
+      <Menu.Item key="2">
+        {' '}
+        <a href={DEMO.headerLink.help}>
+          <Icon type="question-circle-o" />
+          Need Help?
+        </a>{' '}
+      </Menu.Item>
+      <Menu.Divider /> */}
+        <Menu.Item key="3">
+          <span onClick={this.logOut}>
+            <Icon type="logout" />
+            Sign out
+          </span>
+        </Menu.Item>
+      </Menu>
+    );
+  };
+
   onToggleCollapsedNav = () => {
     const { handleToggleCollapsedNav, collapsedNav } = this.props;
     handleToggleCollapsedNav(!collapsedNav);
@@ -58,6 +62,11 @@ class AppHeader extends React.Component {
   onToggleOffCanvasMobileNav = () => {
     const { handleToggleOffCanvasMobileNav, offCanvasMobileNav } = this.props;
     handleToggleOffCanvasMobileNav(!offCanvasMobileNav);
+  };
+
+  logOut = () => {
+    localStorage.removeItem('currentUser');
+    window.location = DEMO.headerLink.signOut;
   };
 
   render() {
@@ -129,7 +138,7 @@ class AppHeader extends React.Component {
               </Popover> */}
               <Dropdown
                 className="list-inline-item"
-                overlay={avatarDropdown}
+                overlay={this.avatarDropdown1}
                 trigger={['click']}
                 placement="bottomRight"
               >

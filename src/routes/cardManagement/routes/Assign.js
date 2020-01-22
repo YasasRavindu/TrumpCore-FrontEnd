@@ -45,12 +45,16 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      searchText: '',
-      searchStatus: 'ALL',
-      registeredDeviceList: [],
-      assignedDeviceList: [],
-      filteredAssignedDeviceList: [],
+      cardList: [],
+      assignList: [],
+      filteredAssignedList: [],
       accountList: [],
+      searchDate: ['', ''],
+      searchText: '',
+      visible: false,
+      checkedID: '',
+      checkedcardId: '',
+      checkedaccountId: '',
     };
   }
 
@@ -60,31 +64,31 @@ class Data extends React.Component {
 
   loadData = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'card/search/debit/inactive')
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
-        const deviceList = response.data.content.map(device => {
+        const cardList = response.data.content.map(device => {
           device.key = device.id;
           return device;
         });
         this.setState({
-          registeredDeviceList: deviceList,
+          cardList: cardList,
         });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
     axios
-      .get(environment.baseUrl + 'device/search/assign')
+      .get(environment.baseUrl + 'cardRegistry')
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
-        const deviceList = response.data.content.map(device => {
+        const assignList = response.data.content.map(device => {
           device.key = device.id;
           return device;
         });
         this.setState({
-          assignedDeviceList: deviceList,
-          filteredAssignedDeviceList: deviceList,
+          assignList: assignList,
+          filteredAssignedList: assignList,
         });
       })
       .catch(error => {
@@ -107,20 +111,26 @@ class Data extends React.Component {
       });
   };
 
-  handleStatus = (id, value) => {
-    axios
-      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + deviceStatus[value].value)
-      .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        this.loadData();
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
+  handleUpdate = (id, cardId, accountId) => {
+    if (id) {
+      this.setState(
+        {
+          checkedID: id,
+          checkedcardId: cardId,
+          checkedaccountId: accountId,
+        },
+        () => {
+          this.setState({
+            visible: true,
+          });
+          console.log(this.state);
+        }
+      );
+    }
   };
 
-  searchStatusHandler = v => {
-    this.dataFilter('searchStatus', v);
+  searchDateHandler = (date, dateString) => {
+    this.dataFilter('searchDate', dateString);
   };
 
   searchTextHandler = e => {
@@ -133,46 +143,109 @@ class Data extends React.Component {
         [key]: value,
       },
       () => {
-        let data = this.state.assignedDeviceList;
-        let searchStatus = this.state.searchStatus.toUpperCase();
+        let data = this.state.assignList;
+        let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
 
         if (searchText) {
           data = data.filter(d => {
             return (
-              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
               (d.account &&
                 (d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())))
+                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()))) ||
+              (d.card && d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()))
             );
           });
         }
 
-        if (searchStatus !== 'ALL') {
-          data = data.filter(d => d.status === searchStatus);
+        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+          var startDate = moment(searchDate[0]);
+          var endDate = moment(searchDate[1]);
+          data = data.filter(d => {
+            var date = moment(d.assignedDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
         }
 
         this.setState({
-          filteredAssignedDeviceList: data,
+          filteredAssignedList: data,
         });
       }
     );
   };
 
-  submit = e => {
+  assignmentSubmit = e => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+    const { checkedID, checkedaccountId } = this.state;
+    this.props.form.validateFields(['updatecardNumber'], (err, values) => {
       if (!err) {
-        console.log(values);
         axios
-          .put(environment.baseUrl + 'device/assign', {
-            serial: values.serialNumber,
+          .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
             account: {
-              id: values.accountNumber,
+              id: checkedaccountId,
+            },
+            card: {
+              id: values.updatecardNumber,
             },
           })
           .then(response => {
-            message.success('Device Successfully Assign to Account');
+            message.success('Card Successfully Assign to Account');
+            console.log('------------------- response - ', response);
+            this.loadData();
+            this.props.form.resetFields();
+            this.setState({
+              visible: false,
+              checkedID: '',
+              checkedcardId: '',
+              checkedaccountId: '',
+            });
+          })
+          .catch(error => {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+              }
+            } else {
+              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+            }
+            message.error(msg);
+            console.log('------------------- error - ', error);
+          });
+      }
+    });
+  };
+  handleCancel = e => {
+    this.setState({
+      visible: false,
+    });
+  };
+
+  submit = e => {
+    e.preventDefault();
+    this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
+      if (!err) {
+        console.log(values);
+        axios
+          .post(environment.baseUrl + 'cardRegistry', {
+            account: {
+              id: values.accountNumber,
+            },
+            card: {
+              id: values.cardNumber,
+            },
+          })
+          .then(response => {
+            message.success('Card Successfully Assign to Account');
             console.log('------------------- response - ', response);
             this.loadData();
             this.props.form.resetFields();
@@ -188,12 +261,12 @@ class Data extends React.Component {
               error.response.data.validationFailures[0].code
             ) {
               let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR[errorCode];
+              msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
               if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
+                msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
               }
             } else {
-              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
+              msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
             }
             message.error(msg);
             console.log('------------------- error - ', error);
@@ -204,11 +277,11 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { accountList, registeredDeviceList, filteredAssignedDeviceList } = this.state;
+    const { accountList, cardList, filteredAssignedList } = this.state;
 
-    const optionsDevices = registeredDeviceList.map(device => (
-      <Option key={device.id} value={device.serial}>
-        {device.serial}
+    const optionsCards = cardList.map(card => (
+      <Option key={card.id} value={card.id}>
+        {card.cardNo}
       </Option>
     ));
 
@@ -223,39 +296,39 @@ class Data extends React.Component {
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default mb-4">
-              <div className="box-header">Assign Devices</div>
+              <div className="box-header">Assign card to account</div>
               <div className="box-body">
                 <Form layout="inline">
                   <FormItem>
-                    {getFieldDecorator('serialNumber', {
+                    {getFieldDecorator('cardNumber', {
                       rules: [
                         {
                           required: true,
-                          message: 'Please enter your Serial number',
+                          message: 'Please enter your card number',
                         },
                       ],
                     })(
                       // (<Input placeholder="Serial Number" />)
                       <AutoComplete
-                        dataSource={optionsDevices}
+                        dataSource={optionsCards}
                         style={{ width: 200 }}
                         onBlur={inputValue => {
                           let keyCard = false;
-                          registeredDeviceList.map(device => {
+                          cardList.map(card => {
                             if (
                               inputValue !== undefined &&
-                              device.serial.toUpperCase() === inputValue.toUpperCase()
+                              card.id.toUpperCase() === inputValue.toUpperCase()
                             ) {
                               keyCard = true;
                             }
                           });
                           if (!keyCard) {
                             this.props.form.setFieldsValue({
-                              serialNumber: '',
+                              cardNo: '',
                             });
                           }
                         }}
-                        placeholder="Serial Number"
+                        placeholder="Card Number"
                         filterOption={(inputValue, option) =>
                           option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
                           -1
@@ -323,11 +396,11 @@ class Data extends React.Component {
           </div>
           <div key="2">
             <div className="box box-default">
-              <div className="box-header">Device Management</div>
+              <div className="box-header">Card Management</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={24}>
-                    <Col span={8} order={1}>
+                    <Col span={8} order={3}>
                       <FormItem>
                         <Input.Search
                           placeholder="input search text"
@@ -336,104 +409,94 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Device Status">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="active">Active</Option>
-                          <Option value="inactive">Inactive</Option>
-                          <Option value="locked">Locked</Option>
-                        </Select>
+                    <Col span={8} order={3}>
+                      <FormItem {...formItemLayout} label="Date Range">
+                        <DatePicker.RangePicker
+                          onChange={this.searchDateHandler}
+                          format={dateFormat}
+                        />
                       </FormItem>
                     </Col>
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={filteredAssignedDeviceList}>
-                    <Column title="Serial Number" dataIndex="serial" key="serial" />
-                    <Column title="Account Holder" dataIndex="account.holder" key="accountHolder" />
+                  <Table dataSource={filteredAssignedList}>
                     <Column
                       title="Account Number"
                       dataIndex="account.accountNumber"
-                      key="accountNo"
+                      key="accountNumber"
                     />
-                    <Column
-                      title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => (
-                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
-                      )}
-                    />
+                    <Column title="Account Holder" dataIndex="account.holder" key="accountHolder" />
+                    <Column title="Card Number" dataIndex="card.cardNo" key="cardNo" />
+                    <Column title="Assigned Date" dataIndex="assignedDate" key="assignedDate" />
                     <Column
                       title="Action"
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status === 'ACTIVE' && (
-                            <>
-                              <Tooltip title="Inactive">
-                                <Icon
-                                  onClick={
-                                    () => this.handleStatus(record.id, 'INACTIVE')
-                                    // this.handleStatus(record.id, deviceStatus['INACTIVE'].value)
-                                  }
-                                  type="close-circle-o"
-                                />
-                              </Tooltip>
-                              <Divider type="vertical" />
-                              <Tooltip title="lock">
-                                <Icon
-                                  onClick={() => this.handleStatus(record.id, 'LOCKED')}
-                                  type="lock"
-                                />
-                              </Tooltip>
-                            </>
-                          )}
-                          {record.status && record.status === 'INACTIVE' && (
-                            <>
-                              <Tooltip title="Active">
-                                <Icon
-                                  onClick={() => this.handleStatus(record.id, 'ACTIVE')}
-                                  type="check-circle-o"
-                                />
-                              </Tooltip>
-                              <Divider type="vertical" />
-                              <Tooltip title="Lock">
-                                <Icon
-                                  onClick={() => this.handleStatus(record.id, 'LOCKED')}
-                                  type="lock"
-                                />
-                              </Tooltip>
-                            </>
-                          )}
-                          {record.status && record.status === 'LOCKED' && (
-                            <>
-                              <Tooltip title="Inactive">
-                                <Icon
-                                  onClick={() => this.handleStatus(record.id, 'INACTIVE')}
-                                  type="close-circle-o"
-                                />
-                              </Tooltip>
-                              <Divider type="vertical" />
-                              <Tooltip title="Unlock">
-                                <Icon
-                                  onClick={() => this.handleStatus(record.id, 'ACTIVE')}
-                                  type="unlock"
-                                />
-                              </Tooltip>
-                            </>
-                          )}
+                          <Tooltip title="Update">
+                            <Icon
+                              onClick={() =>
+                                this.handleUpdate(record.id, record.card.id, record.account.id)
+                              }
+                              type="edit"
+                            />
+                          </Tooltip>
                         </span>
                       )}
                     />
                   </Table>
                 </article>
+                <Modal
+                  title="Update card registry"
+                  visible={this.state.visible}
+                  onOk={this.assignmentSubmit}
+                  onCancel={this.handleCancel}
+                  okText="Assign"
+                  centered
+                >
+                  <Form>
+                    <FormItem>
+                      {getFieldDecorator('updatecardNumber', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please enter your card number',
+                          },
+                        ],
+                      })(
+                        // (<Input placeholder="Serial Number" />)
+                        <AutoComplete
+                          dataSource={optionsCards}
+                          style={{ width: 200 }}
+                          onBlur={inputValue => {
+                            let keyCard = false;
+                            cardList.map(card => {
+                              if (
+                                inputValue !== undefined &&
+                                card.id.toUpperCase() === inputValue.toUpperCase()
+                              ) {
+                                keyCard = true;
+                              }
+                            });
+                            if (!keyCard) {
+                              this.props.form.setFieldsValue({
+                                cardNo: '',
+                              });
+                            }
+                          }}
+                          placeholder="Card Number"
+                          filterOption={(inputValue, option) =>
+                            option.props.children
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    </FormItem>
+                  </Form>
+                </Modal>
               </div>
             </div>
           </div>
@@ -443,5 +506,5 @@ class Data extends React.Component {
   }
 }
 const WrappedData = Form.create()(Data);
-const management = () => <WrappedData />;
-export default management;
+const Assign = () => <WrappedData />;
+export default Assign;
