@@ -51,6 +51,10 @@ class Data extends React.Component {
       accountList: [],
       searchDate: ['', ''],
       searchText: '',
+      visible: false,
+      checkedID: '',
+      checkedcardId: '',
+      checkedaccountId: '',
     };
   }
 
@@ -107,16 +111,22 @@ class Data extends React.Component {
       });
   };
 
-  handleStatus = (id, value) => {
-    axios
-      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + deviceStatus[value].value)
-      .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        this.loadData();
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
+  handleUpdate = (id, cardId, accountId) => {
+    if (id) {
+      this.setState(
+        {
+          checkedID: id,
+          checkedcardId: cardId,
+          checkedaccountId: accountId,
+        },
+        () => {
+          this.setState({
+            visible: true,
+          });
+          console.log(this.state);
+        }
+      );
+    }
   };
 
   searchDateHandler = (date, dateString) => {
@@ -164,9 +174,65 @@ class Data extends React.Component {
     );
   };
 
+  assignmentSubmit = e => {
+    e.preventDefault();
+    const { checkedID, checkedaccountId } = this.state;
+    this.props.form.validateFields(['updatecardNumber'], (err, values) => {
+      if (!err) {
+        axios
+          .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
+            account: {
+              id: checkedaccountId,
+            },
+            card: {
+              id: values.updatecardNumber,
+            },
+          })
+          .then(response => {
+            message.success('Card Successfully Assign to Account');
+            console.log('------------------- response - ', response);
+            this.loadData();
+            this.props.form.resetFields();
+            this.setState({
+              visible: false,
+              checkedID: '',
+              checkedcardId: '',
+              checkedaccountId: '',
+            });
+          })
+          .catch(error => {
+            let msg = null;
+            if (
+              error &&
+              error.response &&
+              error.response.data &&
+              error.response.data.validationFailures &&
+              error.response.data.validationFailures[0] &&
+              error.response.data.validationFailures[0].code
+            ) {
+              let errorCode = error.response.data.validationFailures[0].code;
+              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR[errorCode];
+              if (msg === undefined) {
+                msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+              }
+            } else {
+              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+            }
+            message.error(msg);
+            console.log('------------------- error - ', error);
+          });
+      }
+    });
+  };
+  handleCancel = e => {
+    this.setState({
+      visible: false,
+    });
+  };
+
   submit = e => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
       if (!err) {
         console.log(values);
         axios
@@ -356,20 +422,81 @@ class Data extends React.Component {
 
                 <article className="article mt-2">
                   <Table dataSource={filteredAssignedList}>
-                    {/* <Column title="Account Number" dataIndex="serial" key="serial" /> */}
+                    <Column
+                      title="Account Number"
+                      dataIndex="account.accountNumber"
+                      key="accountNumber"
+                    />
                     <Column title="Account Holder" dataIndex="account.holder" key="accountHolder" />
                     <Column title="Card Number" dataIndex="card.cardNo" key="cardNo" />
+                    <Column title="Assigned Date" dataIndex="assignedDate" key="assignedDate" />
                     <Column
-                      title="Assigned Date"
-                      dataIndex="assignedDate"
-                      key="assignedDate"
-                      //   render={status => (
-                      //     <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
-                      //   )}
+                      title="Action"
+                      key="action"
+                      render={(text, record) => (
+                        <span>
+                          <Tooltip title="Update">
+                            <Icon
+                              onClick={() =>
+                                this.handleUpdate(record.id, record.card.id, record.account.id)
+                              }
+                              type="edit"
+                            />
+                          </Tooltip>
+                        </span>
+                      )}
                     />
-                    <Column title="Action" key="action" render={(text, record) => <span></span>} />
                   </Table>
                 </article>
+                <Modal
+                  title="Update card registry"
+                  visible={this.state.visible}
+                  onOk={this.assignmentSubmit}
+                  onCancel={this.handleCancel}
+                  okText="Assign"
+                  centered
+                >
+                  <Form>
+                    <FormItem>
+                      {getFieldDecorator('updatecardNumber', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please enter your card number',
+                          },
+                        ],
+                      })(
+                        // (<Input placeholder="Serial Number" />)
+                        <AutoComplete
+                          dataSource={optionsCards}
+                          style={{ width: 200 }}
+                          onBlur={inputValue => {
+                            let keyCard = false;
+                            cardList.map(card => {
+                              if (
+                                inputValue !== undefined &&
+                                card.id.toUpperCase() === inputValue.toUpperCase()
+                              ) {
+                                keyCard = true;
+                              }
+                            });
+                            if (!keyCard) {
+                              this.props.form.setFieldsValue({
+                                cardNo: '',
+                              });
+                            }
+                          }}
+                          placeholder="Card Number"
+                          filterOption={(inputValue, option) =>
+                            option.props.children
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    </FormItem>
+                  </Form>
+                </Modal>
               </div>
             </div>
           </div>
