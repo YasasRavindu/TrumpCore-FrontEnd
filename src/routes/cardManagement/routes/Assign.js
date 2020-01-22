@@ -25,6 +25,7 @@ import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 import moment from 'moment';
+import { log } from 'util';
 
 const deviceStatus = {
   ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
@@ -211,6 +212,8 @@ class Data extends React.Component {
               error.response.data.validationFailures[0].code
             ) {
               let errorCode = error.response.data.validationFailures[0].code;
+              console.log('error code', errorCode);
+
               msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR[errorCode];
               if (msg === undefined) {
                 msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
@@ -324,7 +327,7 @@ class Data extends React.Component {
                           });
                           if (!keyCard) {
                             this.props.form.setFieldsValue({
-                              cardNo: '',
+                              cardNumber: '',
                             });
                           }
                         }}
@@ -482,7 +485,7 @@ class Data extends React.Component {
                             });
                             if (!keyCard) {
                               this.props.form.setFieldsValue({
-                                cardNo: '',
+                                updatecardNumber: '',
                               });
                             }
                           }}
