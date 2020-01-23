@@ -205,7 +205,7 @@ class Data extends React.Component {
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Search Devices</div>
+              <div className="box-header">Transaction Report</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
@@ -250,18 +250,6 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  {/* <Table dataSource={this.state.loadFilterDevices}>
-                    <Column title="Serial Number" dataIndex="serial" key="serial" />
-                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
-                    <Column
-                      title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => (
-                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
-                      )}
-                    />
-                  </Table> */}
                   <Table
                     columns={columns}
                     dataSource={data}
