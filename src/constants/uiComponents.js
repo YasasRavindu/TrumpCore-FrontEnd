@@ -51,6 +51,14 @@ export const CARD = [
   },
 ];
 //
+export const REPORT = [
+  {
+    name: 'Report - Transaction',
+    menuName: 'Transaction',
+    desc: 'Report - Transaction - Description',
+    path: '/app/report/transaction',
+  },
+];
 
 export const CARDS = [
   {

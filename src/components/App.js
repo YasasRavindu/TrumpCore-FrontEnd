@@ -43,7 +43,7 @@ class App extends React.Component {
     if (isApp && !currentUser) {
       return <Redirect to={'/user/login'} />;
     } else if (isUser && currentUser) {
-      return <Redirect to={'/app/cardGenerate'} />;
+      return <Redirect to={'/app/cardManagement/generate'} />;
     }
 
     return (

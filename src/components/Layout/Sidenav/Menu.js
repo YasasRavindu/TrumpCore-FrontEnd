@@ -9,6 +9,7 @@ import {
   USER_MANAGEMENT,
   POS_DEVICES,
   CARD,
+  REPORT,
   ACCOUNT,
   CARDS,
   LAYOUTS,
@@ -34,6 +35,7 @@ class AppMenu extends React.Component {
     '/app/calendar',
     '/app/cards',
     '/app/devices',
+    '/app/report',
     // '/app/cardGenerate',
     '/app/userManagement',
   ];
@@ -184,6 +186,17 @@ class AppMenu extends React.Component {
           }
         >
           {this.getNavMenuItems(USER_MANAGEMENT)}
+        </SubMenu>
+        <SubMenu
+          key="/app/report"
+          title={
+            <span>
+              <Icon type="line-chart" />
+              <span className="nav-text">Report</span>
+            </span>
+          }
+        >
+          {this.getNavMenuItems(REPORT)}
         </SubMenu>
 
         {/* <Menu.Divider /> */}

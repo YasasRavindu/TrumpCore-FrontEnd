@@ -14,6 +14,7 @@ class NormalLoginForm extends React.Component {
     this.state = {
       username: '',
       password: '',
+      loading: false,
     };
 
     // --------------------- placement ---------------------
@@ -54,6 +55,9 @@ class NormalLoginForm extends React.Component {
 
   handleSubmit = e => {
     e.preventDefault();
+    this.setState({
+      loading: true,
+    });
     this.props.form.validateFields((err, values) => {
       if (!err) {
         axios
@@ -63,6 +67,9 @@ class NormalLoginForm extends React.Component {
           })
           .then(response => {
             console.log('------------------- response - ', response);
+            this.setState({
+              loading: false,
+            });
             let currentUser = response.data.content;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
@@ -71,6 +78,9 @@ class NormalLoginForm extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
+            this.setState({
+              loading: false,
+            });
             this.openNotificationWithIcon('error', this.showLoginReqError(error));
           });
       }
@@ -118,7 +128,12 @@ class NormalLoginForm extends React.Component {
             })(<Checkbox>Remember me</Checkbox>)}
           </FormItem> */}
           <FormItem>
-            <Button type="primary" htmlType="submit" className="btn-cta btn-block">
+            <Button
+              loading={this.state.loading}
+              type="primary"
+              htmlType="submit"
+              className="btn-cta btn-block"
+            >
               Log in
             </Button>
           </FormItem>
