@@ -27,7 +27,7 @@ const confirm = Modal.confirm;
 const batchStatus = {
   INITIATE: { color: '' },
   DOWNLOAD: { color: 'blue' },
-  ACTIVATE: { color: 'magenta' },
+  ACTIVE: { color: 'magenta' },
 };
 
 const dateFormat = 'YYYY-MM-DD';
