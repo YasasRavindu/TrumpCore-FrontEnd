@@ -18,7 +18,6 @@ import {
   Badge,
   AutoComplete,
   Tooltip,
-  Cascader
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -161,7 +160,6 @@ class Data extends React.Component {
     );
   };
 
-  
   handleUpdate = (id, cardId, accountId) => {
     if (id) {
       this.setState(
@@ -382,33 +380,32 @@ class Data extends React.Component {
                       ],
                     })(
                       // <Input placeholder="Account Number" />
-                      // <AutoComplete
-                      //   dataSource={optionsAccounts}
-                      //   style={{ width: 200 }}
-                      //   onBlur={inputValue => {
-                      //     let keyCard = false;
-                      //     accountList.map(account => {
-                      //       if (
-                      //         inputValue !== undefined &&
-                      //         (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-                      //           account.id.toUpperCase() === inputValue.toUpperCase())
-                      //       ) {
-                      //         keyCard = true;
-                      //       }
-                      //     });
-                      //     if (!keyCard) {
-                      //       this.props.form.setFieldsValue({
-                      //         accountNumber: '',
-                      //       });
-                      //     }
-                      //   }}
-                      //   placeholder="Account Number"
-                      //   filterOption={(inputValue, option) =>
-                      //     option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                      //     -1
-                      //   }
-                      // />
-                      <Cascader style={style} options={[]} showSearch />
+                      <AutoComplete
+                        dataSource={optionsAccounts}
+                        style={{ width: 200 }}
+                        onBlur={inputValue => {
+                          let keyCard = false;
+                          accountList.map(account => {
+                            if (
+                              inputValue !== undefined &&
+                              (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+                                account.id.toUpperCase() === inputValue.toUpperCase())
+                            ) {
+                              keyCard = true;
+                            }
+                          });
+                          if (!keyCard) {
+                            this.props.form.setFieldsValue({
+                              accountNumber: '',
+                            });
+                          }
+                        }}
+                        placeholder="Account Number"
+                        filterOption={(inputValue, option) =>
+                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                          -1
+                        }
+                      />
                     )}
                   </FormItem>
 
