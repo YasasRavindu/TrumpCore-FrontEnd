@@ -35,7 +35,7 @@ const cardStatus = {
   EXPIRED: { color: 'magenta', label: 'EXPIRED', value: '5' },
 };
 const dateFormat = 'YYYY-MM-DD';
-const style = { width: 200 };
+
 const formItemLayout = {
   labelCol: { span: 10 },
   wrapperCol: { span: 14 },
@@ -332,6 +332,7 @@ class Data extends React.Component {
                     })(
                       // (<Input placeholder="Serial Number" />)
                       <AutoComplete
+                        allowClear
                         dataSource={optionsCards}
                         style={{ width: 200 }}
                         onBlur={inputValue => {
@@ -456,7 +457,11 @@ class Data extends React.Component {
                       dataIndex="card.status"
                       key="cardStatus"
                       render={status => (
-                        <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>
+                        <>
+                          {status && (
+                            <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>
+                          )}
+                        </>
                       )}
                     />
                     <Column title="Assigned Date" dataIndex="assignedDate" key="assignedDate" />
