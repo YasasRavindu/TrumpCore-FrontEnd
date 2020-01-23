@@ -187,7 +187,7 @@ class AppMenu extends React.Component {
         >
           {this.getNavMenuItems(USER_MANAGEMENT)}
         </SubMenu>
-        {/* <SubMenu
+        <SubMenu
           key="/app/report"
           title={
             <span>
@@ -197,7 +197,7 @@ class AppMenu extends React.Component {
           }
         >
           {this.getNavMenuItems(REPORT)}
-        </SubMenu> */}
+        </SubMenu>
 
         {/* <Menu.Divider /> */}
         {/* ========= */}
