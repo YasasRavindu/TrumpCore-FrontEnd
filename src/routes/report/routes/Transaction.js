@@ -1,6 +1,18 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import { Table, Input, Button, Form, Tag, Row, Col, Select, DatePicker, message } from 'antd';
+import {
+  Table,
+  Input,
+  Button,
+  Form,
+  Tag,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+  message,
+  Slider,
+} from 'antd';
 import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
@@ -18,6 +30,41 @@ const formItemLayout = {
   wrapperCol: { span: 14 },
 };
 
+const marks = {
+  0: '$0',
+  50: '$50',
+  100: '$100',
+};
+
+const columns = [
+  { title: 'Full Name', width: 100, dataIndex: 'name', key: 'name', fixed: 'left' },
+  { title: 'Age', width: 100, dataIndex: 'age', key: 'age', fixed: 'left' },
+  { title: 'Column 1', dataIndex: 'address', key: '1', width: 150 },
+  { title: 'Column 2', dataIndex: 'address', key: '2', width: 150 },
+  { title: 'Column 3', dataIndex: 'address', key: '3', width: 150 },
+  { title: 'Column 4', dataIndex: 'address', key: '4', width: 150 },
+  { title: 'Column 5', dataIndex: 'address', key: '5', width: 150 },
+  { title: 'Column 6', dataIndex: 'address', key: '6', width: 150 },
+  { title: 'Column 7', dataIndex: 'address', key: '7', width: 150 },
+  { title: 'Column 8', dataIndex: 'address', key: '8' },
+  {
+    title: 'Action',
+    key: 'operation',
+    fixed: 'right',
+    width: 100,
+  },
+];
+
+const data = [];
+for (let i = 0; i < 100; i++) {
+  data.push({
+    key: i,
+    name: `Edrward ${i}`,
+    age: 32,
+    address: `London Park no. ${i}`,
+  });
+}
+
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
@@ -31,6 +78,7 @@ class Data extends React.Component {
       loading: false,
       searchDate: ['', ''],
       searchText: '',
+      inputValue: 1,
     };
   }
 
@@ -108,6 +156,12 @@ class Data extends React.Component {
     this.dataFilter('searchText', e.target.value);
   };
 
+  onChange = value => {
+    this.setState({
+      inputValue: value,
+    });
+  };
+
   dataFilter = (key, value) => {
     this.setState(
       {
@@ -150,59 +204,45 @@ class Data extends React.Component {
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
-            <div className="box box-default mb-4">
-              <div className="box-header">Device Registration</div>
+            <div className="box box-default">
+              <div className="box-header">Transaction Report</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6} order={2}>
-                      <FormItem>
-                        {getFieldDecorator('SerialNumber', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter your Serial number',
-                            },
-                          ],
-                        })(<Input placeholder="Serial number" />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <Button
-                        type="primary"
-                        loading={this.state.loading}
-                        className="float-right"
-                        onClick={this.submit}
-                      >
-                        Submit
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form>
-              </div>
-            </div>
-          </div>
-          <div key="2">
-            <div className="box box-default">
-              <div className="box-header">Search Devices</div>
-              <div className="box-body">
-                <Form>
-                  <Row gutter={24}>
-                    <Col span={8} order={3}>
+                    <Col span={6}>
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search
-                          placeholder="input search text"
-                          onChange={this.searchTextHandler}
-                          style={{ width: 200 }}
-                        />
+                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
+                    <Col span={6}>
+                      <FormItem>
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col span={6}>
+                      <FormItem>
+                        <Select
+                          onChange={this.searchStatusHandler}
+                          value={this.state.searchStatus}
+                          placeholder="Search transaction type"
+                        >
+                          <Option value="all">All</Option>
+                          <Option value="initiate">Initiate</Option>
+                          <Option value="download">Download</Option>
+                          <Option value="active">Active</Option>
+                        </Select>
+                      </FormItem>
+                    </Col>
+                    <Col span={6}>
+                      <FormItem>
+                        <Slider
+                          marks={marks}
+                          onChange={this.onChange}
+                          value={this.state.inputValue}
                         />
                       </FormItem>
                     </Col>
@@ -210,18 +250,12 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={this.state.loadFilterDevices}>
-                    <Column title="Serial Number" dataIndex="serial" key="serial" />
-                    <Column title="Created Date" dataIndex="createDate" key="createDate" />
-                    <Column
-                      title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => (
-                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
-                      )}
-                    />
-                  </Table>
+                  <Table
+                    columns={columns}
+                    dataSource={data}
+                    scroll={{ x: 1500, y: 300 }}
+                    className="ant-table-v1"
+                  />
                 </article>
               </div>
             </div>
@@ -234,6 +268,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const Report01 = () => <WrappedData />;
+const Transaction = () => <WrappedData />;
 
-export default Report01;
+export default Transaction;

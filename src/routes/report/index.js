@@ -1,11 +1,11 @@
 import React from 'react';
 import { Route } from 'react-router-dom';
 
-import Report01 from './routes/report01';
+import Transaction from './routes/Transaction';
 
 const Report = ({ match }) => (
   <div>
-    <Route path={`${match.url}/report01`} component={Report01} />
+    <Route path={`${match.url}/transaction`} component={Transaction} />
   </div>
 );
 
