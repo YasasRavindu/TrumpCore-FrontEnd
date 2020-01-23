@@ -18,6 +18,7 @@ import {
   Badge,
   AutoComplete,
   Tooltip,
+  Cascader
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -27,13 +28,15 @@ import CUSTOM_MESSAGE from 'constants/notification/message';
 import moment from 'moment';
 import { log } from 'util';
 
-const deviceStatus = {
+const cardStatus = {
   ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
   INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
   LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
+  CANCELLED: { color: 'magenta', label: 'CANCELLED', value: '4' },
+  EXPIRED: { color: 'magenta', label: 'EXPIRED', value: '5' },
 };
 const dateFormat = 'YYYY-MM-DD';
-
+const style = { width: 200 };
 const formItemLayout = {
   labelCol: { span: 10 },
   wrapperCol: { span: 14 },
@@ -80,6 +83,22 @@ class Data extends React.Component {
         console.log('------------------- error - ', error);
       });
     axios
+      .post(environment.baseUrl + 'account/filterSearch', {
+        status: '1',
+        context: '',
+        cardAssigned: '0',
+      })
+      .then(response => {
+        // console.log('------------------- response - ', response.data.content);
+        this.setState({
+          accountList: response.data.content,
+        });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+
+    axios
       .get(environment.baseUrl + 'cardRegistry')
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
@@ -95,39 +114,6 @@ class Data extends React.Component {
       .catch(error => {
         console.log('------------------- error - ', error);
       });
-    axios
-      .post(environment.baseUrl + 'account/filterSearch', {
-        status: '1',
-        context: '',
-        cardAssigned: '',
-      })
-      .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        this.setState({
-          accountList: response.data.content,
-        });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
-  };
-
-  handleUpdate = (id, cardId, accountId) => {
-    if (id) {
-      this.setState(
-        {
-          checkedID: id,
-          checkedcardId: cardId,
-          checkedaccountId: accountId,
-        },
-        () => {
-          this.setState({
-            visible: true,
-          });
-          console.log(this.state);
-        }
-      );
-    }
   };
 
   searchDateHandler = (date, dateString) => {
@@ -173,6 +159,25 @@ class Data extends React.Component {
         });
       }
     );
+  };
+
+  
+  handleUpdate = (id, cardId, accountId) => {
+    if (id) {
+      this.setState(
+        {
+          checkedID: id,
+          checkedcardId: cardId,
+          checkedaccountId: accountId,
+        },
+        () => {
+          this.setState({
+            visible: true,
+          });
+          console.log(this.state);
+        }
+      );
+    }
   };
 
   assignmentSubmit = e => {
@@ -227,10 +232,26 @@ class Data extends React.Component {
       }
     });
   };
+
   handleCancel = e => {
     this.setState({
       visible: false,
     });
+  };
+
+  handleStatus = (id, value) => {
+    axios
+      .put(environment.baseUrl + 'card/update', {
+        id: id,
+        status: value,
+      })
+      .then(response => {
+        // console.log('------------------- response - ', response.data.content);
+        this.loadData();
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
   };
 
   submit = e => {
@@ -361,32 +382,33 @@ class Data extends React.Component {
                       ],
                     })(
                       // <Input placeholder="Account Number" />
-                      <AutoComplete
-                        dataSource={optionsAccounts}
-                        style={{ width: 200 }}
-                        onBlur={inputValue => {
-                          let keyCard = false;
-                          accountList.map(account => {
-                            if (
-                              inputValue !== undefined &&
-                              (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-                                account.id.toUpperCase() === inputValue.toUpperCase())
-                            ) {
-                              keyCard = true;
-                            }
-                          });
-                          if (!keyCard) {
-                            this.props.form.setFieldsValue({
-                              accountNumber: '',
-                            });
-                          }
-                        }}
-                        placeholder="Account Number"
-                        filterOption={(inputValue, option) =>
-                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                          -1
-                        }
-                      />
+                      // <AutoComplete
+                      //   dataSource={optionsAccounts}
+                      //   style={{ width: 200 }}
+                      //   onBlur={inputValue => {
+                      //     let keyCard = false;
+                      //     accountList.map(account => {
+                      //       if (
+                      //         inputValue !== undefined &&
+                      //         (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+                      //           account.id.toUpperCase() === inputValue.toUpperCase())
+                      //       ) {
+                      //         keyCard = true;
+                      //       }
+                      //     });
+                      //     if (!keyCard) {
+                      //       this.props.form.setFieldsValue({
+                      //         accountNumber: '',
+                      //       });
+                      //     }
+                      //   }}
+                      //   placeholder="Account Number"
+                      //   filterOption={(inputValue, option) =>
+                      //     option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
+                      //     -1
+                      //   }
+                      // />
+                      <Cascader style={style} options={[]} showSearch />
                     )}
                   </FormItem>
 
@@ -432,20 +454,67 @@ class Data extends React.Component {
                     />
                     <Column title="Account Holder" dataIndex="account.holder" key="accountHolder" />
                     <Column title="Card Number" dataIndex="card.cardNo" key="cardNo" />
+                    <Column
+                      title="Card Status"
+                      dataIndex="card.status"
+                      key="cardStatus"
+                      render={status => (
+                        <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>
+                      )}
+                    />
                     <Column title="Assigned Date" dataIndex="assignedDate" key="assignedDate" />
                     <Column
                       title="Action"
                       key="action"
                       render={(text, record) => (
                         <span>
-                          <Tooltip title="Update">
-                            <Icon
-                              onClick={() =>
-                                this.handleUpdate(record.id, record.card.id, record.account.id)
-                              }
-                              type="edit"
-                            />
-                          </Tooltip>
+                          {record.card.status &&
+                            (record.card.status === 'ACTIVE' ||
+                              record.card.status === 'LOCKED') && (
+                              <>
+                                {record.card.status === 'ACTIVE' && (
+                                  <>
+                                    <Tooltip title="lock">
+                                      <Icon
+                                        onClick={() => this.handleStatus(record.card.id, 'LOCKED')}
+                                        type="lock"
+                                      />
+                                    </Tooltip>
+                                    <Divider type="vertical" />
+                                  </>
+                                )}
+                                {record.card.status === 'LOCKED' && (
+                                  <>
+                                    <Tooltip title="lock">
+                                      <Icon
+                                        onClick={() => this.handleStatus(record.card.id, 'ACTIVE')}
+                                        type="unlock"
+                                      />
+                                    </Tooltip>
+                                    <Divider type="vertical" />
+                                  </>
+                                )}
+                                <Tooltip title="Cancel">
+                                  <Icon
+                                    onClick={() => this.handleStatus(record.card.id, 'CANCELLED')}
+                                    type="close-circle-o"
+                                  />
+                                </Tooltip>
+                              </>
+                            )}
+
+                          {record.card.status &&
+                            (record.card.status === 'CANCELLED' ||
+                              record.card.status === 'EXPIRED') && (
+                              <Tooltip title="Assign New Card">
+                                <Icon
+                                  onClick={() =>
+                                    this.handleUpdate(record.id, record.card.id, record.account.id)
+                                  }
+                                  type="edit"
+                                />
+                              </Tooltip>
+                            )}
                         </span>
                       )}
                     />
