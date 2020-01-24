@@ -18,6 +18,7 @@ import {
   Badge,
   AutoComplete,
   Tooltip,
+  Popconfirm,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
@@ -496,12 +497,16 @@ class Data extends React.Component {
                                     <Divider type="vertical" />
                                   </>
                                 )}
-                                <Tooltip title="Cancel">
-                                  <Icon
-                                    onClick={() => this.handleStatus(record.card.id, 'CANCELLED')}
-                                    type="close-circle-o"
-                                  />
-                                </Tooltip>
+                                <Popconfirm
+                                  title="Are you sure delete this assignment?"
+                                  onConfirm={() => this.handleStatus(record.card.id, 'CANCELLED')}
+                                  okText="Yes"
+                                  cancelText="No"
+                                >
+                                  <Tooltip title="Cancel">
+                                    <Icon type="close-circle-o" />
+                                  </Tooltip>
+                                </Popconfirm>
                               </>
                             )}
 
