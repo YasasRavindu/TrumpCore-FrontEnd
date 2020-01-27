@@ -50,6 +50,20 @@ export const CARD = [
     path: '/app/cardManagement/assign',
   },
 ];
+const REPORTCARDS = [
+  {
+    name: 'Card - Created',
+    menuName: 'Created',
+    desc: 'Card - Created - Description',
+    path: '/app/report/cards/created',
+  },
+  {
+    name: 'Card - Assign',
+    menuName: 'Assign',
+    desc: 'Card - Assign - Description',
+    path: '/app/report/cards/assigned',
+  },
+];
 //
 export const REPORT = [
   {
@@ -57,6 +71,18 @@ export const REPORT = [
     menuName: 'Transaction',
     desc: 'Report - Transaction - Description',
     path: '/app/report/transaction',
+  },
+  {
+    name: 'Report - Pos Devices',
+    menuName: 'POS Devices',
+    desc: 'Report - POS Devices - Description',
+    path: '/app/report/pos',
+  },
+  {
+    name: 'Report - Cards',
+    menuName: 'Cards',
+    path: '/app/report/cards',
+    children: REPORTCARDS,
   },
 ];
 
@@ -853,6 +879,7 @@ const COMPONENTS = [
   ...TABELS,
   ...CHARTS,
   ...CALENDAR,
+  ...REPORTCARDS,
 ];
 
 export default COMPONENTS;

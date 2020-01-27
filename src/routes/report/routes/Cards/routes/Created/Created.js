@@ -13,7 +13,7 @@ import {
   message,
   Slider,
 } from 'antd';
-import { environment } from '../../../environments';
+import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
@@ -30,23 +30,17 @@ const formItemLayout = {
   wrapperCol: { span: 14 },
 };
 
-const marks = {
-  0: '$0',
-  50: '$50',
-  100: '$100',
-};
-
 const columns = [
-  { title: 'Full Name', width: 100, dataIndex: 'name', key: 'name', fixed: 'left' },
-  { title: 'Age', width: 100, dataIndex: 'age', key: 'age', fixed: 'left' },
-  { title: 'Column 1', dataIndex: 'address', key: '1', width: 150 },
-  { title: 'Column 2', dataIndex: 'address', key: '2', width: 150 },
-  { title: 'Column 3', dataIndex: 'address', key: '3', width: 150 },
-  { title: 'Column 4', dataIndex: 'address', key: '4', width: 150 },
-  { title: 'Column 5', dataIndex: 'address', key: '5', width: 150 },
-  { title: 'Column 6', dataIndex: 'address', key: '6', width: 150 },
-  { title: 'Column 7', dataIndex: 'address', key: '7', width: 150 },
-  { title: 'Column 8', dataIndex: 'address', key: '8' },
+  {
+    title: 'Card Type',
+    width: 150,
+    dataIndex: 'cardType',
+    key: 'cardType',
+    fixed: 'left',
+  },
+  { title: 'Card Number', dataIndex: 'cardNo', key: 'cardNo', width: 150 },
+  { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
+  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
   {
     title: 'Action',
     key: 'operation',
@@ -59,9 +53,10 @@ const data = [];
 for (let i = 0; i < 100; i++) {
   data.push({
     key: i,
-    name: `Edrward ${i}`,
-    age: 32,
-    address: `London Park no. ${i}`,
+    cardType: `Edrward ${i}`,
+    cardNo: 32,
+    createDate: `London Park no. ${i}`,
+    status: `test. ${i}`,
   });
 }
 
@@ -205,14 +200,14 @@ class Data extends React.Component {
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Transaction Report</div>
+              <div className="box-header">Created Cards</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
+                        <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
@@ -228,23 +223,21 @@ class Data extends React.Component {
                         <Select
                           onChange={this.searchStatusHandler}
                           value={this.state.searchStatus}
-                          placeholder="Search transaction type"
+                          placeholder="Search Card Type"
                         >
-                          <Option value="all">All</Option>
-                          <Option value="initiate">Initiate</Option>
-                          <Option value="download">Download</Option>
-                          <Option value="active">Active</Option>
+                          <Option value="debit">Debit</Option>
+                          <Option value="credit">Credit</Option>
                         </Select>
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      {/* <FormItem>
                         <Slider
                           marks={marks}
                           onChange={this.onChange}
                           value={this.state.inputValue}
                         />
-                      </FormItem>
+                      </FormItem> */}
                     </Col>
                   </Row>
                 </Form>
@@ -268,6 +261,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const Transaction = () => <WrappedData />;
+const Created = () => <WrappedData />;
 
-export default Transaction;
+export default Created;
