@@ -17,6 +17,8 @@ import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
@@ -192,6 +194,32 @@ class Data extends React.Component {
     );
   };
 
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'portrait'; // portrait or landscape
+
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
+
+    doc.setFontSize(15);
+
+    const title = 'My Awesome Report';
+    const headers = [['card no', 'created', 'expire', 'status']];
+
+    const data1 = data.map(elt => [elt.cardNo, elt.createDate, elt.expireDate, elt.status]);
+
+    let content = {
+      startY: 50,
+      head: headers,
+      body: data1,
+    };
+
+    doc.text(title, marginLeft, 40);
+    doc.autoTable(content);
+    doc.save('report.pdf');
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
 
@@ -250,6 +278,7 @@ class Data extends React.Component {
                     className="ant-table-v1"
                   />
                 </article>
+                <button onClick={() => this.exportPDF()}>Generate Report</button>
               </div>
             </div>
           </div>
