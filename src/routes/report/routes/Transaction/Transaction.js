@@ -37,16 +37,20 @@ const marks = {
 };
 
 const columns = [
-  { title: 'Full Name', width: 100, dataIndex: 'name', key: 'name', fixed: 'left' },
-  { title: 'Age', width: 100, dataIndex: 'age', key: 'age', fixed: 'left' },
-  { title: 'Column 1', dataIndex: 'address', key: '1', width: 150 },
-  { title: 'Column 2', dataIndex: 'address', key: '2', width: 150 },
-  { title: 'Column 3', dataIndex: 'address', key: '3', width: 150 },
-  { title: 'Column 4', dataIndex: 'address', key: '4', width: 150 },
-  { title: 'Column 5', dataIndex: 'address', key: '5', width: 150 },
-  { title: 'Column 6', dataIndex: 'address', key: '6', width: 150 },
-  { title: 'Column 7', dataIndex: 'address', key: '7', width: 150 },
-  { title: 'Column 8', dataIndex: 'address', key: '8' },
+  { title: 'Device ID', width: 100, dataIndex: 'DeviceID', key: 'DeviceID', fixed: 'left' },
+  {
+    title: 'Merchant name',
+    width: 100,
+    dataIndex: 'MerchantName',
+    key: 'MerchantName',
+    fixed: 'left',
+  },
+  { title: 'Merchant ID', dataIndex: 'MerchantID', key: 'MerchantID', width: 150 },
+  { title: 'Transaction Type', dataIndex: 'Type', key: 'Type', width: 150 },
+  { title: 'Date', dataIndex: 'Date', key: 'Date', width: 150 },
+  { title: 'Amount', dataIndex: 'Amount', key: 'Amount', width: 150 },
+  { title: 'From', dataIndex: 'From', key: 'From', width: 150 },
+  { title: 'To', dataIndex: 'To', key: 'To', width: 150 },
   {
     title: 'Action',
     key: 'operation',
@@ -59,9 +63,14 @@ const data = [];
 for (let i = 0; i < 100; i++) {
   data.push({
     key: i,
-    name: `Edrward ${i}`,
-    age: 32,
-    address: `London Park no. ${i}`,
+    DeviceID: `Edrward ${i}`,
+    MerchantName: 32,
+    MerchantID: `London Park no. ${i}`,
+    Type: `test ${i}`,
+    Date: `test1 ${i}`,
+    Amount: `test2 ${i}`,
+    From: `test3 ${i}`,
+    To: `test4 ${i}`,
   });
 }
 
