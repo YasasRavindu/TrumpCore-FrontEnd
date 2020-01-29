@@ -17,6 +17,8 @@ import { environment } from '../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
@@ -32,35 +34,13 @@ const formItemLayout = {
 
 const columns = [
   {
-    title: 'Merchant name',
-    width: 150,
-    dataIndex: 'merchantName',
-    key: 'merchantName',
-    fixed: 'left',
+    title: 'Serial Number',
+    dataIndex: 'serial',
+    key: 'serial',
   },
-  { title: 'Account number', dataIndex: 'accountNo', key: 'accountNo', width: 150 },
-  { title: 'Registered Serial Number', dataIndex: 'serialNo', key: 'serialNo', width: 150 },
   { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
   { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
-  {
-    title: 'Action',
-    key: 'operation',
-    fixed: 'right',
-    width: 100,
-  },
 ];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    merchantName: `Edrward ${i}`,
-    accountNo: 32,
-    serialNo: `London Park no. ${i}`,
-    createDate: `test. ${i}`,
-    status: `test2. ${i}`,
-  });
-}
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -76,6 +56,7 @@ class Data extends React.Component {
       searchDate: ['', ''],
       searchText: '',
       inputValue: 1,
+      searchStatus: 'ALL',
     };
   }
 
@@ -85,7 +66,7 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'device/search/all')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const devicesList = response.data.content.map(regDevices => {
@@ -102,6 +83,54 @@ class Data extends React.Component {
         console.log('------------------- error - ', error);
       });
   };
+
+  expandedRowRender = (holder, accountNumber) => {
+    return (
+      <React.Fragment>
+        <Row>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Account Holder</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{holder}</p>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Account Number</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{accountNumber}</p>
+          </Col>
+        </Row>
+      </React.Fragment>
+    );
+  };
+  // exportPDF = () => {
+  //   const unit = 'pt';
+  //   const size = 'A4'; // Use A1, A2, A3 or A4
+  //   const orientation = 'portrait'; // portrait or landscape
+
+  //   const marginLeft = 40;
+  //   const doc = new jsPDF(orientation, unit, size);
+
+  //   doc.setFontSize(15);
+
+  //   const title = 'My Awesome Report';
+  //   const headers = [['card no', 'created', 'expire', 'status']];
+
+  //   const data1 = data.map(elt => [elt.cardNo, elt.createDate, elt.expireDate, elt.status]);
+
+  //   let content = {
+  //     startY: 50,
+  //     head: headers,
+  //     body: data1,
+  //   };
+
+  //   doc.text(title, marginLeft, 40);
+  //   doc.autoTable(content);
+  //   doc.save('report.pdf');
+  // };
 
   submit = e => {
     this.setState({ loading: true });
@@ -153,6 +182,10 @@ class Data extends React.Component {
     this.dataFilter('searchText', e.target.value);
   };
 
+  searchStatusHandler = v => {
+    this.dataFilter('searchStatus', v);
+  };
+
   onChange = value => {
     this.setState({
       inputValue: value,
@@ -168,6 +201,7 @@ class Data extends React.Component {
         let data = this.state.loadDevices;
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
+        let searchStatus = this.state.searchStatus.toUpperCase();
 
         if (searchText) {
           data = data.filter(d => {
@@ -185,6 +219,10 @@ class Data extends React.Component {
             var date = moment(d.createDate);
             return date.isAfter(startDate) && date.isBefore(endDate);
           });
+        }
+
+        if (searchStatus !== 'All') {
+          data = data.filter(d => d.status === searchStatus);
         }
 
         this.setState({
@@ -228,9 +266,11 @@ class Data extends React.Component {
                           placeholder="Search POS Status"
                         >
                           <Option value="all">All</Option>
-                          <Option value="initiate">Initiate</Option>
-                          <Option value="download">Download</Option>
+                          <Option value="register">Register</Option>
                           <Option value="active">Active</Option>
+                          <Option value="inactive">Inactive</Option>
+                          <Option value="locked">Locked</Option>
+                          <Option value="remove">Remove</Option>
                         </Select>
                       </FormItem>
                     </Col>
@@ -249,9 +289,18 @@ class Data extends React.Component {
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={data}
-                    scroll={{ x: 1500, y: 300 }}
-                    className="ant-table-v1"
+                    dataSource={this.state.loadFilterDevices}
+                    expandedRowRender={record =>
+                      record.account != null ? (
+                        this.expandedRowRender(record.account.holder, record.account.accountNumber)
+                      ) : (
+                        <span>
+                          <Tag color={'red'}>No Account Details</Tag>
+                        </span>
+                      )
+                    }
+                    //scroll={{ x: 1500, y: 300 }}
+                    className="components-table-demo-nested"
                   />
                 </article>
               </div>
