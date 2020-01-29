@@ -9,6 +9,8 @@
     "classnames": "^2.2.6",
     "echarts": "^4.1.0",
     "echarts-for-react": "^2.0.14",
+    "jspdf": "^1.5.3",
+    "jspdf-autotable": "^3.2.11",
     "rc-queue-anim": "^1.6.7",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",

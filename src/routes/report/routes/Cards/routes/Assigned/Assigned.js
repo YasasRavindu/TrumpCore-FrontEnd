@@ -13,10 +13,12 @@ import {
   message,
   Slider,
 } from 'antd';
-import { environment } from '../../../environments';
+import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
@@ -30,23 +32,17 @@ const formItemLayout = {
   wrapperCol: { span: 14 },
 };
 
-const marks = {
-  0: '$0',
-  50: '$50',
-  100: '$100',
-};
-
 const columns = [
-  { title: 'Full Name', width: 100, dataIndex: 'name', key: 'name', fixed: 'left' },
-  { title: 'Age', width: 100, dataIndex: 'age', key: 'age', fixed: 'left' },
-  { title: 'Column 1', dataIndex: 'address', key: '1', width: 150 },
-  { title: 'Column 2', dataIndex: 'address', key: '2', width: 150 },
-  { title: 'Column 3', dataIndex: 'address', key: '3', width: 150 },
-  { title: 'Column 4', dataIndex: 'address', key: '4', width: 150 },
-  { title: 'Column 5', dataIndex: 'address', key: '5', width: 150 },
-  { title: 'Column 6', dataIndex: 'address', key: '6', width: 150 },
-  { title: 'Column 7', dataIndex: 'address', key: '7', width: 150 },
-  { title: 'Column 8', dataIndex: 'address', key: '8' },
+  {
+    title: 'Card No',
+    width: 150,
+    dataIndex: 'cardNo',
+    key: 'cardNo',
+    fixed: 'left',
+  },
+  { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
+  { title: 'Expire date', dataIndex: 'expireDate', key: 'expireDate', width: 150 },
+  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
   {
     title: 'Action',
     key: 'operation',
@@ -59,9 +55,10 @@ const data = [];
 for (let i = 0; i < 100; i++) {
   data.push({
     key: i,
-    name: `Edrward ${i}`,
-    age: 32,
-    address: `London Park no. ${i}`,
+    cardNo: `Edrward ${i}`,
+    createDate: 32,
+    expireDate: `London Park no. ${i}`,
+    status: `test. ${i}`,
   });
 }
 
@@ -197,6 +194,32 @@ class Data extends React.Component {
     );
   };
 
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'portrait'; // portrait or landscape
+
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
+
+    doc.setFontSize(15);
+
+    const title = 'My Awesome Report';
+    const headers = [['card no', 'created', 'expire', 'status']];
+
+    const data1 = data.map(elt => [elt.cardNo, elt.createDate, elt.expireDate, elt.status]);
+
+    let content = {
+      startY: 50,
+      head: headers,
+      body: data1,
+    };
+
+    doc.text(title, marginLeft, 40);
+    doc.autoTable(content);
+    doc.save('report.pdf');
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
 
@@ -205,14 +228,14 @@ class Data extends React.Component {
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Transaction Report</div>
+              <div className="box-header">Assigned Cards</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
+                        <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
@@ -228,23 +251,21 @@ class Data extends React.Component {
                         <Select
                           onChange={this.searchStatusHandler}
                           value={this.state.searchStatus}
-                          placeholder="Search transaction type"
+                          placeholder="Card Type"
                         >
-                          <Option value="all">All</Option>
-                          <Option value="initiate">Initiate</Option>
-                          <Option value="download">Download</Option>
-                          <Option value="active">Active</Option>
+                          <Option value="debit">Debit</Option>
+                          <Option value="credit">Credit</Option>
                         </Select>
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      {/* <FormItem>
                         <Slider
                           marks={marks}
                           onChange={this.onChange}
                           value={this.state.inputValue}
                         />
-                      </FormItem>
+                      </FormItem> */}
                     </Col>
                   </Row>
                 </Form>
@@ -257,6 +278,7 @@ class Data extends React.Component {
                     className="ant-table-v1"
                   />
                 </article>
+                <button onClick={() => this.exportPDF()}>Generate Report</button>
               </div>
             </div>
           </div>
@@ -268,6 +290,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const Transaction = () => <WrappedData />;
+const Assigned = () => <WrappedData />;
 
-export default Transaction;
+export default Assigned;
