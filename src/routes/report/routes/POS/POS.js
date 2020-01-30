@@ -22,8 +22,11 @@ import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
+  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
+  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
+  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
+  REGISTER: { color: 'green', label: 'REGISTER', value: '4' },
+  REMOVE: { color: 'red', label: 'REMOVE', value: '5' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -39,7 +42,13 @@ const columns = [
     key: 'serial',
   },
   { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
-  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
+  {
+    title: 'Status',
+    dataIndex: 'status',
+    key: 'status',
+    width: 150,
+    render: status => <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>,
+  },
 ];
 
 const FormItem = Form.Item;
@@ -56,7 +65,7 @@ class Data extends React.Component {
       searchDate: ['', ''],
       searchText: '',
       inputValue: 1,
-      searchStatus: 'ALL',
+      searchStatus: 'all',
     };
   }
 
@@ -106,31 +115,46 @@ class Data extends React.Component {
       </React.Fragment>
     );
   };
-  // exportPDF = () => {
-  //   const unit = 'pt';
-  //   const size = 'A4'; // Use A1, A2, A3 or A4
-  //   const orientation = 'portrait'; // portrait or landscape
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'portrait'; // portrait or landscape
 
-  //   const marginLeft = 40;
-  //   const doc = new jsPDF(orientation, unit, size);
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
 
-  //   doc.setFontSize(15);
+    doc.setFontSize(15);
 
-  //   const title = 'My Awesome Report';
-  //   const headers = [['card no', 'created', 'expire', 'status']];
+    const title = 'POS Devices Report';
+    const headers = [
+      ['Serial number', 'Created date', 'Status', 'Account holder', 'Account number'],
+    ];
 
-  //   const data1 = data.map(elt => [elt.cardNo, elt.createDate, elt.expireDate, elt.status]);
+    const realData = this.state.loadFilterDevices.map(d =>
+      d.account !== null
+        ? [
+            d.serial,
+            d.createDate,
+            d.status.toLowerCase(),
+            d.account.holder,
+            d.account.accountNumber,
+          ]
+        : [d.serial, d.createDate, d.status, 'N/A', 'N/A']
+    );
+    let content = {
+      startY: 50,
+      head: headers,
+      body: realData,
+    };
 
-  //   let content = {
-  //     startY: 50,
-  //     head: headers,
-  //     body: data1,
-  //   };
-
-  //   doc.text(title, marginLeft, 40);
-  //   doc.autoTable(content);
-  //   doc.save('report.pdf');
-  // };
+    if (realData.length == 0) {
+      message.error("Sorry, we couldn't find any devices with filtered data");
+    } else {
+      doc.text(title, marginLeft, 40);
+      doc.autoTable(content);
+      doc.save('POS-devices-report.pdf');
+    }
+  };
 
   submit = e => {
     this.setState({ loading: true });
@@ -205,10 +229,15 @@ class Data extends React.Component {
 
         if (searchText) {
           data = data.filter(d => {
-            return (
-              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.status.toLowerCase().includes(searchText.toLowerCase())
-            );
+            if (d.account !== null) {
+              return (
+                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+              );
+            } else {
+              return d.serial.toLowerCase().includes(searchText.toLowerCase());
+            }
           });
         }
 
@@ -221,7 +250,7 @@ class Data extends React.Component {
           });
         }
 
-        if (searchStatus !== 'All') {
+        if (searchStatus !== 'ALL') {
           data = data.filter(d => d.status === searchStatus);
         }
 
@@ -244,10 +273,13 @@ class Data extends React.Component {
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6}>
+                    <Col span={8}>
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
+                        <Search
+                          placeholder="Search serial number or account details"
+                          onChange={this.searchTextHandler}
+                        />
                       </FormItem>
                     </Col>
                     <Col span={6}>
@@ -258,7 +290,7 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                       <FormItem>
                         <Select
                           onChange={this.searchStatusHandler}
@@ -275,13 +307,15 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      {/* <FormItem>
-                        <Slider
-                          marks={marks}
-                          onChange={this.onChange}
-                          value={this.state.inputValue}
+                      <FormItem>
+                        <Button
+                          type="primary"
+                          shape="circle"
+                          icon="download"
+                          size={'large'}
+                          onClick={() => this.exportPDF()}
                         />
-                      </FormItem> */}
+                      </FormItem>
                     </Col>
                   </Row>
                 </Form>
