@@ -15,20 +15,14 @@ import {
   InputNumber,
   DatePicker,
   message,
+  Tooltip,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
-
-const userStatus = {
-  ACTIVE: { color: '', label: 'ACTIVE' },
-  INACTIVE: { color: 'blue', label: 'INACTIVE' },
-  DELETED: { color: 'magenta', label: 'DELETED' },
-  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
-};
+import STATUS from 'constants/notification/status';
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -72,6 +66,64 @@ class Data extends React.Component {
         });
       })
       .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  getUserView = id => {
+    axios
+      .get(environment.baseUrl + 'platform-users/' + id)
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        let user = response.data.content;
+
+        // this.props.form.setFieldsValue({
+        //   roleName: role.name,
+        // });
+
+        this.setState({
+          // sections: sections,
+          currentUser: user,
+          visible: true,
+        });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  handleStatus = (id, value) => {
+    axios
+      .get(
+        environment.baseUrl +
+          'platform-users/changeStatus/' +
+          id +
+          '/' +
+          STATUS.USER_STATUS[value].code
+      )
+      .then(response => {
+        // console.log('------------------- response - ', response.data.content);
+        this.loadTable();
+      })
+      .catch(error => {
+        let msg = null;
+        if (
+          error &&
+          error.response &&
+          error.response.data &&
+          error.response.data.validationFailures &&
+          error.response.data.validationFailures[0] &&
+          error.response.data.validationFailures[0].code
+        ) {
+          let errorCode = error.response.data.validationFailures[0].code;
+          msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
+          if (msg === undefined) {
+            msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+          }
+        } else {
+          msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+        }
+        message.error(msg);
         console.log('------------------- error - ', error);
       });
   };
@@ -122,10 +174,10 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
+    const { userRole, userList, visible, currentUser } = this.state;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default mb-4">
@@ -214,46 +266,6 @@ class Data extends React.Component {
           <div key="2">
             <div className="box box-default">
               <div className="box-body">
-                {/* <Form>
-                  <Row gutter={24}>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
-                          format={dateFormat}
-                        />
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={2}>
-                      <FormItem {...formItemLayout} label="Card Type">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="cash">Cash</Option>
-                          <Option value="debit">Debit</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6} order={1}>
-                      <FormItem {...formItemLayout} label="Status">
-                        <Select
-                          style={{ width: 120 }}
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="initiated">Initiated</Option>
-                          <Option value="downloaded">Downloaded</Option>
-                          <Option value="activated">Activated</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
-                  </Row>
-                </Form> */}
-
                 <article className="article mt-2">
                   <Table dataSource={userList}>
                     <Column title="Account Name" dataIndex="accName" key="accountName" />
@@ -263,7 +275,9 @@ class Data extends React.Component {
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={userStatus[status].color}>{userStatus[status].label}</Tag>
+                        <Tag color={STATUS.USER_STATUS[status].color}>
+                          {STATUS.USER_STATUS[status].label}
+                        </Tag>
                       )}
                     />
                     <Column
@@ -272,11 +286,30 @@ class Data extends React.Component {
                       key="role"
                       render={role => <Tag>{role.name}</Tag>}
                     />
-                    {/* <Column
+                    <Column
                       title="Action"
                       key="action"
-                      render={(text, record) => <span>Action</span>}
-                    /> */}
+                      render={(text, record) => (
+                        <span>
+                          {record.status && record.status === 'ACTIVE' && (
+                            <Tooltip title="Inactive">
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'INACTIVE')}
+                                type="close-circle-o"
+                              />
+                            </Tooltip>
+                          )}
+                          {record.status && record.status !== 'ACTIVE' && (
+                            <Tooltip title="Active">
+                              <Icon
+                                onClick={() => this.handleStatus(record.id, 'ACTIVE')}
+                                type="check-circle-o"
+                              />
+                            </Tooltip>
+                          )}
+                        </span>
+                      )}
+                    />
                   </Table>
                 </article>
               </div>
