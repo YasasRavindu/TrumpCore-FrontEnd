@@ -19,9 +19,12 @@ import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const Search = Input.Search;
-const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
+const cardStatus = {
+  ACTIVE: { color: '', label: 'active' },
+  INACTIVE: { color: 'magenta', label: 'inactive' },
+  LOCKED: { color: 'red', label: 'locked' },
+  CANCELLED: { color: 'volcano', label: 'cancelled' },
+  EXPIRED: { color: 'orange', label: 'expired' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -32,33 +35,21 @@ const formItemLayout = {
 
 const columns = [
   {
-    title: 'Card Type',
-    width: 150,
-    dataIndex: 'cardType',
-    key: 'cardType',
+    title: 'Card No',
+    dataIndex: 'cardNo',
+    key: 'cardNo',
     fixed: 'left',
   },
-  { title: 'Card Number', dataIndex: 'cardNo', key: 'cardNo', width: 150 },
-  { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
-  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
+  { title: 'Created date', dataIndex: 'cardBatch.createDate', key: 'createDate' },
+  { title: 'Expiry date', dataIndex: 'cardBatch.expiryDate', key: 'expiryDate' },
+  { title: 'Card Type', dataIndex: 'cardBatch.type', key: 'type' },
   {
-    title: 'Action',
-    key: 'operation',
-    fixed: 'right',
-    width: 100,
+    title: 'Status',
+    dataIndex: 'status',
+    key: 'status',
+    render: type => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
   },
 ];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    cardType: `Edrward ${i}`,
-    cardNo: 32,
-    createDate: `London Park no. ${i}`,
-    status: `test. ${i}`,
-  });
-}
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -68,12 +59,14 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loadDevices: [],
-      loadFilterDevices: [],
+      loadCards: [],
+      loadFilterCards: [],
       loading: false,
       searchDate: ['', ''],
       searchText: '',
       inputValue: 1,
+      searchType: 'ALL',
+      searchState: 'ALL',
     };
   }
 
@@ -83,64 +76,22 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'card/search/all/all')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const devicesList = response.data.content.map(regDevices => {
-          regDevices.key = regDevices.id;
-          return regDevices;
+        const cardList = response.data.content.map(card => {
+          card.key = card.id;
+          return card;
         });
 
         this.setState({
-          loadDevices: devicesList,
-          loadFilterDevices: devicesList,
+          loadCards: cardList,
+          loadFilterCards: cardList,
         });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
-  };
-
-  submit = e => {
-    this.setState({ loading: true });
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'device', {
-            serial: values.SerialNumber,
-          })
-          .then(response => {
-            message.success('Congratulations! Your device successfully registered.');
-            this.loadTable();
-            this.props.form.resetFields();
-            this.setState({ loading: false });
-            console.log('------------------- response - ', response);
-          })
-          .catch(error => {
-            console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
-            this.setState({ loading: false });
-          });
-      }
-    });
   };
 
   searchDateHandler = (date, dateString) => {
@@ -149,6 +100,14 @@ class Data extends React.Component {
 
   searchTextHandler = e => {
     this.dataFilter('searchText', e.target.value);
+  };
+
+  searchTypeHandler = v => {
+    this.dataFilter('searchType', v);
+  };
+
+  searchStateHandler = s => {
+    this.dataFilter('searchState', s);
   };
 
   onChange = value => {
@@ -163,16 +122,15 @@ class Data extends React.Component {
         [key]: value,
       },
       () => {
-        let data = this.state.loadDevices;
+        let data = this.state.loadCards;
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
+        let searchType = this.state.searchType.toUpperCase();
+        let searchState = this.state.searchState.toUpperCase();
 
         if (searchText) {
           data = data.filter(d => {
-            return (
-              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.status.toLowerCase().includes(searchText.toLowerCase())
-            );
+            return d.cardNo.toLowerCase().includes(searchText.toLowerCase());
           });
         }
 
@@ -180,13 +138,21 @@ class Data extends React.Component {
           var startDate = moment(searchDate[0]);
           var endDate = moment(searchDate[1]);
           data = data.filter(d => {
-            var date = moment(d.createDate);
+            var date = moment(d.cardBatch.expiryDate);
             return date.isAfter(startDate) && date.isBefore(endDate);
           });
         }
 
+        if (searchType !== 'ALL') {
+          data = data.filter(d => d.cardBatch.type == searchType);
+        }
+
+        if (searchState !== 'ALL') {
+          data = data.filter(d => d.status == searchState);
+        }
+
         this.setState({
-          loadFilterDevices: data,
+          loadFilterCards: data,
         });
       }
     );
@@ -200,14 +166,14 @@ class Data extends React.Component {
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Created Cards</div>
+              <div className="box-header">Cards Catalog</div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
+                        <Search placeholder="Search Card No" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
@@ -221,23 +187,31 @@ class Data extends React.Component {
                     <Col span={6}>
                       <FormItem>
                         <Select
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
+                          onChange={this.searchTypeHandler}
+                          value={this.state.searchType}
                           placeholder="Search Card Type"
                         >
-                          <Option value="debit">Debit</Option>
-                          <Option value="credit">Credit</Option>
+                          <Option value="ALL">All</Option>
+                          <Option value="DEBIT">Debit</Option>
+                          <Option value="CASH">Credit</Option>
                         </Select>
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      {/* <FormItem>
-                        <Slider
-                          marks={marks}
-                          onChange={this.onChange}
-                          value={this.state.inputValue}
-                        />
-                      </FormItem> */}
+                      <FormItem>
+                        <Select
+                          onChange={this.searchStateHandler}
+                          value={this.state.searchState}
+                          placeholder="Search Card Status"
+                        >
+                          <Option value="ALL">All</Option>
+                          <Option value="ACTIVE">active</Option>
+                          <Option value="INACTIVE">inactive</Option>
+                          <Option value="LOCKED">locked</Option>
+                          <Option value="CANCELLED">cancelled</Option>
+                          <Option value="EXPIRED">expired</Option>
+                        </Select>
+                      </FormItem>
                     </Col>
                   </Row>
                 </Form>
@@ -245,8 +219,8 @@ class Data extends React.Component {
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={data}
-                    scroll={{ x: 1500, y: 300 }}
+                    dataSource={this.state.loadFilterCards}
+                    scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
                   />
                 </article>
@@ -261,6 +235,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const Created = () => <WrappedData />;
+const Catalog = () => <WrappedData />;
 
-export default Created;
+export default Catalog;

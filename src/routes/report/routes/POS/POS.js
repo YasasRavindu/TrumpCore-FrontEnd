@@ -156,48 +156,6 @@ class Data extends React.Component {
     }
   };
 
-  submit = e => {
-    this.setState({ loading: true });
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'device', {
-            serial: values.SerialNumber,
-          })
-          .then(response => {
-            message.success('Congratulations! Your device successfully registered.');
-            this.loadTable();
-            this.props.form.resetFields();
-            this.setState({ loading: false });
-            console.log('------------------- response - ', response);
-          })
-          .catch(error => {
-            console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
-            this.setState({ loading: false });
-          });
-      }
-    });
-  };
-
   searchDateHandler = (date, dateString) => {
     this.dataFilter('searchDate', dateString);
   };
@@ -310,11 +268,13 @@ class Data extends React.Component {
                       <FormItem>
                         <Button
                           type="primary"
-                          shape="circle"
+                          shape="round"
                           icon="download"
-                          size={'large'}
                           onClick={() => this.exportPDF()}
-                        />
+                          className="float-right"
+                        >
+                          PDF
+                        </Button>
                       </FormItem>
                     </Col>
                   </Row>

@@ -2,12 +2,12 @@ import React from 'react';
 import { Route } from 'react-router-dom';
 
 import Assigned from './routes/Assigned/';
-import Created from './routes/Created';
+import catalog from './routes/Catalog';
 
 const Cards = ({ match }) => (
   <div>
     <Route path={`${match.url}/assigned`} component={Assigned} />
-    <Route path={`${match.url}/created`} component={Created} />
+    <Route path={`${match.url}/catalog`} component={catalog} />
   </div>
 );
 
