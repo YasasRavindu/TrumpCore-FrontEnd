@@ -223,16 +223,27 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">POS Devices Report</div>
+              <div className="box-header">
+                POS Devices Report
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={8}>
-                      <FormItem>
+                      <FormItem label="Search">
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
                         <Search
                           placeholder="Search serial number or account details"
@@ -241,7 +252,7 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Created date">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
@@ -249,7 +260,7 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={4}>
-                      <FormItem>
+                      <FormItem label="Status">
                         <Select
                           onChange={this.searchStatusHandler}
                           value={this.state.searchStatus}
@@ -262,19 +273,6 @@ class Data extends React.Component {
                           <Option value="locked">Locked</Option>
                           <Option value="remove">Remove</Option>
                         </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        <Button
-                          type="primary"
-                          shape="round"
-                          icon="download"
-                          onClick={() => this.exportPDF()}
-                          className="float-right"
-                        >
-                          PDF
-                        </Button>
                       </FormItem>
                     </Col>
                   </Row>

@@ -21,9 +21,12 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const Search = Input.Search;
-const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
+const cardStatus = {
+  ACTIVE: { color: '', label: 'Active' },
+  INACTIVE: { color: 'magenta', label: 'Inactive' },
+  LOCKED: { color: 'red', label: 'Locked' },
+  CANCELLED: { color: 'volcano', label: 'Cancelled' },
+  EXPIRED: { color: 'orange', label: 'Expired' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -35,32 +38,22 @@ const formItemLayout = {
 const columns = [
   {
     title: 'Card No',
-    width: 150,
-    dataIndex: 'cardNo',
+    dataIndex: 'card.cardNo',
     key: 'cardNo',
     fixed: 'left',
   },
-  { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
-  { title: 'Expire date', dataIndex: 'expireDate', key: 'expireDate', width: 150 },
-  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
+  { title: 'Account no', dataIndex: 'account.accountNumber', key: 'accountNumber' },
+  { title: 'Account holder', dataIndex: 'account.holder', key: 'holder' },
+  { title: 'Card expire date', dataIndex: 'card.cardBatch.expiryDate', key: 'expireDate' },
+  { title: 'Card create date', dataIndex: 'card.cardBatch.createDate', key: 'createDate' },
   {
-    title: 'Action',
-    key: 'operation',
-    fixed: 'right',
-    width: 100,
+    title: 'Card status',
+    dataIndex: 'card.status',
+    key: 'status',
+    render: status => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
   },
+  { title: 'Card assigned date', dataIndex: 'assignedDate', key: 'assignedDate' },
 ];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    cardNo: `Edrward ${i}`,
-    createDate: 32,
-    expireDate: `London Park no. ${i}`,
-    status: `test. ${i}`,
-  });
-}
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -70,11 +63,13 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loadDevices: [],
-      loadFilterDevices: [],
+      loadCardRegistry: [],
+      loadFilterCardRegistry: [],
       loading: false,
-      searchDate: ['', ''],
+      searchExDate: ['', ''],
+      searchAsDate: ['', ''],
       searchText: '',
+      searchState: 'ALL',
       inputValue: 1,
     };
   }
@@ -85,17 +80,17 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'cardRegistry')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const devicesList = response.data.content.map(regDevices => {
-          regDevices.key = regDevices.id;
-          return regDevices;
+        const cardList = response.data.content.map(cardRegistry => {
+          cardRegistry.key = cardRegistry.id;
+          return cardRegistry;
         });
 
         this.setState({
-          loadDevices: devicesList,
-          loadFilterDevices: devicesList,
+          loadCardRegistry: cardList,
+          loadFilterCardRegistry: cardList,
         });
       })
       .catch(error => {
@@ -103,54 +98,18 @@ class Data extends React.Component {
       });
   };
 
-  submit = e => {
-    this.setState({ loading: true });
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'device', {
-            serial: values.SerialNumber,
-          })
-          .then(response => {
-            message.success('Congratulations! Your device successfully registered.');
-            this.loadTable();
-            this.props.form.resetFields();
-            this.setState({ loading: false });
-            console.log('------------------- response - ', response);
-          })
-          .catch(error => {
-            console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
-            this.setState({ loading: false });
-          });
-      }
-    });
+  searchexDateHandler = (date, dateString) => {
+    this.dataFilter('searchExDate', dateString);
   };
-
-  searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
+  searchAsDateHandler = (date, dateString) => {
+    this.dataFilter('searchAsDate', dateString);
   };
 
   searchTextHandler = e => {
     this.dataFilter('searchText', e.target.value);
+  };
+  searchStateHandler = s => {
+    this.dataFilter('searchState', s);
   };
 
   onChange = value => {
@@ -165,30 +124,45 @@ class Data extends React.Component {
         [key]: value,
       },
       () => {
-        let data = this.state.loadDevices;
-        let searchDate = this.state.searchDate;
+        let data = this.state.loadCardRegistry;
+        let searchExDate = this.state.searchExDate;
+        let searchAsDate = this.state.searchAsDate;
         let searchText = this.state.searchText;
+        let searchState = this.state.searchState.toUpperCase();
 
         if (searchText) {
           data = data.filter(d => {
             return (
-              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.status.toLowerCase().includes(searchText.toLowerCase())
+              d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.account.holder.toLowerCase().includes(searchText.toLowerCase())
             );
           });
         }
 
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
+        if (searchExDate.length > 0 && searchExDate[0] !== '' && searchExDate[1] !== '') {
+          var startDate = moment(searchExDate[0]);
+          var endDate = moment(searchExDate[1]);
           data = data.filter(d => {
-            var date = moment(d.createDate);
+            var date = moment(d.card.cardBatch.expiryDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
+        }
+        if (searchAsDate.length > 0 && searchAsDate[0] !== '' && searchAsDate[1] !== '') {
+          var startDate = moment(searchAsDate[0]);
+          var endDate = moment(searchAsDate[1]);
+          data = data.filter(d => {
+            var date = moment(d.assignedDate);
             return date.isAfter(startDate) && date.isBefore(endDate);
           });
         }
 
+        if (searchState !== 'ALL') {
+          data = data.filter(d => d.card.status == searchState);
+        }
+
         this.setState({
-          loadFilterDevices: data,
+          loadFilterCardRegistry: data,
         });
       }
     );
@@ -197,75 +171,110 @@ class Data extends React.Component {
   exportPDF = () => {
     const unit = 'pt';
     const size = 'A4'; // Use A1, A2, A3 or A4
-    const orientation = 'portrait'; // portrait or landscape
+    const orientation = 'landscape'; // portrait or landscape
 
     const marginLeft = 40;
     const doc = new jsPDF(orientation, unit, size);
 
     doc.setFontSize(15);
 
-    const title = 'My Awesome Report';
-    const headers = [['card no', 'created', 'expire', 'status']];
+    const title = 'Cards Report';
+    const headers = [
+      [
+        'Card No',
+        'Account no',
+        'Account Holder',
+        'Card expire date',
+        'Card create date',
+        'Card status',
+        'Card Assigned date',
+      ],
+    ];
 
-    const data1 = data.map(elt => [elt.cardNo, elt.createDate, elt.expireDate, elt.status]);
-
+    const realData = this.state.loadFilterCardRegistry.map(d => [
+      d.card.cardNo,
+      d.account.accountNumber,
+      d.account.holder,
+      d.card.cardBatch.expiryDate,
+      d.card.cardBatch.createDate,
+      d.card.status.toLowerCase(),
+      d.assignedDate,
+    ]);
     let content = {
       startY: 50,
       head: headers,
-      body: data1,
+      body: realData,
     };
 
-    doc.text(title, marginLeft, 40);
-    doc.autoTable(content);
-    doc.save('report.pdf');
+    if (realData.length == 0) {
+      message.error("Sorry, we couldn't find any card details with filtered data");
+    } else {
+      doc.text(title, marginLeft, 40);
+      doc.autoTable(content);
+      doc.save('Transaction-report.pdf');
+    }
   };
 
   render() {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Assigned Cards</div>
+              <div className="box-header">
+                Assigned Cards
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Search">
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
                         <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Card expire date">
                         <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
+                          onChange={this.searchexDateHandler}
                           format={dateFormat}
                         />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
-                        <Select
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                          placeholder="Card Type"
-                        >
-                          <Option value="debit">Debit</Option>
-                          <Option value="credit">Credit</Option>
-                        </Select>
+                      <FormItem label="Card assigned date">
+                        <DatePicker.RangePicker
+                          onChange={this.searchAsDateHandler}
+                          format={dateFormat}
+                        />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      {/* <FormItem>
-                        <Slider
-                          marks={marks}
-                          onChange={this.onChange}
-                          value={this.state.inputValue}
-                        />
-                      </FormItem> */}
+                      <FormItem label="Card Status">
+                        <Select
+                          onChange={this.searchStateHandler}
+                          value={this.state.searchState}
+                          placeholder="Search Card Status"
+                        >
+                          <Option value="ALL">All</Option>
+                          <Option value="ACTIVE">Active</Option>
+                          <Option value="INACTIVE">Inactive</Option>
+                          <Option value="LOCKED">Locked</Option>
+                          <Option value="CANCELLED">Cancelled</Option>
+                          <Option value="EXPIRED">Expired</Option>
+                        </Select>
+                      </FormItem>
                     </Col>
                   </Row>
                 </Form>
@@ -273,12 +282,11 @@ class Data extends React.Component {
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={data}
+                    dataSource={this.state.loadFilterCardRegistry}
                     scroll={{ x: 1500, y: 300 }}
                     className="ant-table-v1"
                   />
                 </article>
-                <button onClick={() => this.exportPDF()}>Generate Report</button>
               </div>
             </div>
           </div>

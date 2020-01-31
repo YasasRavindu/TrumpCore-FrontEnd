@@ -239,21 +239,32 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Transaction Report</div>
+              <div className="box-header">
+                Transaction Report
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Search">
                         <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Log time">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
@@ -261,7 +272,7 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Transaction type">
                         <Select
                           onChange={this.searchTypeHandler}
                           value={this.state.searchType}
@@ -283,19 +294,6 @@ class Data extends React.Component {
                           <Option value="13">B Mobile</Option>
                           <Option value="14">NPF</Option>
                         </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        <Button
-                          type="primary"
-                          shape="round"
-                          icon="download"
-                          onClick={() => this.exportPDF()}
-                          className="float-right"
-                        >
-                          PDF
-                        </Button>
                       </FormItem>
                     </Col>
                   </Row>

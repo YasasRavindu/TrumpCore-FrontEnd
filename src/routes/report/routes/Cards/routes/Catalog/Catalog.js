@@ -17,14 +17,20 @@ import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const cardStatus = {
-  ACTIVE: { color: '', label: 'active' },
-  INACTIVE: { color: 'magenta', label: 'inactive' },
-  LOCKED: { color: 'red', label: 'locked' },
-  CANCELLED: { color: 'volcano', label: 'cancelled' },
-  EXPIRED: { color: 'orange', label: 'expired' },
+  ACTIVE: { color: '', label: 'Active' },
+  INACTIVE: { color: 'magenta', label: 'Inactive' },
+  LOCKED: { color: 'red', label: 'Locked' },
+  CANCELLED: { color: 'volcano', label: 'Cancelled' },
+  EXPIRED: { color: 'orange', label: 'Expired' },
+};
+const cardType = {
+  DEBIT: { color: 'green', label: 'Debit' },
+  CASH: { color: 'cyan', label: 'Cash' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -42,7 +48,12 @@ const columns = [
   },
   { title: 'Created date', dataIndex: 'cardBatch.createDate', key: 'createDate' },
   { title: 'Expiry date', dataIndex: 'cardBatch.expiryDate', key: 'expiryDate' },
-  { title: 'Card Type', dataIndex: 'cardBatch.type', key: 'type' },
+  {
+    title: 'Card Type',
+    dataIndex: 'cardBatch.type',
+    key: 'type',
+    render: type => <Tag color={cardType[type].color}>{cardType[type].label}</Tag>,
+  },
   {
     title: 'Status',
     dataIndex: 'status',
@@ -92,6 +103,41 @@ class Data extends React.Component {
       .catch(error => {
         console.log('------------------- error - ', error);
       });
+  };
+
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'landscape'; // portrait or landscape
+
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
+
+    doc.setFontSize(15);
+
+    const title = 'Cards Report';
+    const headers = [['Card No', 'Created date', 'Expiry date', 'Card type', 'Card status']];
+
+    const realData = this.state.loadFilterCards.map(d => [
+      d.cardNo,
+      d.cardBatch.createDate,
+      d.cardBatch.expiryDate,
+      d.cardBatch.type,
+      d.status,
+    ]);
+    let content = {
+      startY: 50,
+      head: headers,
+      body: realData,
+    };
+
+    if (realData.length == 0) {
+      message.error("Sorry, we couldn't find any card details with filtered data");
+    } else {
+      doc.text(title, marginLeft, 40);
+      doc.autoTable(content);
+      doc.save('Transaction-report.pdf');
+    }
   };
 
   searchDateHandler = (date, dateString) => {
@@ -162,22 +208,32 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Cards Catalog</div>
+              <div className="box-header">
+                Cards Catalog
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
-                      <FormItem>
-                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
+                      <FormItem label="Search">
                         <Search placeholder="Search Card No" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Expire Date">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
@@ -185,7 +241,7 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Card Type">
                         <Select
                           onChange={this.searchTypeHandler}
                           value={this.state.searchType}
@@ -198,21 +254,26 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Card Status">
                         <Select
                           onChange={this.searchStateHandler}
                           value={this.state.searchState}
                           placeholder="Search Card Status"
                         >
                           <Option value="ALL">All</Option>
-                          <Option value="ACTIVE">active</Option>
-                          <Option value="INACTIVE">inactive</Option>
-                          <Option value="LOCKED">locked</Option>
-                          <Option value="CANCELLED">cancelled</Option>
-                          <Option value="EXPIRED">expired</Option>
+                          <Option value="ACTIVE">Active</Option>
+                          <Option value="INACTIVE">Inactive</Option>
+                          <Option value="LOCKED">Locked</Option>
+                          <Option value="CANCELLED">Cancelled</Option>
+                          <Option value="EXPIRED">Expired</Option>
                         </Select>
                       </FormItem>
                     </Col>
+                    {/* <Col span={6}>
+                      <FormItem>
+                        
+                      </FormItem>
+                    </Col> */}
                   </Row>
                 </Form>
 
