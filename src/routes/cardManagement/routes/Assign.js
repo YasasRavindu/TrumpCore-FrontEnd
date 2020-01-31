@@ -36,7 +36,6 @@ const cardStatus = {
   EXPIRED: { color: 'magenta', label: 'EXPIRED', value: '5' },
 };
 const dateFormat = 'YYYY-MM-DD';
-
 const formItemLayout = {
   labelCol: { span: 10 },
   wrapperCol: { span: 14 },
@@ -218,12 +217,12 @@ class Data extends React.Component {
               let errorCode = error.response.data.validationFailures[0].code;
               console.log('error code', errorCode);
 
-              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR[errorCode];
+              msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
               if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
               }
             } else {
-              msg = CUSTOM_MESSAGE.CARD_REGISRTY_ERROR['defaultError'];
+              msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
             }
             message.error(msg);
             console.log('------------------- error - ', error);
@@ -313,6 +312,12 @@ class Data extends React.Component {
         {account.accountNumber}
       </Option>
     ));
+
+    // const PageLayout = () => (
+    //   <Layout className="app-layout">
+    //     <AppContent/>
+    //   </Layout>
+    // )
 
     return (
       <div className="container-fluid no-breadcrumb container-mw-xl chapter">

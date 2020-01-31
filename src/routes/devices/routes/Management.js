@@ -24,13 +24,9 @@ import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import STATUS from 'constants/notification/status';
 import moment from 'moment';
 
-const deviceStatus = {
-  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
-  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
-  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
-};
 const dateFormat = 'YYYY-MM-DD';
 
 const formItemLayout = {
@@ -109,12 +105,30 @@ class Data extends React.Component {
 
   handleStatus = (id, value) => {
     axios
-      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + deviceStatus[value].value)
+      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + STATUS.DEVICE_STATUS[value].value)
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
         this.loadData();
       })
       .catch(error => {
+        let msg = null;
+        if (
+          error &&
+          error.response &&
+          error.response.data &&
+          error.response.data.validationFailures &&
+          error.response.data.validationFailures[0] &&
+          error.response.data.validationFailures[0].code
+        ) {
+          let errorCode = error.response.data.validationFailures[0].code;
+          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR[errorCode];
+          if (msg === undefined) {
+            msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
+          }
+        } else {
+          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
+        }
+        message.error(msg);
         console.log('------------------- error - ', error);
       });
   };
@@ -367,7 +381,7 @@ class Data extends React.Component {
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
+                        <Tag color={STATUS.DEVICE_STATUS[status].color}>{STATUS.DEVICE_STATUS[status].label}</Tag>
                       )}
                     />
                     <Column

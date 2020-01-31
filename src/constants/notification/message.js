@@ -15,6 +15,11 @@ const CUSTOM_MESSAGE = {
     // invalidCount: 'Please check your card count!',
     defaultError: 'Something went wrong please try again!',
   },
+  
+  USER_ROLE_SAVE_ERROR: {
+    roleNameAlreadyExist: 'Role name already exist!',
+    defaultError: 'Something went wrong please try again!',
+  },
   DEVICES_REGISTRATION_ERROR: {
     alreadyRegistered: 'Device already registered!',
     issueInRegister: 'Something wrong!',
@@ -34,7 +39,7 @@ const CUSTOM_MESSAGE = {
     cardAlreadyAssigned: 'This card already assigned!',
     defaultError: 'Something went wrong please try again!',
   },
-  CARD_REGISRTY_ERROR: {
+  CARD_REGISTRY_ERROR: {
     cardAlreadyAssigned: 'This card already assigned!',
     accountAlreadyAssigned: 'This account already assigned!',
     invalidContext: 'Invalid context!',
