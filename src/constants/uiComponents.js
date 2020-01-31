@@ -52,10 +52,10 @@ export const CARD = [
 ];
 const REPORTCARDS = [
   {
-    name: 'Card - Created',
-    menuName: 'Created',
-    desc: 'Card - Created - Description',
-    path: '/app/report/cards/created',
+    name: 'Card - Catalog',
+    menuName: 'Catalog',
+    desc: 'Card - Catalog - Description',
+    path: '/app/report/cards/catalog',
   },
   {
     name: 'Card - Assign',
@@ -79,8 +79,8 @@ export const REPORT = [
     path: '/app/report/pos',
   },
   {
-    name: 'Report - Cards',
-    menuName: 'Cards',
+    name: 'Cards',
+    // menuName: 'Cards',
     path: '/app/report/cards',
     children: REPORTCARDS,
   },

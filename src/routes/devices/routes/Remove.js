@@ -12,12 +12,14 @@ import {
   message,
   Popconfirm,
   Tooltip,
+  Divider,
 } from 'antd';
 
 import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import STATUS from 'constants/notification/status';
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
 
@@ -64,12 +66,43 @@ class Data extends React.Component {
       });
   };
 
-  devicesDelete = id => {
+  // devicesDelete = id => {
+  //   axios
+  //     .delete(environment.baseUrl + 'device/' + id)
+  //     .then(response => {
+  //       message.success('Devices  successfully removed');
+  //       console.log('------------------- response - ', response);
+  //       this.loadTable();
+  //     })
+  //     .catch(error => {
+  //       let msg = null;
+  //       if (
+  //         error &&
+  //         error.response &&
+  //         error.response.data &&
+  //         error.response.data.validationFailures &&
+  //         error.response.data.validationFailures[0] &&
+  //         error.response.data.validationFailures[0].code
+  //       ) {
+  //         let errorCode = error.response.data.validationFailures[0].code;
+  //         msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR[errorCode];
+  //         if (msg === undefined) {
+  //           msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
+  //         }
+  //       } else {
+  //         msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
+  //       }
+  //       message.error(msg);
+  //       console.log('------------------- error - ', error);
+  //     });
+  // };
+
+  handleStatus = (id, value) => {
     axios
-      .delete(environment.baseUrl + 'device/' + id)
+      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + STATUS.DEVICE_STATUS[value].value)
       .then(response => {
-        message.success('Devices  successfully removed');
-        console.log('------------------- response - ', response);
+        message.success('Device status successfully updated!');
+        // console.log('------------------- response - ', response.data.content);
         this.loadTable();
       })
       .catch(error => {
@@ -83,12 +116,12 @@ class Data extends React.Component {
           error.response.data.validationFailures[0].code
         ) {
           let errorCode = error.response.data.validationFailures[0].code;
-          msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR[errorCode];
+          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR[errorCode];
           if (msg === undefined) {
-            msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR['defaultError'];
+            msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
           }
         } else {
-          msg = CUSTOM_MESSAGE.DEVICES_REMOVE_ERROR['defaultError'];
+          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
         }
         message.error(msg);
         console.log('------------------- error - ', error);
@@ -143,7 +176,7 @@ class Data extends React.Component {
 
   render() {
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
@@ -188,8 +221,21 @@ class Data extends React.Component {
                       render={(text, record) => (
                         <span>
                           <Popconfirm
-                            title="Are you sure delete this assignment?"
-                            onConfirm={() => this.devicesDelete(record.id)}
+                            title="Are you sure, you want re-register this device?"
+                            onConfirm={() => this.handleStatus(record.id, 'RE_REGISTER')}
+                            // onConfirm={() => this.devicesDelete(record.id)}
+                            okText="Yes"
+                            cancelText="No"
+                          >
+                            <Tooltip title="Re Register">
+                              <Icon type="reload" />
+                            </Tooltip>
+                          </Popconfirm>
+                          <Divider type="vertical" />
+                          <Popconfirm
+                            title="Are you sure, you want delete this device?"
+                            onConfirm={() => this.handleStatus(record.id, 'REMOVE')}
+                            // onConfirm={() => this.devicesDelete(record.id)}
                             okText="Yes"
                             cancelText="No"
                           >

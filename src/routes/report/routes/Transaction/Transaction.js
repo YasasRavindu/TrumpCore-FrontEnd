@@ -17,11 +17,29 @@ import { environment } from '../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
   REGISTER: { color: '', label: 'REGISTER' },
   REMOVE: { color: 'magenta', label: 'DELETED' },
+};
+const transactionType = {
+  1: { color: '', label: 'New Biometric' },
+  2: { color: 'magenta', label: 'Edit Biometric' },
+  3: { color: 'red', label: 'Change Pin' },
+  4: { color: 'volcano', label: 'Deposit' },
+  5: { color: 'orange', label: 'Withdrew' },
+  6: { color: 'gold', label: 'Balance Query' },
+  7: { color: 'lime', label: 'Merchant Pay' },
+  8: { color: 'green', label: 'Sim Registration' },
+  9: { color: 'cyan', label: 'Cancel Transaction' },
+  10: { color: 'blue', label: 'Cash Power' },
+  11: { color: 'geekblue', label: 'Soloman Water' },
+  12: { color: 'purple', label: 'TELKO' },
+  13: { color: 'black', label: 'B Mobile' },
+  14: { color: 'pink', label: 'NPF' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -37,42 +55,30 @@ const marks = {
 };
 
 const columns = [
-  { title: 'Device ID', width: 100, dataIndex: 'DeviceID', key: 'DeviceID', fixed: 'left' },
+  { title: 'Account Holder', dataIndex: 'holder', key: 'holder' },
   {
-    title: 'Merchant name',
-    width: 100,
-    dataIndex: 'MerchantName',
-    key: 'MerchantName',
-    fixed: 'left',
+    title: 'Account No',
+    dataIndex: 'accountNo',
+    key: 'accountNo',
   },
-  { title: 'Merchant ID', dataIndex: 'MerchantID', key: 'MerchantID', width: 150 },
-  { title: 'Transaction Type', dataIndex: 'Type', key: 'Type', width: 150 },
-  { title: 'Date', dataIndex: 'Date', key: 'Date', width: 150 },
-  { title: 'Amount', dataIndex: 'Amount', key: 'Amount', width: 150 },
-  { title: 'From', dataIndex: 'From', key: 'From', width: 150 },
-  { title: 'To', dataIndex: 'To', key: 'To', width: 150 },
+  { title: 'Serial No', dataIndex: 'serial', key: 'serial' },
+  { title: 'Merchant Account No', dataIndex: 'merchantAccNo', key: 'merchantAccNo' },
+  { title: 'Merchant Account Name', dataIndex: 'merchantName', key: 'merchantName' },
+  { title: 'Device Account No', dataIndex: 'deviceAccNo', key: 'deviceAccNo' },
+  { title: 'Device Account Name', dataIndex: 'deviceAcctName', key: 'deviceAcctName' },
   {
-    title: 'Action',
-    key: 'operation',
-    fixed: 'right',
-    width: 100,
+    title: 'Log Time',
+    dataIndex: 'logTime',
+    key: 'logTime',
+    render: logTime => moment(logTime).format('MMMM Do YYYY, h:mm:ss a'),
+  },
+  {
+    title: 'Type',
+    dataIndex: 'type',
+    key: 'type',
+    render: type => <Tag color={transactionType[type].color}>{transactionType[type].label}</Tag>,
   },
 ];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    DeviceID: `Edrward ${i}`,
-    MerchantName: 32,
-    MerchantID: `London Park no. ${i}`,
-    Type: `test ${i}`,
-    Date: `test1 ${i}`,
-    Amount: `test2 ${i}`,
-    From: `test3 ${i}`,
-    To: `test4 ${i}`,
-  });
-}
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -82,11 +88,12 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loadDevices: [],
-      loadFilterDevices: [],
+      loadLog: [],
+      loadFilterLog: [],
       loading: false,
       searchDate: ['', ''],
       searchText: '',
+      searchType: 'all',
       inputValue: 1,
     };
   }
@@ -97,17 +104,17 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'report/allLogs')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const devicesList = response.data.content.map(regDevices => {
-          regDevices.key = regDevices.id;
-          return regDevices;
+        const logList = response.data.content.map(log => {
+          log.key = log.id;
+          return log;
         });
 
         this.setState({
-          loadDevices: devicesList,
-          loadFilterDevices: devicesList,
+          loadLog: logList,
+          loadFilterLog: logList,
         });
       })
       .catch(error => {
@@ -115,46 +122,55 @@ class Data extends React.Component {
       });
   };
 
-  submit = e => {
-    this.setState({ loading: true });
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'device', {
-            serial: values.SerialNumber,
-          })
-          .then(response => {
-            message.success('Congratulations! Your device successfully registered.');
-            this.loadTable();
-            this.props.form.resetFields();
-            this.setState({ loading: false });
-            console.log('------------------- response - ', response);
-          })
-          .catch(error => {
-            console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
-            this.setState({ loading: false });
-          });
-      }
-    });
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'landscape'; // portrait or landscape
+
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
+
+    doc.setFontSize(15);
+
+    const title = 'Transaction Report';
+    const headers = [
+      [
+        'Account holder',
+        'Account no',
+        'Serial no',
+        'Merchant account',
+        'Merchant Name',
+        'Device Account',
+        'Device Acc name',
+        'Log Time',
+        'Transaction Type',
+      ],
+    ];
+
+    const realData = this.state.loadFilterLog.map(d => [
+      d.holder,
+      d.accountNo,
+      d.serial,
+      d.merchantAccNo,
+      d.merchantName,
+      d.deviceAccNo,
+      d.deviceAcctName,
+      moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
+      transactionType[d.type].label,
+    ]);
+    let content = {
+      startY: 50,
+      head: headers,
+      body: realData,
+    };
+
+    if (realData.length == 0) {
+      message.error("Sorry, we couldn't find any devices with filtered data");
+    } else {
+      doc.text(title, marginLeft, 40);
+      doc.autoTable(content);
+      doc.save('Transaction-report.pdf');
+    }
   };
 
   searchDateHandler = (date, dateString) => {
@@ -163,6 +179,9 @@ class Data extends React.Component {
 
   searchTextHandler = e => {
     this.dataFilter('searchText', e.target.value);
+  };
+  searchTypeHandler = v => {
+    this.dataFilter('searchType', v);
   };
 
   onChange = value => {
@@ -177,15 +196,21 @@ class Data extends React.Component {
         [key]: value,
       },
       () => {
-        let data = this.state.loadDevices;
+        let data = this.state.loadLog;
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
+        let searchType = this.state.searchType;
 
         if (searchText) {
           data = data.filter(d => {
             return (
+              d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.accountNo.toLowerCase().includes(searchText.toLowerCase()) ||
               d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.status.toLowerCase().includes(searchText.toLowerCase())
+              d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.merchantName.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
+              d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase())
             );
           });
         }
@@ -194,13 +219,17 @@ class Data extends React.Component {
           var startDate = moment(searchDate[0]);
           var endDate = moment(searchDate[1]);
           data = data.filter(d => {
-            var date = moment(d.createDate);
+            var date = moment(d.logTime);
             return date.isAfter(startDate) && date.isBefore(endDate);
           });
         }
 
+        if (searchType !== 'all') {
+          data = data.filter(d => d.type == searchType);
+        }
+
         this.setState({
-          loadFilterDevices: data,
+          loadFilterLog: data,
         });
       }
     );
@@ -210,22 +239,32 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">Transaction Report</div>
+              <div className="box-header">
+                Transaction Report
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
-                      <FormItem>
-                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
+                      <FormItem label="Search">
+                        <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Log time">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
@@ -233,26 +272,28 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Transaction type">
                         <Select
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
+                          onChange={this.searchTypeHandler}
+                          value={this.state.searchType}
                           placeholder="Search transaction type"
                         >
                           <Option value="all">All</Option>
-                          <Option value="initiate">Initiate</Option>
-                          <Option value="download">Download</Option>
-                          <Option value="active">Active</Option>
+                          <Option value="1">New Biometric</Option>
+                          <Option value="2">Edit Biometric</Option>
+                          <Option value="3">Change Pin</Option>
+                          <Option value="4">Deposit</Option>
+                          <Option value="5">Withdrew</Option>
+                          <Option value="6">Balance Query</Option>
+                          <Option value="7">Merchant Pay</Option>
+                          <Option value="8">Sim Registration</Option>
+                          <Option value="9">Cancel Transaction</Option>
+                          <Option value="10">Cash Power</Option>
+                          <Option value="11">Soloman Water</Option>
+                          <Option value="12">TELKO</Option>
+                          <Option value="13">B Mobile</Option>
+                          <Option value="14">NPF</Option>
                         </Select>
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        <Slider
-                          marks={marks}
-                          onChange={this.onChange}
-                          value={this.state.inputValue}
-                        />
                       </FormItem>
                     </Col>
                   </Row>
@@ -261,8 +302,8 @@ class Data extends React.Component {
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={data}
-                    scroll={{ x: 1500, y: 300 }}
+                    dataSource={this.state.loadFilterLog}
+                    scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
                   />
                 </article>

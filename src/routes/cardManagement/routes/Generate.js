@@ -230,7 +230,7 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default mb-4">

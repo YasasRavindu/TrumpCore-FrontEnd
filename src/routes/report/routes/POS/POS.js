@@ -17,11 +17,16 @@ import { environment } from '../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Search = Input.Search;
 const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
+  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
+  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
+  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
+  REGISTER: { color: 'green', label: 'REGISTER', value: '4' },
+  REMOVE: { color: 'red', label: 'REMOVE', value: '5' },
 };
 const dateFormat = 'YYYY-MM-DD';
 
@@ -32,35 +37,19 @@ const formItemLayout = {
 
 const columns = [
   {
-    title: 'Merchant name',
-    width: 150,
-    dataIndex: 'merchantName',
-    key: 'merchantName',
-    fixed: 'left',
+    title: 'Serial Number',
+    dataIndex: 'serial',
+    key: 'serial',
   },
-  { title: 'Account number', dataIndex: 'accountNo', key: 'accountNo', width: 150 },
-  { title: 'Registered Serial Number', dataIndex: 'serialNo', key: 'serialNo', width: 150 },
   { title: 'Created date', dataIndex: 'createDate', key: 'createDate', width: 150 },
-  { title: 'Status', dataIndex: 'status', key: 'status', width: 150 },
   {
-    title: 'Action',
-    key: 'operation',
-    fixed: 'right',
-    width: 100,
+    title: 'Status',
+    dataIndex: 'status',
+    key: 'status',
+    width: 150,
+    render: status => <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>,
   },
 ];
-
-const data = [];
-for (let i = 0; i < 100; i++) {
-  data.push({
-    key: i,
-    merchantName: `Edrward ${i}`,
-    accountNo: 32,
-    serialNo: `London Park no. ${i}`,
-    createDate: `test. ${i}`,
-    status: `test2. ${i}`,
-  });
-}
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -76,6 +65,7 @@ class Data extends React.Component {
       searchDate: ['', ''],
       searchText: '',
       inputValue: 1,
+      searchStatus: 'all',
     };
   }
 
@@ -85,7 +75,7 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .get(environment.baseUrl + 'device/search/all')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const devicesList = response.data.content.map(regDevices => {
@@ -103,46 +93,67 @@ class Data extends React.Component {
       });
   };
 
-  submit = e => {
-    this.setState({ loading: true });
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        axios
-          .post(environment.baseUrl + 'device', {
-            serial: values.SerialNumber,
-          })
-          .then(response => {
-            message.success('Congratulations! Your device successfully registered.');
-            this.loadTable();
-            this.props.form.resetFields();
-            this.setState({ loading: false });
-            console.log('------------------- response - ', response);
-          })
-          .catch(error => {
-            console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DIVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
-            this.setState({ loading: false });
-          });
-      }
-    });
+  expandedRowRender = (holder, accountNumber) => {
+    return (
+      <React.Fragment>
+        <Row>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Account Holder</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{holder}</p>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Account Number</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{accountNumber}</p>
+          </Col>
+        </Row>
+      </React.Fragment>
+    );
+  };
+  exportPDF = () => {
+    const unit = 'pt';
+    const size = 'A4'; // Use A1, A2, A3 or A4
+    const orientation = 'portrait'; // portrait or landscape
+
+    const marginLeft = 40;
+    const doc = new jsPDF(orientation, unit, size);
+
+    doc.setFontSize(15);
+
+    const title = 'POS Devices Report';
+    const headers = [
+      ['Serial number', 'Created date', 'Status', 'Account holder', 'Account number'],
+    ];
+
+    const realData = this.state.loadFilterDevices.map(d =>
+      d.account !== null
+        ? [
+            d.serial,
+            d.createDate,
+            d.status.toLowerCase(),
+            d.account.holder,
+            d.account.accountNumber,
+          ]
+        : [d.serial, d.createDate, d.status, 'N/A', 'N/A']
+    );
+    let content = {
+      startY: 50,
+      head: headers,
+      body: realData,
+    };
+
+    if (realData.length == 0) {
+      message.error("Sorry, we couldn't find any devices with filtered data");
+    } else {
+      doc.text(title, marginLeft, 40);
+      doc.autoTable(content);
+      doc.save('POS-devices-report.pdf');
+    }
   };
 
   searchDateHandler = (date, dateString) => {
@@ -151,6 +162,10 @@ class Data extends React.Component {
 
   searchTextHandler = e => {
     this.dataFilter('searchText', e.target.value);
+  };
+
+  searchStatusHandler = v => {
+    this.dataFilter('searchStatus', v);
   };
 
   onChange = value => {
@@ -168,13 +183,19 @@ class Data extends React.Component {
         let data = this.state.loadDevices;
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
+        let searchStatus = this.state.searchStatus.toUpperCase();
 
         if (searchText) {
           data = data.filter(d => {
-            return (
-              d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.status.toLowerCase().includes(searchText.toLowerCase())
-            );
+            if (d.account !== null) {
+              return (
+                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+              );
+            } else {
+              return d.serial.toLowerCase().includes(searchText.toLowerCase());
+            }
           });
         }
 
@@ -185,6 +206,10 @@ class Data extends React.Component {
             var date = moment(d.createDate);
             return date.isAfter(startDate) && date.isBefore(endDate);
           });
+        }
+
+        if (searchStatus !== 'ALL') {
+          data = data.filter(d => d.status === searchStatus);
         }
 
         this.setState({
@@ -198,50 +223,57 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              <div className="box-header">POS Devices Report</div>
+              <div className="box-header">
+                POS Devices Report
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="download"
+                  onClick={() => this.exportPDF()}
+                  className="float-right"
+                >
+                  PDF
+                </Button>
+              </div>
               <div className="box-body">
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6}>
-                      <FormItem>
+                    <Col span={8}>
+                      <FormItem label="Search">
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Search device ID" onChange={this.searchTextHandler} />
+                        <Search
+                          placeholder="Search serial number or account details"
+                          onChange={this.searchTextHandler}
+                        />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem>
+                      <FormItem label="Created date">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
                           format={dateFormat}
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
-                      <FormItem>
+                    <Col span={4}>
+                      <FormItem label="Status">
                         <Select
                           onChange={this.searchStatusHandler}
                           value={this.state.searchStatus}
                           placeholder="Search POS Status"
                         >
                           <Option value="all">All</Option>
-                          <Option value="initiate">Initiate</Option>
-                          <Option value="download">Download</Option>
+                          <Option value="register">Register</Option>
                           <Option value="active">Active</Option>
+                          <Option value="inactive">Inactive</Option>
+                          <Option value="locked">Locked</Option>
+                          <Option value="remove">Remove</Option>
                         </Select>
                       </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      {/* <FormItem>
-                        <Slider
-                          marks={marks}
-                          onChange={this.onChange}
-                          value={this.state.inputValue}
-                        />
-                      </FormItem> */}
                     </Col>
                   </Row>
                 </Form>
@@ -249,9 +281,18 @@ class Data extends React.Component {
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={data}
-                    scroll={{ x: 1500, y: 300 }}
-                    className="ant-table-v1"
+                    dataSource={this.state.loadFilterDevices}
+                    expandedRowRender={record =>
+                      record.account != null ? (
+                        this.expandedRowRender(record.account.holder, record.account.accountNumber)
+                      ) : (
+                        <span>
+                          <Tag color={'red'}>No Account Details</Tag>
+                        </span>
+                      )
+                    }
+                    //scroll={{ x: 1500, y: 300 }}
+                    className="components-table-demo-nested"
                   />
                 </article>
               </div>

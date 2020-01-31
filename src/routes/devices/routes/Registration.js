@@ -5,12 +5,9 @@ import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
-const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
-};
 const dateFormat = 'YYYY-MM-DD';
 
 const formItemLayout = {
@@ -147,7 +144,7 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <div className="container-fluid no-breadcrumb container-mw-xl chapter">
+      <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default mb-4">
@@ -218,7 +215,7 @@ class Data extends React.Component {
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>
+                        <Tag color={STATUS.DEVICE_STATUS[status].color}>{STATUS.DEVICE_STATUS[status].label}</Tag>
                       )}
                     />
                   </Table>

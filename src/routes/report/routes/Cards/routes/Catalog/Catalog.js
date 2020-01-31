@@ -28,6 +28,10 @@ const cardStatus = {
   CANCELLED: { color: 'volcano', label: 'Cancelled' },
   EXPIRED: { color: 'orange', label: 'Expired' },
 };
+const cardType = {
+  DEBIT: { color: 'green', label: 'Debit' },
+  CASH: { color: 'cyan', label: 'Cash' },
+};
 const dateFormat = 'YYYY-MM-DD';
 
 const formItemLayout = {
@@ -38,21 +42,24 @@ const formItemLayout = {
 const columns = [
   {
     title: 'Card No',
-    dataIndex: 'card.cardNo',
+    dataIndex: 'cardNo',
     key: 'cardNo',
     fixed: 'left',
   },
-  { title: 'Account no', dataIndex: 'account.accountNumber', key: 'accountNumber' },
-  { title: 'Account holder', dataIndex: 'account.holder', key: 'holder' },
-  { title: 'Card expire date', dataIndex: 'card.cardBatch.expiryDate', key: 'expireDate' },
-  { title: 'Card create date', dataIndex: 'card.cardBatch.createDate', key: 'createDate' },
+  { title: 'Created date', dataIndex: 'cardBatch.createDate', key: 'createDate' },
+  { title: 'Expiry date', dataIndex: 'cardBatch.expiryDate', key: 'expiryDate' },
   {
-    title: 'Card status',
-    dataIndex: 'card.status',
+    title: 'Card Type',
+    dataIndex: 'cardBatch.type',
+    key: 'type',
+    render: type => <Tag color={cardType[type].color}>{cardType[type].label}</Tag>,
+  },
+  {
+    title: 'Status',
+    dataIndex: 'status',
     key: 'status',
     render: status => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
   },
-  { title: 'Card assigned date', dataIndex: 'assignedDate', key: 'assignedDate' },
 ];
 
 const FormItem = Form.Item;
@@ -63,14 +70,14 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loadCardRegistry: [],
-      loadFilterCardRegistry: [],
+      loadCards: [],
+      loadFilterCards: [],
       loading: false,
-      searchExDate: ['', ''],
-      searchAsDate: ['', ''],
+      searchDate: ['', ''],
       searchText: '',
-      searchState: 'ALL',
       inputValue: 1,
+      searchType: 'ALL',
+      searchState: 'ALL',
     };
   }
 
@@ -80,92 +87,22 @@ class Data extends React.Component {
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'cardRegistry')
+      .get(environment.baseUrl + 'card/search/all/all')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const cardList = response.data.content.map(cardRegistry => {
-          cardRegistry.key = cardRegistry.id;
-          return cardRegistry;
+        const cardList = response.data.content.map(card => {
+          card.key = card.id;
+          return card;
         });
 
         this.setState({
-          loadCardRegistry: cardList,
-          loadFilterCardRegistry: cardList,
+          loadCards: cardList,
+          loadFilterCards: cardList,
         });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
-  };
-
-  searchexDateHandler = (date, dateString) => {
-    this.dataFilter('searchExDate', dateString);
-  };
-  searchAsDateHandler = (date, dateString) => {
-    this.dataFilter('searchAsDate', dateString);
-  };
-
-  searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
-  };
-  searchStateHandler = s => {
-    this.dataFilter('searchState', s);
-  };
-
-  onChange = value => {
-    this.setState({
-      inputValue: value,
-    });
-  };
-
-  dataFilter = (key, value) => {
-    this.setState(
-      {
-        [key]: value,
-      },
-      () => {
-        let data = this.state.loadCardRegistry;
-        let searchExDate = this.state.searchExDate;
-        let searchAsDate = this.state.searchAsDate;
-        let searchText = this.state.searchText;
-        let searchState = this.state.searchState.toUpperCase();
-
-        if (searchText) {
-          data = data.filter(d => {
-            return (
-              d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.holder.toLowerCase().includes(searchText.toLowerCase())
-            );
-          });
-        }
-
-        if (searchExDate.length > 0 && searchExDate[0] !== '' && searchExDate[1] !== '') {
-          var startDate = moment(searchExDate[0]);
-          var endDate = moment(searchExDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.card.cardBatch.expiryDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-        if (searchAsDate.length > 0 && searchAsDate[0] !== '' && searchAsDate[1] !== '') {
-          var startDate = moment(searchAsDate[0]);
-          var endDate = moment(searchAsDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.assignedDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-
-        if (searchState !== 'ALL') {
-          data = data.filter(d => d.card.status == searchState);
-        }
-
-        this.setState({
-          loadFilterCardRegistry: data,
-        });
-      }
-    );
   };
 
   exportPDF = () => {
@@ -179,26 +116,14 @@ class Data extends React.Component {
     doc.setFontSize(15);
 
     const title = 'Cards Report';
-    const headers = [
-      [
-        'Card No',
-        'Account no',
-        'Account Holder',
-        'Card expire date',
-        'Card create date',
-        'Card status',
-        'Card Assigned date',
-      ],
-    ];
+    const headers = [['Card No', 'Created date', 'Expiry date', 'Card type', 'Card status']];
 
-    const realData = this.state.loadFilterCardRegistry.map(d => [
-      d.card.cardNo,
-      d.account.accountNumber,
-      d.account.holder,
-      d.card.cardBatch.expiryDate,
-      d.card.cardBatch.createDate,
-      d.card.status.toLowerCase(),
-      d.assignedDate,
+    const realData = this.state.loadFilterCards.map(d => [
+      d.cardNo,
+      d.cardBatch.createDate,
+      d.cardBatch.expiryDate,
+      d.cardBatch.type,
+      d.status,
     ]);
     let content = {
       startY: 50,
@@ -215,6 +140,70 @@ class Data extends React.Component {
     }
   };
 
+  searchDateHandler = (date, dateString) => {
+    this.dataFilter('searchDate', dateString);
+  };
+
+  searchTextHandler = e => {
+    this.dataFilter('searchText', e.target.value);
+  };
+
+  searchTypeHandler = v => {
+    this.dataFilter('searchType', v);
+  };
+
+  searchStateHandler = s => {
+    this.dataFilter('searchState', s);
+  };
+
+  onChange = value => {
+    this.setState({
+      inputValue: value,
+    });
+  };
+
+  dataFilter = (key, value) => {
+    this.setState(
+      {
+        [key]: value,
+      },
+      () => {
+        let data = this.state.loadCards;
+        let searchDate = this.state.searchDate;
+        let searchText = this.state.searchText;
+        let searchType = this.state.searchType.toUpperCase();
+        let searchState = this.state.searchState.toUpperCase();
+
+        if (searchText) {
+          data = data.filter(d => {
+            return d.cardNo.toLowerCase().includes(searchText.toLowerCase());
+          });
+        }
+
+        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+          var startDate = moment(searchDate[0]);
+          var endDate = moment(searchDate[1]);
+          data = data.filter(d => {
+            var date = moment(d.cardBatch.expiryDate);
+            return date.isAfter(startDate) && date.isBefore(endDate);
+          });
+        }
+
+        if (searchType !== 'ALL') {
+          data = data.filter(d => d.cardBatch.type == searchType);
+        }
+
+        if (searchState !== 'ALL') {
+          data = data.filter(d => d.status == searchState);
+        }
+
+        this.setState({
+          loadFilterCards: data,
+        });
+      }
+    );
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
 
@@ -224,7 +213,7 @@ class Data extends React.Component {
           <div key="1">
             <div className="box box-default">
               <div className="box-header">
-                Assigned Cards
+                Cards Catalog
                 <Button
                   type="primary"
                   shape="round"
@@ -240,24 +229,28 @@ class Data extends React.Component {
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6}>
                       <FormItem label="Search">
-                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
+                        <Search placeholder="Search Card No" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem label="Card expire date">
+                      <FormItem label="Expire Date">
                         <DatePicker.RangePicker
-                          onChange={this.searchexDateHandler}
+                          onChange={this.searchDateHandler}
                           format={dateFormat}
                         />
                       </FormItem>
                     </Col>
                     <Col span={6}>
-                      <FormItem label="Card assigned date">
-                        <DatePicker.RangePicker
-                          onChange={this.searchAsDateHandler}
-                          format={dateFormat}
-                        />
+                      <FormItem label="Card Type">
+                        <Select
+                          onChange={this.searchTypeHandler}
+                          value={this.state.searchType}
+                          placeholder="Search Card Type"
+                        >
+                          <Option value="ALL">All</Option>
+                          <Option value="DEBIT">Debit</Option>
+                          <Option value="CASH">Credit</Option>
+                        </Select>
                       </FormItem>
                     </Col>
                     <Col span={6}>
@@ -276,14 +269,19 @@ class Data extends React.Component {
                         </Select>
                       </FormItem>
                     </Col>
+                    {/* <Col span={6}>
+                      <FormItem>
+                        
+                      </FormItem>
+                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={this.state.loadFilterCardRegistry}
-                    scroll={{ x: 1500, y: 300 }}
+                    dataSource={this.state.loadFilterCards}
+                    scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
                   />
                 </article>
@@ -298,6 +296,6 @@ class Data extends React.Component {
 
 const WrappedData = Form.create()(Data);
 
-const Assigned = () => <WrappedData />;
+const Catalog = () => <WrappedData />;
 
-export default Assigned;
+export default Catalog;
