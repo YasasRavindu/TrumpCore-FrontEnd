@@ -47,7 +47,7 @@ const columns = [
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    render: type => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
+    render: status => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
   },
 ];
 
