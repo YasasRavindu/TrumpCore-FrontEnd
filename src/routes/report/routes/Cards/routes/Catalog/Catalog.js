@@ -16,11 +16,22 @@ import {
 import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
+import CUSTOM_MESSAGE from 'constants/notification/message';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
+const cardStatus = {
+  ACTIVE: { color: '', label: 'Active' },
+  INACTIVE: { color: 'magenta', label: 'Inactive' },
+  LOCKED: { color: 'red', label: 'Locked' },
+  CANCELLED: { color: 'volcano', label: 'Cancelled' },
+  EXPIRED: { color: 'orange', label: 'Expired' },
+};
+const cardType = {
+  DEBIT: { color: 'green', label: 'Debit' },
+  CASH: { color: 'cyan', label: 'Cash' },
+};
 const dateFormat = 'YYYY-MM-DD';
 
 const formItemLayout = {
@@ -41,15 +52,13 @@ const columns = [
     title: 'Card Type',
     dataIndex: 'cardBatch.type',
     key: 'type',
-    render: type => <Tag color={STATUS.CARD_TYPE[type].color}>{STATUS.CARD_TYPE[type].label}</Tag>,
+    render: type => <Tag color={cardType[type].color}>{cardType[type].label}</Tag>,
   },
   {
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    render: status => (
-      <Tag color={STATUS.CARD_STATUS[status].color}>{STATUS.CARD_STATUS[status].label}</Tag>
-    ),
+    render: status => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
   },
 ];
 

@@ -22,7 +22,6 @@ import { environment, commonUrl } from '../../../environments';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 import axios from 'axios';
 import moment from 'moment';
-import STATUS from 'constants/notification/status';
 const confirm = Modal.confirm;
 
 const batchStatus = {
@@ -328,9 +327,7 @@ class Data extends React.Component {
                       title="Status"
                       dataIndex="status"
                       key="status"
-                      render={status => (
-                        <Tag color={STATUS.BATCH_STATUS[status].color}>{status}</Tag>
-                      )}
+                      render={status => <Tag color={batchStatus[status].color}>{status}</Tag>}
                     />
                     <Column
                       title="Action"
