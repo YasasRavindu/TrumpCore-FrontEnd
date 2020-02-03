@@ -233,7 +233,7 @@ class Data extends React.Component {
                         >
                           <Option value="ALL">All</Option>
                           <Option value="DEBIT">Debit</Option>
-                          <Option value="CASH">Credit</Option>
+                          <Option value="CASH">Cash</Option>
                         </Select>
                       </FormItem>
                     </Col>
