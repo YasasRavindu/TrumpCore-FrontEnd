@@ -19,22 +19,10 @@ import moment from 'moment';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
-const deviceStatus = {
-  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
-  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
-  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
-  REGISTER: { color: 'green', label: 'REGISTER', value: '4' },
-  REMOVE: { color: 'red', label: 'REMOVE', value: '5' },
-};
 const dateFormat = 'YYYY-MM-DD';
-
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
-
 const columns = [
   {
     title: 'Serial Number',
@@ -47,7 +35,9 @@ const columns = [
     dataIndex: 'status',
     key: 'status',
     width: 150,
-    render: status => <Tag color={deviceStatus[status].color}>{deviceStatus[status].label}</Tag>,
+    render: status => (
+      <Tag color={STATUS.DEVICE_STATUS[status].color}>{STATUS.DEVICE_STATUS[status].label}</Tag>
+    ),
   },
 ];
 

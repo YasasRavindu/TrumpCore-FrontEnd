@@ -16,44 +16,12 @@ import {
 import { environment } from '../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
-import CUSTOM_MESSAGE from 'constants/notification/message';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
-const deviceStatus = {
-  REGISTER: { color: '', label: 'REGISTER' },
-  REMOVE: { color: 'magenta', label: 'DELETED' },
-};
-const transactionType = {
-  1: { color: '', label: 'New Biometric' },
-  2: { color: 'magenta', label: 'Edit Biometric' },
-  3: { color: 'red', label: 'Change Pin' },
-  4: { color: 'volcano', label: 'Deposit' },
-  5: { color: 'orange', label: 'Withdrew' },
-  6: { color: 'gold', label: 'Balance Query' },
-  7: { color: 'lime', label: 'Merchant Pay' },
-  8: { color: 'green', label: 'Sim Registration' },
-  9: { color: 'cyan', label: 'Cancel Transaction' },
-  10: { color: 'blue', label: 'Cash Power' },
-  11: { color: 'geekblue', label: 'Soloman Water' },
-  12: { color: 'purple', label: 'TELKO' },
-  13: { color: 'black', label: 'B Mobile' },
-  14: { color: 'pink', label: 'NPF' },
-};
 const dateFormat = 'YYYY-MM-DD';
-
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
-
-const marks = {
-  0: '$0',
-  50: '$50',
-  100: '$100',
-};
-
 const columns = [
   { title: 'Account Holder', dataIndex: 'holder', key: 'holder' },
   {
@@ -76,7 +44,9 @@ const columns = [
     title: 'Type',
     dataIndex: 'type',
     key: 'type',
-    render: type => <Tag color={transactionType[type].color}>{transactionType[type].label}</Tag>,
+    render: type => (
+      <Tag color={STATUS.TRANSACTION_TYPE[type].color}>{STATUS.TRANSACTION_TYPE[type].label}</Tag>
+    ),
   },
 ];
 
@@ -156,7 +126,7 @@ class Data extends React.Component {
       d.deviceAccNo,
       d.deviceAcctName,
       moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
-      transactionType[d.type].label,
+      STATUS.TRANSACTION_TYPE[d.type].label,
     ]);
     let content = {
       startY: 50,
