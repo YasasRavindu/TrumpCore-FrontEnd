@@ -23,18 +23,10 @@ import {
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
-import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 import moment from 'moment';
-import { log } from 'util';
+import STATUS from 'constants/notification/status';
 
-const cardStatus = {
-  ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
-  INACTIVE: { color: '', label: 'INACTIVE', value: '2' },
-  LOCKED: { color: 'magenta', label: 'LOCKED', value: '3' },
-  CANCELLED: { color: 'magenta', label: 'CANCELLED', value: '4' },
-  EXPIRED: { color: 'magenta', label: 'EXPIRED', value: '5' },
-};
 const dateFormat = 'YYYY-MM-DD';
 const formItemLayout = {
   labelCol: { span: 10 },
@@ -465,7 +457,9 @@ class Data extends React.Component {
                       render={status => (
                         <>
                           {status && (
-                            <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>
+                            <Tag color={STATUS.CARD_STATUS[status].color}>
+                              {STATUS.CARD_STATUS[status].label}
+                            </Tag>
                           )}
                         </>
                       )}
