@@ -16,25 +16,12 @@ import {
 import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
-import CUSTOM_MESSAGE from 'constants/notification/message';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
-const cardStatus = {
-  ACTIVE: { color: '', label: 'Active' },
-  INACTIVE: { color: 'magenta', label: 'Inactive' },
-  LOCKED: { color: 'red', label: 'Locked' },
-  CANCELLED: { color: 'volcano', label: 'Cancelled' },
-  EXPIRED: { color: 'orange', label: 'Expired' },
-};
 const dateFormat = 'YYYY-MM-DD';
-
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
-
 const columns = [
   {
     title: 'Card No',
@@ -50,7 +37,9 @@ const columns = [
     title: 'Card status',
     dataIndex: 'card.status',
     key: 'status',
-    render: status => <Tag color={cardStatus[status].color}>{cardStatus[status].label}</Tag>,
+    render: status => (
+      <Tag color={STATUS.CARD_STATUS[status].color}>{STATUS.CARD_STATUS[status].label}</Tag>
+    ),
   },
   { title: 'Card assigned date', dataIndex: 'assignedDate', key: 'assignedDate' },
 ];
