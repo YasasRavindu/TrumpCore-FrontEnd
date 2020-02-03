@@ -36,7 +36,7 @@ class App extends React.Component {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
     if (isRoot) {
-      // return <Redirect to={'/app/dashboard'} />;
+      //return <Redirect to={'/app/dashboard'} />;
       return <Redirect to={'/user/login'} />;
     }
 
