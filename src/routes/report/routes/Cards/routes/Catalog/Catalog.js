@@ -12,12 +12,14 @@ import {
   DatePicker,
   message,
   Slider,
+  Icon,
 } from 'antd';
 import { environment } from '../../../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
@@ -44,6 +46,14 @@ const columns = [
       <Tag color={STATUS.CARD_STATUS[status].color}>{STATUS.CARD_STATUS[status].label}</Tag>
     ),
   },
+];
+
+const csvHeader = [
+  { label: 'Card No', key: 'cardNo' },
+  { label: 'Created date', key: 'cardBatch.createDate' },
+  { label: 'Expiry date', key: 'cardBatch.expiryDate' },
+  { label: 'Card Type', key: 'cardBatch.type' },
+  { label: 'Status', key: 'status' },
 ];
 
 const FormItem = Form.Item;
@@ -120,7 +130,7 @@ class Data extends React.Component {
     } else {
       doc.text(title, marginLeft, 40);
       doc.autoTable(content);
-      doc.save('Transaction-report.pdf');
+      doc.save('Card-catalog-report.pdf');
     }
   };
 
@@ -203,10 +213,20 @@ class Data extends React.Component {
                   shape="round"
                   icon="download"
                   onClick={() => this.exportPDF()}
-                  className="float-right"
+                  className="float-right ml-1"
                 >
                   PDF
                 </Button>
+                <CSVLink
+                  data={this.state.loadFilterCards}
+                  headers={csvHeader}
+                  filename={'Card-catalog-report.csv'}
+                  className="ant-btn float-right ant-btn-primary ant-btn-round"
+                >
+                  <Icon type="download" />
+                  <span class="mr-1"></span>
+                  CSV
+                </CSVLink>
               </div>
               <div className="box-body">
                 <Form>

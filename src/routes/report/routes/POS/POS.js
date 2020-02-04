@@ -12,6 +12,7 @@ import {
   DatePicker,
   message,
   Slider,
+  Icon,
 } from 'antd';
 import { environment } from '../../../../environments';
 import axios from 'axios';
@@ -19,6 +20,7 @@ import moment from 'moment';
 import STATUS from 'constants/notification/status';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { CSVLink } from 'react-csv';
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
 const columns = [
@@ -37,6 +39,11 @@ const columns = [
       <Tag color={STATUS.DEVICE_STATUS[status].color}>{STATUS.DEVICE_STATUS[status].label}</Tag>
     ),
   },
+];
+const csvHeader = [
+  { label: 'Serial Number', key: 'serial' },
+  { label: 'Created date', key: 'createDate' },
+  { label: 'Status', key: 'status' },
 ];
 
 const FormItem = Form.Item;
@@ -222,10 +229,20 @@ class Data extends React.Component {
                   shape="round"
                   icon="download"
                   onClick={() => this.exportPDF()}
-                  className="float-right"
+                  className="float-right ml-1"
                 >
                   PDF
                 </Button>
+                <CSVLink
+                  data={this.state.loadFilterDevices}
+                  headers={csvHeader}
+                  filename={'POS-devices-report.csv'}
+                  className="ant-btn float-right ant-btn-primary ant-btn-round"
+                >
+                  <Icon type="download" />
+                  <span class="mr-1"></span>
+                  CSV
+                </CSVLink>
               </div>
               <div className="box-body">
                 <Form>
