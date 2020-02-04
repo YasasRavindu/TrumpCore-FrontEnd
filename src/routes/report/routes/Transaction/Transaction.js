@@ -12,12 +12,14 @@ import {
   DatePicker,
   message,
   Slider,
+  Icon,
 } from 'antd';
 import { environment } from '../../../../environments';
 import axios from 'axios';
 import moment from 'moment';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
@@ -49,6 +51,17 @@ const columns = [
       <Tag color={STATUS.TRANSACTION_TYPE[type].color}>{STATUS.TRANSACTION_TYPE[type].label}</Tag>
     ),
   },
+];
+const csvHeader = [
+  { label: 'Account Holder', key: 'holder' },
+  { label: 'Account No', key: 'accountNo' },
+  { label: 'Serial No', key: 'serial' },
+  { label: 'Merchant Account No', key: 'merchantAccNo' },
+  { label: 'Merchant Account Name', key: 'merchantName' },
+  { label: 'Device Account No', key: 'deviceAccNo' },
+  { label: 'Device Account Name', key: 'deviceAcctName' },
+  { label: 'Log Time', key: 'logTime' },
+  { label: 'Type', key: 'type' },
 ];
 
 const FormItem = Form.Item;
@@ -221,10 +234,20 @@ class Data extends React.Component {
                   shape="round"
                   icon="download"
                   onClick={() => this.exportPDF()}
-                  className="float-right"
+                  className="float-right ml-1"
                 >
                   PDF
                 </Button>
+                <CSVLink
+                  data={this.state.loadFilterLog}
+                  headers={csvHeader}
+                  filename={'Transaction-report.csv'}
+                  className="ant-btn float-right ant-btn-primary ant-btn-round"
+                >
+                  <Icon type="download" />
+                  <span class="mr-1"></span>
+                  CSV
+                </CSVLink>
               </div>
               <div className="box-body">
                 <Form>
