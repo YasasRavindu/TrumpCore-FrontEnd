@@ -13,6 +13,7 @@ import {
   message,
   Slider,
   Icon,
+  TreeSelect,
 } from 'antd';
 import { environment } from '../../../../../../environments';
 import axios from 'axios';
@@ -21,6 +22,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
+const { SHOW_PARENT } = TreeSelect;
 
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
@@ -47,12 +49,40 @@ const columns = [
   { title: 'Card assigned date', dataIndex: 'assignedDate', key: 'assignedDate' },
 ];
 const csvHeader = [
-  { label: 'Card No', key: 'card.cardNo' },
-  { label: 'Account no', key: 'account.accountNumber' },
-  { label: 'Account holder', key: 'account.holder' },
-  { label: 'Card expire date', key: 'card.cardBatch.expiryDate' },
-  { label: 'Card create date', key: 'card.cardBatch.createDate' },
-  { label: 'Card status', key: 'card.status' },
+  { label: 'Card No', key: 'cardNo' },
+  { label: 'Account no', key: 'accountNumber' },
+  { label: 'Account holder', key: 'holder' },
+  { label: 'Card expire date', key: 'expiryDate' },
+  { label: 'Card create date', key: 'createDate' },
+  { label: 'Card status', key: 'status' },
+  { label: 'Assigned Date', key: 'assignedDate' },
+];
+const treeData = [
+  {
+    title: 'Active',
+    value: 'active',
+    key: 'active',
+  },
+  {
+    title: 'Inactive',
+    value: 'inactive',
+    key: 'inactive',
+  },
+  {
+    title: 'Locked',
+    value: 'locked',
+    key: 'locked',
+  },
+  {
+    title: 'Cancelled',
+    value: 'cancelled',
+    key: 'cancelled',
+  },
+  {
+    title: 'Expired',
+    value: 'expired',
+    key: 'expired',
+  },
 ];
 
 const FormItem = Form.Item;
@@ -69,7 +99,7 @@ class Data extends React.Component {
       searchExDate: ['', ''],
       searchAsDate: ['', ''],
       searchText: '',
-      searchState: 'ALL',
+      searchState: [],
       inputValue: 1,
     };
   }
@@ -128,37 +158,49 @@ class Data extends React.Component {
         let searchExDate = this.state.searchExDate;
         let searchAsDate = this.state.searchAsDate;
         let searchText = this.state.searchText;
-        let searchState = this.state.searchState.toUpperCase();
-
-        if (searchText) {
+        let searchState = this.state.searchState;
+        if (
+          searchText ||
+          (searchExDate.length > 0 && searchExDate[0] !== '' && searchExDate[1] !== '') ||
+          (searchAsDate.length > 0 && searchAsDate[0] !== '' && searchAsDate[1] !== '') ||
+          searchState.length > 0
+        ) {
+          let returnable;
           data = data.filter(d => {
-            return (
-              d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()) ||
-              d.account.holder.toLowerCase().includes(searchText.toLowerCase())
-            );
+            returnable = true;
+            if (returnable && searchText) {
+              returnable =
+                d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.account.holder.toLowerCase().includes(searchText.toLowerCase());
+            }
+            if (
+              returnable &&
+              searchExDate.length > 0 &&
+              searchExDate[0] !== '' &&
+              searchExDate[1] !== ''
+            ) {
+              var startDate = moment(searchExDate[0]);
+              var endDate = moment(searchExDate[1]);
+              var date = moment(d.card.cardBatch.expiryDate);
+              returnable = date.isAfter(startDate) && date.isBefore(endDate);
+            }
+            if (
+              returnable &&
+              searchAsDate.length > 0 &&
+              searchAsDate[0] !== '' &&
+              searchAsDate[1] !== ''
+            ) {
+              var startDate = moment(searchAsDate[0]);
+              var endDate = moment(searchAsDate[1]);
+              var date = moment(d.assignedDate);
+              returnable = date.isAfter(startDate) && date.isBefore(endDate);
+            }
+            if (returnable && searchState.length > 0) {
+              returnable = searchState.includes(d.card.status.toLowerCase());
+            }
+            return returnable;
           });
-        }
-
-        if (searchExDate.length > 0 && searchExDate[0] !== '' && searchExDate[1] !== '') {
-          var startDate = moment(searchExDate[0]);
-          var endDate = moment(searchExDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.card.cardBatch.expiryDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-        if (searchAsDate.length > 0 && searchAsDate[0] !== '' && searchAsDate[1] !== '') {
-          var startDate = moment(searchAsDate[0]);
-          var endDate = moment(searchAsDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.assignedDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-
-        if (searchState !== 'ALL') {
-          data = data.filter(d => d.card.status == searchState);
         }
 
         this.setState({
@@ -217,6 +259,17 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    const tProps = {
+      treeData,
+      value: this.state.searchState,
+      onChange: this.searchStateHandler,
+      treeCheckable: true,
+      showCheckedStrategy: SHOW_PARENT,
+      searchPlaceholder: 'Please select',
+      style: {
+        width: '100%',
+      },
+    };
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -235,7 +288,15 @@ class Data extends React.Component {
                   PDF
                 </Button>
                 <CSVLink
-                  data={this.state.loadFilterCardRegistry}
+                  data={this.state.loadFilterCardRegistry.map(d => ({
+                    cardNo: d.card.cardNo,
+                    accountNumber: d.account.accountNumber,
+                    holder: d.account.holder,
+                    expiryDate: d.card.cardBatch.expiryDate,
+                    createDate: d.card.cardBatch.createDate,
+                    status: d.card.status.toLowerCase(),
+                    assignedDate: d.assignedDate,
+                  }))}
                   headers={csvHeader}
                   filename={'Card-Assign-report.csv'}
                   className="ant-btn float-right ant-btn-primary ant-btn-round"
@@ -272,18 +333,7 @@ class Data extends React.Component {
                     </Col>
                     <Col span={6}>
                       <FormItem label="Card Status">
-                        <Select
-                          onChange={this.searchStateHandler}
-                          value={this.state.searchState}
-                          placeholder="Search Card Status"
-                        >
-                          <Option value="ALL">All</Option>
-                          <Option value="ACTIVE">Active</Option>
-                          <Option value="INACTIVE">Inactive</Option>
-                          <Option value="LOCKED">Locked</Option>
-                          <Option value="CANCELLED">Cancelled</Option>
-                          <Option value="EXPIRED">Expired</Option>
-                        </Select>
+                        <TreeSelect {...tProps} />
                       </FormItem>
                     </Col>
                   </Row>

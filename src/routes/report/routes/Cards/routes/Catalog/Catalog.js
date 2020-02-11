@@ -13,6 +13,7 @@ import {
   message,
   Slider,
   Icon,
+  TreeSelect,
 } from 'antd';
 import { environment } from '../../../../../../environments';
 import axios from 'axios';
@@ -21,6 +22,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
+const { SHOW_PARENT } = TreeSelect;
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
 const columns = [
@@ -50,10 +52,38 @@ const columns = [
 
 const csvHeader = [
   { label: 'Card No', key: 'cardNo' },
-  { label: 'Created date', key: 'cardBatch.createDate' },
-  { label: 'Expiry date', key: 'cardBatch.expiryDate' },
-  { label: 'Card Type', key: 'cardBatch.type' },
+  { label: 'Created date', key: 'createDate' },
+  { label: 'Expiry date', key: 'expiryDate' },
+  { label: 'Card Type', key: 'type' },
   { label: 'Status', key: 'status' },
+];
+
+const treeData = [
+  {
+    title: 'Active',
+    value: 'active',
+    key: 'active',
+  },
+  {
+    title: 'Inactive',
+    value: 'inactive',
+    key: 'inactive',
+  },
+  {
+    title: 'Locked',
+    value: 'locked',
+    key: 'locked',
+  },
+  {
+    title: 'Cancelled',
+    value: 'cancelled',
+    key: 'cancelled',
+  },
+  {
+    title: 'Expired',
+    value: 'expired',
+    key: 'expired',
+  },
 ];
 
 const FormItem = Form.Item;
@@ -71,7 +101,7 @@ class Data extends React.Component {
       searchText: '',
       inputValue: 1,
       searchType: 'ALL',
-      searchState: 'ALL',
+      searchState: [],
     };
   }
 
@@ -166,29 +196,43 @@ class Data extends React.Component {
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
         let searchType = this.state.searchType.toUpperCase();
-        let searchState = this.state.searchState.toUpperCase();
+        let searchState = this.state.searchState;
 
-        if (searchText) {
+        if (
+          searchText ||
+          (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
+          searchType.length > 0 ||
+          searchState.length > 0
+        ) {
+          let returnable;
           data = data.filter(d => {
-            return d.cardNo.toLowerCase().includes(searchText.toLowerCase());
+            returnable = true;
+            if (returnable && searchText) {
+              returnable = d.cardNo.toLowerCase().includes(searchText.toLowerCase());
+            }
+            if (
+              returnable &&
+              searchDate.length > 0 &&
+              searchDate[0] !== '' &&
+              searchDate[1] !== ''
+            ) {
+              var startDate = moment(searchDate[0]);
+              var endDate = moment(searchDate[1]);
+              var date = moment(d.cardBatch.expiryDate);
+              returnable = date.isAfter(startDate) && date.isBefore(endDate);
+            }
+            if (returnable && searchType.length > 0) {
+              if (searchType == 'ALL') {
+                returnable = true;
+              } else {
+                returnable = searchType.includes(d.cardBatch.type);
+              }
+            }
+            if (returnable && searchState.length > 0) {
+              returnable = searchState.includes(d.status.toLowerCase());
+            }
+            return returnable;
           });
-        }
-
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.cardBatch.expiryDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-
-        if (searchType !== 'ALL') {
-          data = data.filter(d => d.cardBatch.type == searchType);
-        }
-
-        if (searchState !== 'ALL') {
-          data = data.filter(d => d.status == searchState);
         }
 
         this.setState({
@@ -200,6 +244,17 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    const tProps = {
+      treeData,
+      value: this.state.searchState,
+      onChange: this.searchStateHandler,
+      treeCheckable: true,
+      showCheckedStrategy: SHOW_PARENT,
+      searchPlaceholder: 'Please select',
+      style: {
+        width: '100%',
+      },
+    };
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -218,7 +273,13 @@ class Data extends React.Component {
                   PDF
                 </Button>
                 <CSVLink
-                  data={this.state.loadFilterCards}
+                  data={this.state.loadFilterCards.map(d => ({
+                    cardNo: d.cardNo,
+                    createDate: d.cardBatch.createDate,
+                    expiryDate: d.cardBatch.expiryDate,
+                    type: d.cardBatch.type.toLowerCase(),
+                    status: d.status.toLowerCase(),
+                  }))}
                   headers={csvHeader}
                   filename={'Card-catalog-report.csv'}
                   className="ant-btn float-right ant-btn-primary ant-btn-round"
@@ -259,18 +320,7 @@ class Data extends React.Component {
                     </Col>
                     <Col span={6}>
                       <FormItem label="Card Status">
-                        <Select
-                          onChange={this.searchStateHandler}
-                          value={this.state.searchState}
-                          placeholder="Search Card Status"
-                        >
-                          <Option value="ALL">All</Option>
-                          <Option value="ACTIVE">Active</Option>
-                          <Option value="INACTIVE">Inactive</Option>
-                          <Option value="LOCKED">Locked</Option>
-                          <Option value="CANCELLED">Cancelled</Option>
-                          <Option value="EXPIRED">Expired</Option>
-                        </Select>
+                        <TreeSelect {...tProps} />
                       </FormItem>
                     </Col>
                     {/* <Col span={6}>
