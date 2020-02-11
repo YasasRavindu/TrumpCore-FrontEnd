@@ -13,6 +13,7 @@ import {
   message,
   Slider,
   Icon,
+  TreeSelect,
 } from 'antd';
 import { environment } from '../../../../environments';
 import axios from 'axios';
@@ -21,6 +22,7 @@ import STATUS from 'constants/notification/status';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
+const { SHOW_PARENT } = TreeSelect;
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
 const columns = [
@@ -44,6 +46,35 @@ const csvHeader = [
   { label: 'Serial Number', key: 'serial' },
   { label: 'Created date', key: 'createDate' },
   { label: 'Status', key: 'status' },
+  { label: 'Account holder', key: 'holder' },
+  { label: 'Account no', key: 'accountNumber' },
+];
+const treeData = [
+  {
+    title: 'Register',
+    value: 'register',
+    key: 'register',
+  },
+  {
+    title: 'Active',
+    value: 'active',
+    key: 'active',
+  },
+  {
+    title: 'Inactive',
+    value: 'inactive',
+    key: 'inactive',
+  },
+  {
+    title: 'Locked',
+    value: 'locked',
+    key: 'locked',
+  },
+  {
+    title: 'Remove',
+    value: 'remove',
+    key: 'remove',
+  },
 ];
 
 const FormItem = Form.Item;
@@ -60,7 +91,7 @@ class Data extends React.Component {
       searchDate: ['', ''],
       searchText: '',
       inputValue: 1,
-      searchStatus: 'all',
+      searchStatus: [],
     };
   }
 
@@ -134,7 +165,7 @@ class Data extends React.Component {
             d.account.holder,
             d.account.accountNumber,
           ]
-        : [d.serial, d.createDate, d.status, 'N/A', 'N/A']
+        : [d.serial, d.createDate, d.status.toLowerCase(), 'N/A', 'N/A']
     );
     let content = {
       startY: 50,
@@ -178,33 +209,42 @@ class Data extends React.Component {
         let data = this.state.loadDevices;
         let searchDate = this.state.searchDate;
         let searchText = this.state.searchText;
-        let searchStatus = this.state.searchStatus.toUpperCase();
-
-        if (searchText) {
+        let searchStatus = this.state.searchStatus;
+        if (
+          searchText ||
+          (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
+          searchStatus.length > 0
+        ) {
+          let returnable;
           data = data.filter(d => {
-            if (d.account !== null) {
-              return (
-                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
-              );
-            } else {
-              return d.serial.toLowerCase().includes(searchText.toLowerCase());
+            returnable = true;
+            if (returnable && searchText) {
+              if (d.account !== null) {
+                returnable =
+                  d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+                  d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase());
+              } else {
+                returnable = d.serial.toLowerCase().includes(searchText.toLowerCase());
+              }
             }
-          });
-        }
+            if (
+              returnable &&
+              searchDate.length > 0 &&
+              searchDate[0] !== '' &&
+              searchDate[1] !== ''
+            ) {
+              var startDate = moment(searchDate[0]);
+              var endDate = moment(searchDate[1]);
+              var date = moment(d.createDate);
+              returnable = date.isAfter(startDate) && date.isBefore(endDate);
+            }
 
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.createDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
+            if (returnable && searchStatus.length > 0) {
+              returnable = searchStatus.includes(d.status.toLowerCase());
+            }
+            return returnable;
           });
-        }
-
-        if (searchStatus !== 'ALL') {
-          data = data.filter(d => d.status === searchStatus);
         }
 
         this.setState({
@@ -216,6 +256,17 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    const tProps = {
+      treeData,
+      value: this.state.searchStatus,
+      onChange: this.searchStatusHandler,
+      treeCheckable: true,
+      showCheckedStrategy: SHOW_PARENT,
+      searchPlaceholder: 'Please select',
+      style: {
+        width: '100%',
+      },
+    };
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -234,7 +285,23 @@ class Data extends React.Component {
                   PDF
                 </Button>
                 <CSVLink
-                  data={this.state.loadFilterDevices}
+                  data={this.state.loadFilterDevices.map(d =>
+                    d.account !== null
+                      ? {
+                          serial: d.serial,
+                          createDate: d.createDate,
+                          status: d.status.toLowerCase(),
+                          holder: d.account.holder,
+                          accountNumber: d.account.accountNumber,
+                        }
+                      : {
+                          serial: d.serial,
+                          createDate: d.createDate,
+                          status: d.status.toLowerCase(),
+                          holder: 'N/A',
+                          accountNumber: 'N/A',
+                        }
+                  )}
                   headers={csvHeader}
                   filename={'POS-devices-report.csv'}
                   className="ant-btn float-right ant-btn-primary ant-btn-round"
@@ -264,20 +331,9 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={4}>
+                    <Col span={6}>
                       <FormItem label="Status">
-                        <Select
-                          onChange={this.searchStatusHandler}
-                          value={this.state.searchStatus}
-                          placeholder="Search POS Status"
-                        >
-                          <Option value="all">All</Option>
-                          <Option value="register">Register</Option>
-                          <Option value="active">Active</Option>
-                          <Option value="inactive">Inactive</Option>
-                          <Option value="locked">Locked</Option>
-                          <Option value="remove">Remove</Option>
-                        </Select>
+                        <TreeSelect {...tProps} />
                       </FormItem>
                     </Col>
                   </Row>
