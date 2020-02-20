@@ -219,6 +219,8 @@ class Data extends React.Component {
             message.error(msg);
             this.setState({ loading: false });
           });
+      } else {
+        this.setState({ loading: false });
       }
     });
   };

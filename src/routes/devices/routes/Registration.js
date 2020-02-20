@@ -93,6 +93,8 @@ class Data extends React.Component {
             message.error(msg);
             this.setState({ loading: false });
           });
+      } else {
+        this.setState({ loading: false });
       }
     });
   };
@@ -215,7 +217,9 @@ class Data extends React.Component {
                       dataIndex="status"
                       key="status"
                       render={status => (
-                        <Tag color={STATUS.DEVICE_STATUS[status].color}>{STATUS.DEVICE_STATUS[status].label}</Tag>
+                        <Tag color={STATUS.DEVICE_STATUS[status].color}>
+                          {STATUS.DEVICE_STATUS[status].label}
+                        </Tag>
                       )}
                     />
                   </Table>
