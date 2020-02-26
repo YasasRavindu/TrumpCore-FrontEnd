@@ -234,6 +234,8 @@ class Data extends React.Component {
             message.error(msg);
             this._isMounted && this.setState({ loading: false });
           });
+      } else {
+        this.setState({ loading: false });
       }
     });
   };
