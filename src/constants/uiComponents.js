@@ -1,32 +1,21 @@
 // optional `menuName` overrides default name for menu item if it's defined
 // hideInMenu hides item in menu
-export const ACCOUNT = [
-  {
-    name: 'Account Upload - Account',
-    menuName: 'Upload',
-    desc: 'Account Upload - Account - Description',
-    path: '/app/account/upload',
-  },
-  {
-    name: 'Account Management - Account',
-    menuName: 'Management',
-    desc: 'Account Management - Account - Description',
-    path: '/app/account/management',
-  },
-];
+import { USER_AUTHORITY_CODE } from 'constants/authority/authority';
 
-export const USER_MANAGEMENT = [
+export const CARD = [
   {
-    name: 'User Management - Users',
-    menuName: 'Users',
-    desc: 'User Management - Users - Description',
-    path: '/app/userManagement/users',
+    name: 'Card - Generate',
+    menuName: 'Generate',
+    desc: 'Card - Generate - Description',
+    path: '/app/cardManagement/generate',
+    authorityCode: USER_AUTHORITY_CODE.CARD_GENERATE,
   },
   {
-    name: 'User Management - Roles',
-    menuName: 'Roles',
-    desc: 'User Management - Roles - Description',
-    path: '/app/userManagement/roles',
+    name: 'Card - Assign',
+    menuName: 'Assign',
+    desc: 'Card - Assign - Description',
+    path: '/app/cardManagement/assign',
+    authorityCode: USER_AUTHORITY_CODE.CARD_ASSIGN,
   },
 ];
 export const POS_DEVICES = [
@@ -35,33 +24,37 @@ export const POS_DEVICES = [
     menuName: 'Registration',
     desc: 'POS Devices - Registration - Description',
     path: '/app/devices/registration',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_REGISTRATION,
   },
   {
     name: 'POS Devices - Management',
     menuName: 'Management',
     desc: 'POS Devices - Management - Description',
     path: '/app/devices/management',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_MANAGEMENT,
   },
   {
     name: 'POS Devices - Remove',
     menuName: 'Remove',
     desc: 'POS Devices - Remove - Description',
     path: '/app/devices/remove',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_REMOVE,
   },
 ];
-// TrumpCore cards
-export const CARD = [
+export const USER_MANAGEMENT = [
   {
-    name: 'Card - Generate',
-    menuName: 'Generate',
-    desc: 'Card - Generate - Description',
-    path: '/app/cardManagement/generate',
+    name: 'User Management - Users',
+    menuName: 'Users',
+    desc: 'User Management - Users - Description',
+    path: '/app/userManagement/users',
+    authorityCode: USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS,
   },
   {
-    name: 'Card - Assign',
-    menuName: 'Assign',
-    desc: 'Card - Assign - Description',
-    path: '/app/cardManagement/assign',
+    name: 'User Management - Roles',
+    menuName: 'Roles',
+    desc: 'User Management - Roles - Description',
+    path: '/app/userManagement/roles',
+    authorityCode: USER_AUTHORITY_CODE.USER_MANAGEMENT_ROLES,
   },
 ];
 const REPORTCARDS = [
@@ -85,18 +78,35 @@ export const REPORT = [
     menuName: 'Transaction',
     desc: 'Report - Transaction - Description',
     path: '/app/report/transaction',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_TRANSACTION,
   },
   {
     name: 'Report - Pos Devices',
     menuName: 'POS Devices',
     desc: 'Report - POS Devices - Description',
     path: '/app/report/pos',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_POS_DEVICES,
   },
   {
     name: 'Cards',
     // menuName: 'Cards',
     path: '/app/report/cards',
     children: REPORTCARDS,
+    authorityCode: USER_AUTHORITY_CODE.REPORT_CARDS,
+  },
+];
+export const ACCOUNT = [
+  {
+    name: 'Account Upload - Account',
+    menuName: 'Upload',
+    desc: 'Account Upload - Account - Description',
+    path: '/app/account/upload',
+  },
+  {
+    name: 'Account Management - Account',
+    menuName: 'Management',
+    desc: 'Account Management - Account - Description',
+    path: '/app/account/management',
   },
 ];
 

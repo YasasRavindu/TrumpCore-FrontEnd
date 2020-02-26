@@ -17,9 +17,19 @@ import {
   message,
   Tooltip,
 } from 'antd';
-
 import { environment, commonUrl } from '../../../environments';
 import CUSTOM_MESSAGE from 'constants/notification/message';
+
+import { Redirect } from 'react-router-dom';
+// -------------- IMPORT AUTHORITY -----------------------------------------
+import {
+  DEFAULT_REDIRECT_ROUTE,
+  USER_AUTHORITY_CODE,
+  getActiveAuthorities,
+  checkAuthority,
+} from 'constants/authority/authority';
+// -------------------------------------------------------------------------
+
 import axios from 'axios';
 import moment from 'moment';
 import STATUS from 'constants/notification/status';
@@ -45,6 +55,7 @@ const formItemLayout = {
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       count: '',
       type: '',
@@ -58,7 +69,8 @@ class Data extends React.Component {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
+    this._isMounted = true;
     const { searchType, searchStatus } = this.state;
     this.loadTable(searchType, searchStatus);
   }
@@ -72,10 +84,11 @@ class Data extends React.Component {
           cardBatch.key = cardBatch.id;
           return cardBatch;
         });
-        this.setState({
-          batchList: cardBatchList,
-          batchFilteredList: cardBatchList,
-        });
+        this._isMounted &&
+          this.setState({
+            batchList: cardBatchList,
+            batchFilteredList: cardBatchList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -95,36 +108,38 @@ class Data extends React.Component {
   };
 
   dataFilter = (key, value) => {
-    this.setState(
-      {
-        [key]: value,
-      },
-      () => {
-        let data = this.state.batchList;
-        let searchType = this.state.searchType.toUpperCase();
-        let searchStatus = this.state.searchStatus.toUpperCase();
-        let searchDate = this.state.searchDate;
+    this._isMounted &&
+      this.setState(
+        {
+          [key]: value,
+        },
+        () => {
+          let data = this.state.batchList;
+          let searchType = this.state.searchType.toUpperCase();
+          let searchStatus = this.state.searchStatus.toUpperCase();
+          let searchDate = this.state.searchDate;
 
-        if (searchType !== 'ALL') {
-          data = data.filter(d => d.type === searchType);
-        }
-        if (searchStatus !== 'ALL') {
-          data = data.filter(d => d.status === searchStatus);
-        }
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.createDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
+          if (searchType !== 'ALL') {
+            data = data.filter(d => d.type === searchType);
+          }
+          if (searchStatus !== 'ALL') {
+            data = data.filter(d => d.status === searchStatus);
+          }
+          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+            var startDate = moment(searchDate[0]);
+            var endDate = moment(searchDate[1]);
+            data = data.filter(d => {
+              var date = moment(d.createDate);
+              return date.isAfter(startDate) && date.isBefore(endDate);
+            });
+          }
 
-        this.setState({
-          batchFilteredList: data,
-        });
-      }
-    );
+          this._isMounted &&
+            this.setState({
+              batchFilteredList: data,
+            });
+        }
+      );
   };
 
   batchDelete(id) {
@@ -142,7 +157,7 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-            message.warning('Somthing Wrong');
+            message.warning('Something Wrong');
           });
       },
       onCancel() {},
@@ -178,7 +193,7 @@ class Data extends React.Component {
 
   submit = e => {
     console.log(this.state);
-    this.setState({ loading: true });
+    this._isMounted && this.setState({ loading: true });
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
@@ -193,7 +208,7 @@ class Data extends React.Component {
             const { searchType, searchStatus } = this.state;
             this.loadTable(searchType, searchStatus);
             this.props.form.resetFields();
-            this.setState({ loading: false });
+            this._isMounted && this.setState({ loading: false });
             console.log('------------------- response - ', response);
           })
           .catch(error => {
@@ -217,76 +232,88 @@ class Data extends React.Component {
               msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
             }
             message.error(msg);
-            this.setState({ loading: false });
+            this._isMounted && this.setState({ loading: false });
           });
       } else {
         this.setState({ loading: false });
       }
     });
   };
-  //   Card count - Please add your card count
-  // Card type - Please select your card type
-  // Effective period - Please enter a valid effective period
-  // Card count exceed - You have reached the maximum count allowed
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   render() {
+    // -------------- GET ACTIVE AUTHORITIES -----------------------------------------
+    const viewAuthorities = getActiveAuthorities(USER_AUTHORITY_CODE.CARD_GENERATE);
+    // -------------------------------------------------------------------------------
+
+    // -------------- IF UNAUTHORIZED ------------------------------------------------
+    if (viewAuthorities === 'UNAUTHORIZED') {
+      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+    }
+    // -------------------------------------------------------------------------------
+
     const { getFieldDecorator } = this.props.form;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          <div key="1">
-            <div className="box box-default mb-4">
-              <div className="box-header">Generate Card Numbers</div>
-              <div className="box-body">
-                <Form layout="inline">
-                  <FormItem label="Card Count">
-                    {getFieldDecorator('count', {
-                      rules: [
-                        {
-                          required: true,
-                          message: 'Please add your card count.',
-                        },
-                      ],
-                    })(<InputNumber min={1} />)}
-                  </FormItem>
-                  <FormItem label="Card Type">
-                    {getFieldDecorator('type', {
-                      rules: [
-                        {
-                          required: true,
-                          message: 'Please select your card type.',
-                        },
-                      ],
-                    })(
-                      <Select style={{ width: 120 }}>
-                        <Option value="DEBIT">Debit</Option>
-                        <Option value="CASH">Cash</Option>
-                      </Select>
-                    )}
-                  </FormItem>
-                  <FormItem label="Effective Period (Months)">
-                    {getFieldDecorator('effectivePeriod', {
-                      rules: [
-                        {
-                          required: true,
-                          message: 'Please enter a valid effective period.',
-                        },
-                      ],
-                    })(<InputNumber min={1} />)}
-                  </FormItem>
-                  <Button
-                    type="primary"
-                    loading={this.state.loading}
-                    className="float-right"
-                    onClick={this.submit}
-                  >
-                    Submit
-                  </Button>
-                </Form>
+          {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_GENERATE_GENERATE) && (
+            <div key="1">
+              <div className="box box-default mb-4">
+                <div className="box-header">Generate Card Numbers</div>
+                <div className="box-body">
+                  <Form layout="inline">
+                    <FormItem label="Card Count">
+                      {getFieldDecorator('count', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please add your card count.',
+                          },
+                        ],
+                      })(<InputNumber min={1} />)}
+                    </FormItem>
+                    <FormItem label="Card Type">
+                      {getFieldDecorator('type', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please select your card type.',
+                          },
+                        ],
+                      })(
+                        <Select style={{ width: 120 }}>
+                          <Option value="DEBIT">Debit</Option>
+                          <Option value="CASH">Cash</Option>
+                        </Select>
+                      )}
+                    </FormItem>
+                    <FormItem label="Effective Period (Months)">
+                      {getFieldDecorator('effectivePeriod', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please enter a valid effective period.',
+                          },
+                        ],
+                      })(<InputNumber min={1} />)}
+                    </FormItem>
+                    <Button
+                      type="primary"
+                      loading={this.state.loading}
+                      className="float-right"
+                      onClick={this.submit}
+                    >
+                      Generate
+                    </Button>
+                  </Form>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <div key="2">
             <div className="box box-default">
               <div className="box-body">
@@ -339,23 +366,32 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status !== 'ACTIVE' && (
-                            <Tooltip title="Download">
-                              <Icon
-                                onClick={() => this.downloadCsv(record.id, record.createDate)}
-                                type="download"
-                              />
-                            </Tooltip>
-                          )}
-                          {record.status && record.status === 'INITIATE' && (
-                            <>
-                              {/* <Icon onClick={() => this.batchDelete(record.id)} type="delete" /> */}
-                              <Divider type="vertical" />
-                              <Tooltip title="Delete">
+                          {record.status &&
+                            record.status !== 'ACTIVE' &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.CARD_GENERATE_DOWNLOAD
+                            ) && (
+                              <>
+                                <Tooltip title="Download">
+                                  <Icon
+                                    onClick={() => this.downloadCsv(record.id, record.createDate)}
+                                    type="download"
+                                    className="mr-3"
+                                  />
+                                </Tooltip>
+                              </>
+                            )}
+                          {record.status &&
+                            record.status === 'INITIATE' &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.CARD_GENERATE_REMOVE
+                            ) && (
+                              <Tooltip title="Remove">
                                 <Icon onClick={() => this.batchDelete(record.id)} type="delete" />
                               </Tooltip>
-                            </>
-                          )}
+                            )}
                         </span>
                       )}
                     />

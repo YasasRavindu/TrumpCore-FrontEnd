@@ -16,7 +16,8 @@ const CUSTOM_MESSAGE = {
     defaultError: 'Something went wrong please try again!',
   },
   
-  USER_ROLE_SAVE_ERROR: {
+  USER_ROLE_ERROR: {
+    roleHasUsers : "Users have been assigned to this role!",
     roleNameAlreadyExist: 'Role name already exist!',
     defaultError: 'Something went wrong please try again!',
   },

@@ -15,6 +15,16 @@ import {
   Divider,
 } from 'antd';
 
+import { Redirect } from 'react-router-dom';
+// -------------- IMPORT AUTHORITY -----------------------------------------
+import {
+  DEFAULT_REDIRECT_ROUTE,
+  USER_AUTHORITY_CODE,
+  getActiveAuthorities,
+  checkAuthority,
+} from 'constants/authority/authority';
+// -------------------------------------------------------------------------
+
 import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
@@ -35,6 +45,7 @@ const { Column, ColumnGroup } = Table;
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       inactiveList: [],
       inactiveFieldList: [],
@@ -44,6 +55,7 @@ class Data extends React.Component {
   }
 
   async componentDidMount() {
+    this._isMounted = true;
     this.loadTable();
   }
 
@@ -56,10 +68,11 @@ class Data extends React.Component {
           inactive.key = inactive.id;
           return inactive;
         });
-        this.setState({
-          inactiveList: inactiveList,
-          inactiveFieldList: inactiveList,
-        });
+        this._isMounted &&
+          this.setState({
+            inactiveList: inactiveList,
+            inactiveFieldList: inactiveList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -99,7 +112,9 @@ class Data extends React.Component {
 
   handleStatus = (id, value) => {
     axios
-      .get(environment.baseUrl + 'device/changeStatus/' + id + '/' + STATUS.DEVICE_STATUS[value].value)
+      .get(
+        environment.baseUrl + 'device/changeStatus/' + id + '/' + STATUS.DEVICE_STATUS[value].value
+      )
       .then(response => {
         message.success('Device status successfully updated!');
         // console.log('------------------- response - ', response.data.content);
@@ -137,44 +152,60 @@ class Data extends React.Component {
   };
 
   dataFilter = (key, value) => {
-    this.setState(
-      {
-        [key]: value,
-      },
-      () => {
-        let data = this.state.inactiveList;
-        let searchDate = this.state.searchDate;
-        let searchText = this.state.searchText;
+    this._isMounted &&
+      this.setState(
+        {
+          [key]: value,
+        },
+        () => {
+          let data = this.state.inactiveList;
+          let searchDate = this.state.searchDate;
+          let searchText = this.state.searchText;
 
-        if (searchText) {
-          data = data.filter(d => {
-            if (d.account !== null) {
-              return (
-                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
-              );
-            } else {
-              return d.serial.toLowerCase().includes(searchText.toLowerCase());
-            }
-          });
+          if (searchText) {
+            data = data.filter(d => {
+              if (d.account !== null) {
+                return (
+                  d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
+                  d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+                );
+              } else {
+                return d.serial.toLowerCase().includes(searchText.toLowerCase());
+              }
+            });
+          }
+          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+            var startDate = moment(searchDate[0]);
+            var endDate = moment(searchDate[1]);
+            data = data.filter(d => {
+              var date = moment(d.createDate);
+              return date.isAfter(startDate) && date.isBefore(endDate);
+            });
+          }
+          this._isMounted &&
+            this.setState({
+              inactiveFieldList: data,
+            });
         }
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.createDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-        this.setState({
-          inactiveFieldList: data,
-        });
-      }
-    );
+      );
   };
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
   render() {
+    // -------------- GET ACTIVE AUTHORITIES -----------------------------------------
+    const viewAuthorities = getActiveAuthorities(USER_AUTHORITY_CODE.POS_DEVICE_REMOVE);
+    // -------------------------------------------------------------------------------
+
+    // -------------- IF UNAUTHORIZED ------------------------------------------------
+    if (viewAuthorities === 'UNAUTHORIZED') {
+      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+    }
+    // -------------------------------------------------------------------------------
+
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
@@ -220,29 +251,39 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          <Popconfirm
-                            title="Are you sure, you want re-register this device?"
-                            onConfirm={() => this.handleStatus(record.id, 'RE_REGISTER')}
-                            // onConfirm={() => this.devicesDelete(record.id)}
-                            okText="Yes"
-                            cancelText="No"
-                          >
-                            <Tooltip title="Re Register">
-                              <Icon type="reload" />
-                            </Tooltip>
-                          </Popconfirm>
-                          <Divider type="vertical" />
-                          <Popconfirm
-                            title="Are you sure, you want delete this device?"
-                            onConfirm={() => this.handleStatus(record.id, 'REMOVE')}
-                            // onConfirm={() => this.devicesDelete(record.id)}
-                            okText="Yes"
-                            cancelText="No"
-                          >
-                            <Tooltip title="Delete">
-                              <Icon type="delete" />
-                            </Tooltip>
-                          </Popconfirm>
+                          {checkAuthority(
+                            viewAuthorities,
+                            USER_AUTHORITY_CODE.POS_DEVICE_REMOVE_RE_REGISTER
+                          ) && (
+                            <Popconfirm
+                              title="Are you sure, you want re-register this device?"
+                              onConfirm={() => this.handleStatus(record.id, 'RE_REGISTER')}
+                              // onConfirm={() => this.devicesDelete(record.id)}
+                              okText="Yes"
+                              cancelText="No"
+                            >
+                              <Tooltip title="Re Register" className="mr-3">
+                                <Icon type="reload" />
+                              </Tooltip>
+                            </Popconfirm>
+                          )}
+
+                          {checkAuthority(
+                            viewAuthorities,
+                            USER_AUTHORITY_CODE.POS_DEVICE_REMOVE_REMOVE
+                          ) && (
+                            <Popconfirm
+                              title="Are you sure, you want delete this device?"
+                              onConfirm={() => this.handleStatus(record.id, 'REMOVE')}
+                              // onConfirm={() => this.devicesDelete(record.id)}
+                              okText="Yes"
+                              cancelText="No"
+                            >
+                              <Tooltip title="Remove">
+                                <Icon type="delete" />
+                              </Tooltip>
+                            </Popconfirm>
+                          )}
                         </span>
                       )}
                     />

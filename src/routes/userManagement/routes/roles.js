@@ -18,69 +18,33 @@ import {
   Tabs,
   Checkbox,
   Tooltip,
+  Popconfirm,
 } from 'antd';
+
+import { Redirect } from 'react-router-dom';
+// -------------- IMPORT AUTHORITY -----------------------------------------
+import {
+  DEFAULT_REDIRECT_ROUTE,
+  USER_AUTHORITY_CODE,
+  getActiveAuthorities,
+  checkAuthority,
+} from 'constants/authority/authority';
+// -------------------------------------------------------------------------
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
-import Password from 'antd/lib/input/Password';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 
 const { TabPane } = Tabs;
-
-const userStatus = {
-  ACTIVE: { color: '', label: 'ACTIVE' },
-  INACTIVE: { color: 'blue', label: 'INACTIVE' },
-  DELETED: { color: 'magenta', label: 'DELETED' },
-  PENDING_ACTIVATION: { color: 'magenta', label: 'PENDING' },
-  TEMP_LOCKED_BAD_CREDENTIALS: { color: 'magenta', label: 'LOCKED' },
-};
 
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
 
-const sections = [
-  {
-    tabName: 'AAA',
-    checkedList: [],
-    values: [
-      { name: 'AA', value: 'A' },
-      { name: 'BB', value: 'B' },
-      { name: 'CC', value: 'C' },
-      { name: 'DD', value: 'D' },
-      { name: 'EE', value: 'E' },
-    ],
-  },
-  {
-    tabName: 'BBB',
-    checkedList: [],
-    values: [
-      { name: 'AA', value: 'A' },
-      { name: 'BB', value: 'B' },
-      { name: 'CC', value: 'C' },
-      { name: 'DD', value: 'D' },
-      { name: 'EE', value: 'E' },
-    ],
-  },
-  {
-    tabName: 'CCC',
-    checkedList: [],
-    values: [
-      { name: 'AA', value: 'A' },
-      { name: 'BB', value: 'B' },
-      { name: 'CC', value: 'C' },
-      { name: 'DD', value: 'D' },
-      { name: 'EE', value: 'E' },
-    ],
-  },
-];
-
-// const plainOptions = ['A', 'B', 'C', 'D', 'E'];
-const defaultCheckedList = [];
-
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       sections: [],
       activeTab: '0',
@@ -96,6 +60,7 @@ class Data extends React.Component {
   }
 
   async componentDidMount() {
+    this._isMounted = true;
     this.loadTable();
     axios
       .get(environment.baseUrl + 'authority')
@@ -113,9 +78,10 @@ class Data extends React.Component {
           section.checkAll = false;
           return section;
         });
-        this.setState({
-          sections: sectionList,
-        });
+        this._isMounted &&
+          this.setState({
+            sections: sectionList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -131,9 +97,10 @@ class Data extends React.Component {
           role.key = role.id;
           return role;
         });
-        this.setState({
-          userRole: userRole,
-        });
+        this._isMounted &&
+          this.setState({
+            userRole: userRole,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -171,11 +138,12 @@ class Data extends React.Component {
           roleName: role.name,
         });
 
-        this.setState({
-          sections: sections,
-          currentRole: role,
-          visible: true,
-        });
+        this._isMounted &&
+          this.setState({
+            sections: sections,
+            currentRole: role,
+            visible: true,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -189,15 +157,16 @@ class Data extends React.Component {
       if (id) {
         this.getRoleView(id);
       } else {
-        this.setState({
-          visible: true,
-        });
+        this._isMounted &&
+          this.setState({
+            visible: true,
+          });
       }
     }
   };
 
   onTabChange = key => {
-    this.setState({ activeTab: key });
+    this._isMounted && this.setState({ activeTab: key });
   };
 
   onCheckAllChange = e => {
@@ -210,9 +179,10 @@ class Data extends React.Component {
     sections[tab].indeterminate = false;
     sections[tab].checkAll = event.checked;
 
-    this.setState({
-      sections: sections,
-    });
+    this._isMounted &&
+      this.setState({
+        sections: sections,
+      });
   };
 
   onChange = checkedValues => {
@@ -225,9 +195,10 @@ class Data extends React.Component {
       !!checkedValues.length && checkedValues.length < sections[tab].plainOptions.length;
     sections[tab].checkAll = checkedValues.length === sections[tab].plainOptions.length;
 
-    this.setState({
-      sections: sections,
-    });
+    this._isMounted &&
+      this.setState({
+        sections: sections,
+      });
   };
 
   getCheckedList = () => {
@@ -254,15 +225,28 @@ class Data extends React.Component {
       section.checkedList = [];
       section.indeterminate = false;
       section.checkAll = false;
+
+      // let displayAuthorities = [];
+      // let commonAuthorities = [];
+
+      // section.map(authority => {
+      //   if (authority.type === 'DISPLAY') {
+      //     displayAuthorities.push(authority);
+      //   } else if (authority.type === 'COMMON') {
+      //   }
+      // });
     });
 
-    this.setState({
-      sections: sections,
-      visible: false,
-      activeTab: '0',
-      currentRole: undefined,
-    });
+    this._isMounted &&
+      this.setState({
+        sections: sections,
+        visible: false,
+        activeTab: '0',
+        currentRole: undefined,
+      });
   };
+
+  roleDelete = () => {};
 
   submit = e => {
     e.preventDefault();
@@ -291,24 +275,7 @@ class Data extends React.Component {
               this.props.form.resetFields();
             })
             .catch(error => {
-              let msg = null;
-              if (
-                error &&
-                error.response &&
-                error.response.data &&
-                error.response.data.validationFailures &&
-                error.response.data.validationFailures[0] &&
-                error.response.data.validationFailures[0].code
-              ) {
-                let errorCode = error.response.data.validationFailures[0].code;
-                msg = CUSTOM_MESSAGE.USER_ROLE_SAVE_ERROR[errorCode];
-                if (msg === undefined) {
-                  msg = CUSTOM_MESSAGE.USER_ROLE_SAVE_ERROR['defaultError'];
-                }
-              } else {
-                msg = CUSTOM_MESSAGE.USER_ROLE_SAVE_ERROR['defaultError'];
-              }
-              message.error(msg);
+              this.errorHandler(error);
               console.log('------------------- error - ', error);
             });
         }
@@ -318,7 +285,56 @@ class Data extends React.Component {
     }
   };
 
+  removeRole = id => {
+    axios
+      .delete(environment.baseUrl + 'role/' + id)
+      .then(response => {
+        message.success('Role successfully deleted!');
+        // console.log('------------------- response - ', response.data.content);
+        this.loadTable();
+      })
+      .catch(error => {
+        this.errorHandler(error);
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  errorHandler = error => {
+    let msg = null;
+    if (
+      error &&
+      error.response &&
+      error.response.data &&
+      error.response.data.validationFailures &&
+      error.response.data.validationFailures[0] &&
+      error.response.data.validationFailures[0].code
+    ) {
+      let errorCode = error.response.data.validationFailures[0].code;
+      msg = CUSTOM_MESSAGE.USER_ROLE_ERROR[errorCode];
+      if (msg === undefined) {
+        msg = CUSTOM_MESSAGE.USER_ROLE_ERROR['defaultError'];
+      }
+    } else {
+      msg = CUSTOM_MESSAGE.USER_ROLE_ERROR['defaultError'];
+    }
+    message.error(msg);
+  };
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
   render() {
+    // -------------- GET ACTIVE AUTHORITIES -----------------------------------------
+    const viewAuthorities = getActiveAuthorities(USER_AUTHORITY_CODE.USER_MANAGEMENT_ROLES);
+    // -------------------------------------------------------------------------------
+
+    // -------------- IF UNAUTHORIZED ------------------------------------------------
+    if (viewAuthorities === 'UNAUTHORIZED') {
+      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+    }
+    // -------------------------------------------------------------------------------
+
     const { getFieldDecorator } = this.props.form;
     const { userRole, sections, visible, activeTab, currentRole } = this.state;
     return (
@@ -352,12 +368,14 @@ class Data extends React.Component {
                     <Tabs animated={true} onChange={this.onTabChange} activeKey={activeTab}>
                       {sections &&
                         sections.map(section => {
+                          let displayAuthorities = [];
+                          let commonAuthorities = [];
                           return (
                             <TabPane
                               key={section.key}
                               tab={
                                 <span>
-                                  <Icon type="message" />
+                                  {/* <Icon type="message" /> */}
                                   {section.name}
                                 </span>
                               }
@@ -372,8 +390,8 @@ class Data extends React.Component {
                                   >
                                     Select All
                                   </Checkbox>
+                                  <div className="divider my-3 divider-solid"></div>
                                 </Col>
-                                <div className="divider my-5 divider-solid"></div>
                               </Row>
                               <Row>
                                 <Checkbox.Group
@@ -383,7 +401,45 @@ class Data extends React.Component {
                                   onChange={this.onChange}
                                   value={section.checkedList}
                                 >
-                                  <Row>
+                                  <>
+                                    {section.authorities.map(authority => {
+                                      let authorityJSX = (
+                                        <Col span={8} key={authority.id}>
+                                          <Checkbox value={authority.id}>{authority.name}</Checkbox>
+                                        </Col>
+                                      );
+
+                                      if (authority.type === 'DISPLAY') {
+                                        displayAuthorities.push(authorityJSX);
+                                      } else if (authority.type === 'COMMON') {
+                                        commonAuthorities.push(authorityJSX);
+                                      }
+                                    })}
+                                    {
+                                      <>
+                                        <Row>
+                                          {displayAuthorities.length > 0 && (
+                                            <>
+                                              <h4 className="section-header">
+                                                Display Authorities
+                                              </h4>
+                                              {displayAuthorities}
+                                            </>
+                                          )}
+                                        </Row>
+                                        <Row>
+                                          {commonAuthorities.length > 0 && (
+                                            <>
+                                              <div className="divider my-3 divider-solid"></div>
+                                              <h4 className="section-header">Common Authorities</h4>
+                                              {commonAuthorities}
+                                            </>
+                                          )}
+                                        </Row>
+                                      </>
+                                    }
+                                  </>
+                                  {/* <Row>
                                     {section.authorities.map(authority => {
                                       return (
                                         <Col span={8} key={authority.id}>
@@ -391,7 +447,7 @@ class Data extends React.Component {
                                         </Col>
                                       );
                                     })}
-                                  </Row>
+                                  </Row> */}
                                 </Checkbox.Group>
                               </Row>
                             </TabPane>
@@ -419,15 +475,22 @@ class Data extends React.Component {
                 {/* <div className="box-header">Role</div> */}
                 <div className="box-header">
                   <Row className="mt-4">
-                    <Col span={12}><h4>Role</h4></Col>
                     <Col span={12}>
-                      <Button
-                        onClick={() => this.toggleModal(undefined)}
-                        style={{ float: 'right' }}
-                      >
-                        <Icon type="plus" />
-                        New Role
-                      </Button>
+                      <h4>Role</h4>
+                    </Col>
+                    <Col span={12}>
+                      {checkAuthority(
+                        viewAuthorities,
+                        USER_AUTHORITY_CODE.USER_MANAGEMENT_ROLES_CREATE
+                      ) && (
+                        <Button
+                          onClick={() => this.toggleModal(undefined)}
+                          style={{ float: 'right' }}
+                        >
+                          <Icon type="plus" />
+                          New Role
+                        </Button>
+                      )}
                     </Col>
                   </Row>
                 </div>
@@ -480,9 +543,29 @@ class Data extends React.Component {
                         key="action"
                         render={(text, record) => (
                           <span>
-                            <Tooltip title="Edit">
-                              <Icon onClick={() => this.toggleModal(record.id)} type="edit" />
-                            </Tooltip>
+                            {checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.USER_MANAGEMENT_ROLES_UPDATE
+                            ) && (
+                              <Tooltip title="Edit" className="mr-3">
+                                <Icon onClick={() => this.toggleModal(record.id)} type="edit" />
+                              </Tooltip>
+                            )}
+                            {checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.USER_MANAGEMENT_ROLES_REMOVE
+                            ) && (
+                              <Popconfirm
+                                title="Are you sure, you want delete this Role?"
+                                onConfirm={() => this.removeRole(record.id)}
+                                okText="Yes"
+                                cancelText="No"
+                              >
+                                <Tooltip title="Delete">
+                                  <Icon type="delete" />
+                                </Tooltip>
+                              </Popconfirm>
+                            )}
                           </span>
                         )}
                       />

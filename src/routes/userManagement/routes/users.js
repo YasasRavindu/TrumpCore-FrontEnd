@@ -18,6 +18,16 @@ import {
   Tooltip,
 } from 'antd';
 
+import { Redirect } from 'react-router-dom';
+// -------------- IMPORT AUTHORITY -----------------------------------------
+import {
+  DEFAULT_REDIRECT_ROUTE,
+  USER_AUTHORITY_CODE,
+  getActiveAuthorities,
+  checkAuthority,
+} from 'constants/authority/authority';
+// -------------------------------------------------------------------------
+
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
@@ -31,21 +41,27 @@ const { Column, ColumnGroup } = Table;
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       userList: [],
       userRole: [],
+      currentUser: undefined,
+      currentRole: undefined,
+      visible: false,
     };
   }
 
   async componentDidMount() {
+    this._isMounted = true;
     this.loadTable();
     axios
       .get(environment.baseUrl + 'role')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        this.setState({
-          userRole: response.data.content,
-        });
+        this._isMounted &&
+          this.setState({
+            userRole: response.data.content,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -57,35 +73,18 @@ class Data extends React.Component {
       .get(environment.baseUrl + 'platform-users')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const userList = response.data.content.map(user => {
-          user.key = user.id;
-          return user;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const userList = response.data.content.filter(user => {
+          if (currentUser.id !== user.id) {
+            user.key = user.id;
+            return user;
+          }
         });
-        this.setState({
-          userList: userList,
-        });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
-  };
 
-  getUserView = id => {
-    axios
-      .get(environment.baseUrl + 'platform-users/' + id)
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        let user = response.data.content;
-
-        // this.props.form.setFieldsValue({
-        //   roleName: role.name,
-        // });
-
-        this.setState({
-          // sections: sections,
-          currentUser: user,
-          visible: true,
-        });
+        this._isMounted &&
+          this.setState({
+            userList: userList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -93,6 +92,8 @@ class Data extends React.Component {
   };
 
   handleStatus = (id, value) => {
+    console.log(id, value);
+
     axios
       .get(
         environment.baseUrl +
@@ -103,27 +104,11 @@ class Data extends React.Component {
       )
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
+        message.success('User Status Successfully Changed.');
         this.loadTable();
       })
       .catch(error => {
-        let msg = null;
-        if (
-          error &&
-          error.response &&
-          error.response.data &&
-          error.response.data.validationFailures &&
-          error.response.data.validationFailures[0] &&
-          error.response.data.validationFailures[0].code
-        ) {
-          let errorCode = error.response.data.validationFailures[0].code;
-          msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-          if (msg === undefined) {
-            msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-          }
-        } else {
-          msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-        }
-        message.error(msg);
+        this.showErrorMsg(error);
         console.log('------------------- error - ', error);
       });
   };
@@ -142,127 +127,196 @@ class Data extends React.Component {
             },
           })
           .then(response => {
-            message.success('User Account Successfully Created');
+            message.success('User Account Successfully Created.');
             console.log('------------------- response - ', response);
             this.loadTable();
             this.props.form.resetFields();
           })
           .catch(error => {
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-            }
-            message.error(msg);
+            this.showErrorMsg(error);
             console.log('------------------- error - ', error);
           });
       }
     });
   };
 
+  showErrorMsg = error => {
+    let msg = null;
+    if (
+      error &&
+      error.response &&
+      error.response.data &&
+      error.response.data.validationFailures &&
+      error.response.data.validationFailures[0] &&
+      error.response.data.validationFailures[0].code
+    ) {
+      let errorCode = error.response.data.validationFailures[0].code;
+      msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
+      if (msg === undefined) {
+        msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+      }
+    } else {
+      msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
+    }
+    message.error(msg);
+  };
+
+  onRoleSelect = e => {
+    this._isMounted &&
+      this.setState({
+        currentRole: e,
+      });
+  };
+
+  toggleModal = (id, currentRole) => {
+    if (id) {
+      this.props.form.setFieldsValue({
+        roleUpdate: currentRole,
+      });
+      this._isMounted &&
+        this.setState({
+          currentUser: id,
+          visible: true,
+        });
+    } else {
+      this._isMounted &&
+        this.setState({
+          visible: false,
+          currentUser: undefined,
+          currentRole: undefined,
+        });
+    }
+  };
+
+  updateUser = () => {
+    if (this.state.currentRole) {
+      axios
+        .put(environment.baseUrl + 'platform-users', {
+          id: this.state.currentUser,
+          role: {
+            id: this.state.currentRole,
+          },
+        })
+        .then(response => {
+          message.success('User Role Successfully Updated');
+          console.log('------------------- response - ', response);
+          this.loadTable();
+          this.toggleModal(undefined);
+        })
+        .catch(error => {
+          this.showErrorMsg(error);
+          console.log('------------------- error - ', error);
+        });
+    }
+  };
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
   render() {
+    // -------------- GET ACTIVE AUTHORITIES -----------------------------------------
+    const viewAuthorities = getActiveAuthorities(USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS);
+    // -------------------------------------------------------------------------------
+
+    // -------------- IF UNAUTHORIZED ------------------------------------------------
+    if (viewAuthorities === 'UNAUTHORIZED') {
+      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+    }
+    // -------------------------------------------------------------------------------
+
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList, visible, currentUser } = this.state;
+    const { userRole, userList } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          <div key="1">
-            <div className="box box-default mb-4">
-              <div className="box-header">User Registration</div>
-              <div className="box-body">
-                <Form>
-                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6}>
-                      <FormItem>
-                        {getFieldDecorator('accountName', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter your account name',
-                            },
-                          ],
-                        })(<Input placeholder="Account Name" />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        {getFieldDecorator('email', {
-                          rules: [
-                            {
-                              type: 'email',
-                              message: 'The email you entered is not in the right format.',
-                            },
-                            {
-                              required: true,
-                              message: 'Please add your email.',
-                            },
-                            ,
-                          ],
-                        })(<Input placeholder="Email" />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        {getFieldDecorator('password', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter a password.',
-                            },
-                          ],
-                        })(<Password placeholder="Password" />)}
-                      </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        {getFieldDecorator('role', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please select a user role.',
-                            },
-                          ],
-                        })(
-                          <Select placeholder="Role">
-                            {userRole &&
-                              userRole.map(role => {
-                                if (role.name !== 'Super Admin') {
-                                  return (
-                                    <Option key={role.id} value={role.id}>
-                                      {role.name}
-                                    </Option>
-                                  );
-                                }
-                              })}
-                          </Select>
-                        )}
-                      </FormItem>
-                    </Col>
-                  </Row>
-                  <Row>
-                    <Col span={24} order={4}>
-                      <Button type="primary" className="float-right" onClick={this.submit}>
-                        Submit
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form>
+          {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_CREATE) && (
+            <div key="1">
+              <div className="box box-default mb-4">
+                <div className="box-header">User Registration</div>
+                <div className="box-body">
+                  <Form>
+                    <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                      <Col span={6}>
+                        <FormItem>
+                          {getFieldDecorator('accountName', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please enter your account name',
+                              },
+                            ],
+                          })(<Input placeholder="Account Name" />)}
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem>
+                          {getFieldDecorator('email', {
+                            rules: [
+                              {
+                                type: 'email',
+                                message: 'The email you entered is not in the right format.',
+                              },
+                              {
+                                required: true,
+                                message: 'Please add your email.',
+                              },
+                              ,
+                            ],
+                          })(<Input placeholder="Email" />)}
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem>
+                          {getFieldDecorator('password', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please enter a password.',
+                              },
+                            ],
+                          })(<Password placeholder="Password" />)}
+                        </FormItem>
+                      </Col>
+                      <Col span={6}>
+                        <FormItem>
+                          {getFieldDecorator('role', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please select a user role.',
+                              },
+                            ],
+                          })(
+                            <Select placeholder="Role">
+                              {userRole &&
+                                userRole.map(role => {
+                                  if (role.name !== 'Super Admin') {
+                                    return (
+                                      <Option key={role.id} value={role.id}>
+                                        {role.name}
+                                      </Option>
+                                    );
+                                  }
+                                })}
+                            </Select>
+                          )}
+                        </FormItem>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col span={24} order={4}>
+                        <Button type="primary" className="float-right" onClick={this.submit}>
+                          Submit
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Form>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <div key="2">
             <div className="box box-default">
               <div className="box-body">
@@ -291,19 +345,41 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {record.status && record.status === 'ACTIVE' && (
-                            <Tooltip title="Inactive">
+                          {record.status &&
+                            record.status === 'ACTIVE' &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_INACTIVE
+                            ) && (
+                              <Tooltip title="Inactive" className="mr-3">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'INACTIVE')}
+                                  type="close-circle-o"
+                                />
+                              </Tooltip>
+                            )}
+                          {record.status &&
+                            record.status !== 'ACTIVE' &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_ACTIVE
+                            ) && (
+                              <Tooltip title="Active" className="mr-3">
+                                <Icon
+                                  onClick={() => this.handleStatus(record.id, 'ACTIVE')}
+                                  type="check-circle-o"
+                                />
+                              </Tooltip>
+                            )}
+
+                          {checkAuthority(
+                            viewAuthorities,
+                            USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_UPDATE
+                          ) && (
+                            <Tooltip title="Update">
                               <Icon
-                                onClick={() => this.handleStatus(record.id, 'INACTIVE')}
-                                type="close-circle-o"
-                              />
-                            </Tooltip>
-                          )}
-                          {record.status && record.status !== 'ACTIVE' && (
-                            <Tooltip title="Active">
-                              <Icon
-                                onClick={() => this.handleStatus(record.id, 'ACTIVE')}
-                                type="check-circle-o"
+                                onClick={() => this.toggleModal(record.id, record.role.id)}
+                                type="edit"
                               />
                             </Tooltip>
                           )}
@@ -316,6 +392,51 @@ class Data extends React.Component {
             </div>
           </div>
         </QueueAnim>
+        <Modal
+          title="Change User Role"
+          visible={this.state.visible}
+          onOk={this.updateUser}
+          confirmLoading={this.state.confirmLoading}
+          onCancel={() => this.toggleModal(undefined)}
+          width="300px"
+        >
+          <Form>
+            <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+              <Col span={24}>
+                <FormItem>
+                  {getFieldDecorator('roleUpdate', {
+                    rules: [
+                      {
+                        required: true,
+                        message: 'Please select a user role.',
+                      },
+                    ],
+                  })(
+                    <Select placeholder="Role" onSelect={this.onRoleSelect}>
+                      {userRole &&
+                        userRole.map(role => {
+                          if (role.name !== 'Super Admin') {
+                            return (
+                              <Option key={role.id} value={role.id}>
+                                {role.name}
+                              </Option>
+                            );
+                          }
+                        })}
+                    </Select>
+                  )}
+                </FormItem>
+              </Col>
+            </Row>
+            {/* <Row>
+              <Col span={24} order={4}>
+                <Button type="primary" className="float-right" onClick={this.submit}>
+                  Submit
+                </Button>
+              </Col>
+            </Row> */}
+          </Form>
+        </Modal>
       </div>
     );
   }

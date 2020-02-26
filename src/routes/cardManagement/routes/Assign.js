@@ -21,6 +21,16 @@ import {
   Popconfirm,
 } from 'antd';
 
+import { Redirect } from 'react-router-dom';
+// -------------- IMPORT AUTHORITY -----------------------------------------
+import {
+  DEFAULT_REDIRECT_ROUTE,
+  USER_AUTHORITY_CODE,
+  getActiveAuthorities,
+  checkAuthority,
+} from 'constants/authority/authority';
+// -------------------------------------------------------------------------
+
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import CUSTOM_MESSAGE from 'constants/notification/message';
@@ -39,6 +49,7 @@ const { Column, ColumnGroup } = Table;
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       cardList: [],
       assignList: [],
@@ -54,6 +65,7 @@ class Data extends React.Component {
   }
 
   async componentDidMount() {
+    this._isMounted = true;
     this.loadData();
   }
 
@@ -66,9 +78,10 @@ class Data extends React.Component {
           device.key = device.id;
           return device;
         });
-        this.setState({
-          cardList: cardList,
-        });
+        this._isMounted &&
+          this.setState({
+            cardList: cardList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -81,9 +94,10 @@ class Data extends React.Component {
       })
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
-        this.setState({
-          accountList: response.data.content,
-        });
+        this._isMounted &&
+          this.setState({
+            accountList: response.data.content,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -97,10 +111,11 @@ class Data extends React.Component {
           device.key = device.id;
           return device;
         });
-        this.setState({
-          assignList: assignList,
-          filteredAssignedList: assignList,
-        });
+        this._isMounted &&
+          this.setState({
+            assignList: assignList,
+            filteredAssignedList: assignList,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -116,57 +131,61 @@ class Data extends React.Component {
   };
 
   dataFilter = (key, value) => {
-    this.setState(
-      {
-        [key]: value,
-      },
-      () => {
-        let data = this.state.assignList;
-        let searchDate = this.state.searchDate;
-        let searchText = this.state.searchText;
+    this._isMounted &&
+      this.setState(
+        {
+          [key]: value,
+        },
+        () => {
+          let data = this.state.assignList;
+          let searchDate = this.state.searchDate;
+          let searchText = this.state.searchText;
 
-        if (searchText) {
-          data = data.filter(d => {
-            return (
-              (d.account &&
-                (d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                  d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()))) ||
-              (d.card && d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()))
-            );
-          });
+          if (searchText) {
+            data = data.filter(d => {
+              return (
+                (d.account &&
+                  (d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                    d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()))) ||
+                (d.card && d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()))
+              );
+            });
+          }
+
+          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+            var startDate = moment(searchDate[0]);
+            var endDate = moment(searchDate[1]);
+            data = data.filter(d => {
+              var date = moment(d.assignedDate);
+              return date.isAfter(startDate) && date.isBefore(endDate);
+            });
+          }
+
+          this._isMounted &&
+            this.setState({
+              filteredAssignedList: data,
+            });
         }
-
-        if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          data = data.filter(d => {
-            var date = moment(d.assignedDate);
-            return date.isAfter(startDate) && date.isBefore(endDate);
-          });
-        }
-
-        this.setState({
-          filteredAssignedList: data,
-        });
-      }
-    );
+      );
   };
 
   handleUpdate = (id, cardId, accountId) => {
     if (id) {
-      this.setState(
-        {
-          checkedID: id,
-          checkedcardId: cardId,
-          checkedaccountId: accountId,
-        },
-        () => {
-          this.setState({
-            visible: true,
-          });
-          console.log(this.state);
-        }
-      );
+      this._isMounted &&
+        this.setState(
+          {
+            checkedID: id,
+            checkedcardId: cardId,
+            checkedaccountId: accountId,
+          },
+          () => {
+            this._isMounted &&
+              this.setState({
+                visible: true,
+              });
+            console.log(this.state);
+          }
+        );
     }
   };
 
@@ -189,12 +208,13 @@ class Data extends React.Component {
             console.log('------------------- response - ', response);
             this.loadData();
             this.props.form.resetFields();
-            this.setState({
-              visible: false,
-              checkedID: '',
-              checkedcardId: '',
-              checkedaccountId: '',
-            });
+            this._isMounted &&
+              this.setState({
+                visible: false,
+                checkedID: '',
+                checkedcardId: '',
+                checkedaccountId: '',
+              });
           })
           .catch(error => {
             let msg = null;
@@ -224,9 +244,10 @@ class Data extends React.Component {
   };
 
   handleCancel = e => {
-    this.setState({
-      visible: false,
-    });
+    this._isMounted &&
+      this.setState({
+        visible: false,
+      });
   };
 
   handleStatus = (id, value) => {
@@ -292,8 +313,22 @@ class Data extends React.Component {
   addAssign = () => {
     console.log('work');
   };
+  
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   render() {
+    // -------------- GET ACTIVE AUTHORITIES -----------------------------------------
+    const viewAuthorities = getActiveAuthorities(USER_AUTHORITY_CODE.CARD_ASSIGN);
+    // -------------------------------------------------------------------------------
+
+    // -------------- IF UNAUTHORIZED ------------------------------------------------
+    if (viewAuthorities === 'UNAUTHORIZED') {
+      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+    }
+    // -------------------------------------------------------------------------------
+
     const { getFieldDecorator } = this.props.form;
     const { accountList, cardList, filteredAssignedList } = this.state;
 
@@ -318,107 +353,112 @@ class Data extends React.Component {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          <div key="1">
-            <div className="box box-default mb-4">
-              <div className="box-header">Assign card to account</div>
-              <div className="box-body">
-                <Form layout="inline">
-                  <FormItem>
-                    {getFieldDecorator('cardNumber', {
-                      rules: [
-                        {
-                          required: true,
-                          message: 'Please enter your card number',
-                        },
-                      ],
-                    })(
-                      // (<Input placeholder="Serial Number" />)
-                      <AutoComplete
-                        allowClear
-                        dataSource={optionsCards}
-                        style={{ width: 200 }}
-                        onBlur={inputValue => {
-                          let keyCard = false;
-                          cardList.map(card => {
-                            if (
-                              inputValue !== undefined &&
-                              card.id.toUpperCase() === inputValue.toUpperCase()
-                            ) {
-                              keyCard = true;
-                            }
-                          });
-                          if (!keyCard) {
-                            this.props.form.setFieldsValue({
-                              cardNumber: '',
+          {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
+            <div key="1">
+              <div className="box box-default mb-4">
+                <div className="box-header">Assign card to account</div>
+                <div className="box-body">
+                  <Form layout="inline">
+                    <FormItem>
+                      {getFieldDecorator('cardNumber', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please enter your card number',
+                          },
+                        ],
+                      })(
+                        // (<Input placeholder="Serial Number" />)
+                        <AutoComplete
+                          allowClear
+                          dataSource={optionsCards}
+                          style={{ width: 200 }}
+                          onBlur={inputValue => {
+                            let keyCard = false;
+                            cardList.map(card => {
+                              if (
+                                inputValue !== undefined &&
+                                card.id.toUpperCase() === inputValue.toUpperCase()
+                              ) {
+                                keyCard = true;
+                              }
                             });
-                          }
-                        }}
-                        placeholder="Card Number"
-                        filterOption={(inputValue, option) =>
-                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                          -1
-                        }
-                      />
-                    )}
-                  </FormItem>
-                  <FormItem>
-                    <Badge
-                      count={'Assign to >'}
-                      style={{
-                        backgroundColor: '#fff',
-                        color: '#999',
-                        boxShadow: '0 0 0 1px #d9d9d9 inset',
-                        marginTop: '10px',
-                      }}
-                    />
-                  </FormItem>
-
-                  <FormItem>
-                    {getFieldDecorator('accountNumber', {
-                      rules: [
-                        {
-                          required: true,
-                          message: 'Please enter your Account number',
-                        },
-                      ],
-                    })(
-                      // <Input placeholder="Account Number" />
-                      <AutoComplete
-                        dataSource={optionsAccounts}
-                        style={{ width: 200 }}
-                        onBlur={inputValue => {
-                          let keyCard = false;
-                          accountList.map(account => {
-                            if (
-                              inputValue !== undefined &&
-                              (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-                                account.id.toUpperCase() === inputValue.toUpperCase())
-                            ) {
-                              keyCard = true;
+                            if (!keyCard) {
+                              this.props.form.setFieldsValue({
+                                cardNumber: '',
+                              });
                             }
-                          });
-                          if (!keyCard) {
-                            this.props.form.setFieldsValue({
-                              accountNumber: '',
-                            });
+                          }}
+                          placeholder="Card Number"
+                          filterOption={(inputValue, option) =>
+                            option.props.children
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
                           }
+                        />
+                      )}
+                    </FormItem>
+                    <FormItem>
+                      <Badge
+                        count={'Assign to >'}
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#999',
+                          boxShadow: '0 0 0 1px #d9d9d9 inset',
+                          marginTop: '10px',
                         }}
-                        placeholder="Account Number"
-                        filterOption={(inputValue, option) =>
-                          option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !==
-                          -1
-                        }
                       />
-                    )}
-                  </FormItem>
+                    </FormItem>
 
-                  <Button type="primary" className="float-right" onClick={this.submit}>
-                    Assign
-                  </Button>
-                </Form>
+                    <FormItem>
+                      {getFieldDecorator('accountNumber', {
+                        rules: [
+                          {
+                            required: true,
+                            message: 'Please enter your Account number',
+                          },
+                        ],
+                      })(
+                        // <Input placeholder="Account Number" />
+                        <AutoComplete
+                          dataSource={optionsAccounts}
+                          style={{ width: 200 }}
+                          onBlur={inputValue => {
+                            let keyCard = false;
+                            accountList.map(account => {
+                              if (
+                                inputValue !== undefined &&
+                                (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+                                  account.id.toUpperCase() === inputValue.toUpperCase())
+                              ) {
+                                keyCard = true;
+                              }
+                            });
+                            if (!keyCard) {
+                              this.props.form.setFieldsValue({
+                                accountNumber: '',
+                              });
+                            }
+                          }}
+                          placeholder="Account Number"
+                          filterOption={(inputValue, option) =>
+                            option.props.children
+                              .toUpperCase()
+                              .indexOf(inputValue.toUpperCase()) !== -1
+                          }
+                        />
+                      )}
+                    </FormItem>
+
+                    <Button type="primary" className="float-right" onClick={this.submit}>
+                      Assign
+                    </Button>
+                  </Form>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
           <div key="2">
             <div className="box box-default">
               <div className="box-header">
@@ -490,44 +530,66 @@ class Data extends React.Component {
                             (record.card.status === 'ACTIVE' ||
                               record.card.status === 'LOCKED') && (
                               <>
-                                {record.card.status === 'ACTIVE' && (
-                                  <>
-                                    <Tooltip title="lock">
-                                      <Icon
-                                        onClick={() => this.handleStatus(record.card.id, 'LOCKED')}
-                                        type="lock"
-                                      />
+                                {record.card.status === 'ACTIVE' &&
+                                  checkAuthority(
+                                    viewAuthorities,
+                                    USER_AUTHORITY_CODE.CARD_ASSIGN_LOCK
+                                  ) && (
+                                    <>
+                                      <Tooltip title="Lock">
+                                        <Icon
+                                          onClick={() =>
+                                            this.handleStatus(record.card.id, 'LOCKED')
+                                          }
+                                          type="lock"
+                                          className="mr-3"
+                                        />
+                                      </Tooltip>
+                                    </>
+                                  )}
+                                {record.card.status === 'LOCKED' &&
+                                  checkAuthority(
+                                    viewAuthorities,
+                                    USER_AUTHORITY_CODE.CARD_ASSIGN_UNLOCK
+                                  ) && (
+                                    <>
+                                      <Tooltip title="Unlock">
+                                        <Icon
+                                          onClick={() =>
+                                            this.handleStatus(record.card.id, 'ACTIVE')
+                                          }
+                                          type="unlock"
+                                          className="mr-3"
+                                        />
+                                      </Tooltip>
+                                      <Divider type="vertical" />
+                                    </>
+                                  )}
+                                {checkAuthority(
+                                  viewAuthorities,
+                                  USER_AUTHORITY_CODE.CARD_ASSIGN_CANCEL
+                                ) && (
+                                  <Popconfirm
+                                    title="Are you sure delete this assignment?"
+                                    onConfirm={() => this.handleStatus(record.card.id, 'CANCELLED')}
+                                    okText="Yes"
+                                    cancelText="No"
+                                  >
+                                    <Tooltip title="Cancel">
+                                      <Icon type="close-circle-o" />
                                     </Tooltip>
-                                    <Divider type="vertical" />
-                                  </>
+                                  </Popconfirm>
                                 )}
-                                {record.card.status === 'LOCKED' && (
-                                  <>
-                                    <Tooltip title="lock">
-                                      <Icon
-                                        onClick={() => this.handleStatus(record.card.id, 'ACTIVE')}
-                                        type="unlock"
-                                      />
-                                    </Tooltip>
-                                    <Divider type="vertical" />
-                                  </>
-                                )}
-                                <Popconfirm
-                                  title="Are you sure delete this assignment?"
-                                  onConfirm={() => this.handleStatus(record.card.id, 'CANCELLED')}
-                                  okText="Yes"
-                                  cancelText="No"
-                                >
-                                  <Tooltip title="Cancel">
-                                    <Icon type="close-circle-o" />
-                                  </Tooltip>
-                                </Popconfirm>
                               </>
                             )}
 
                           {record.card.status &&
                             (record.card.status === 'CANCELLED' ||
-                              record.card.status === 'EXPIRED') && (
+                              record.card.status === 'EXPIRED') &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.CARD_ASSIGN_RE_ASSIGN
+                            ) && (
                               <Tooltip title="Assign New Card">
                                 <Icon
                                   onClick={() =>
