@@ -2,7 +2,7 @@
   "name": "ant",
   "version": "1.2.0",
   "private": true,
-  "homepage": "",
+  "homepage": "http://trumpcore.trumpcode.com",
   "dependencies": {
     "antd": "^3.10.3",
     "axios": "^0.19.1",

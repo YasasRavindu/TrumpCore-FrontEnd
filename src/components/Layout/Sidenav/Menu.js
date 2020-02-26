@@ -36,6 +36,7 @@ class AppMenu extends React.Component {
     '/app/cards',
     '/app/devices',
     '/app/report',
+    '/app/account',
     // '/app/cardGenerate',
     '/app/userManagement',
   ];
@@ -176,6 +177,17 @@ class AppMenu extends React.Component {
         >
           {this.getNavMenuItems(POS_DEVICES)}
         </SubMenu>
+        {/* <SubMenu
+          key="/app/account"
+          title={
+            <span>
+              <Icon type="mobile" />
+              <span className="nav-text">Account</span>
+            </span>
+          }
+        >
+          {this.getNavMenuItems(ACCOUNT)}
+        </SubMenu> */}
         <SubMenu
           key="/app/userManagement"
           title={

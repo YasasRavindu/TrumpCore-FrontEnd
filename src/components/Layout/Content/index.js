@@ -55,7 +55,6 @@ let AsyncUIOverview = loadable({
   loading: LoadingComponent,
 });
 
-
 let AsyncException = loadable({
   loader: () => import('routes/exception/'),
   loading: LoadingComponent,
@@ -70,6 +69,10 @@ let AsyncCardManagement = loadable({
 });
 let AsyncUserManagement = loadable({
   loader: () => import('routes/userManagement/'),
+  loading: LoadingComponent,
+});
+let AsyncAccount = loadable({
+  loader: () => import('routes/account/'),
   loading: LoadingComponent,
 });
 let AsyncReport = loadable({
@@ -99,6 +102,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/devices`} component={AsyncDevices} />
         <Route path={`${match.url}/cardManagement`} component={AsyncCardManagement} />
         <Route path={`${match.url}/userManagement`} component={AsyncUserManagement} />
+        <Route path={`${match.url}/account`} component={AsyncAccount} />
         <Route path={`${match.url}/report`} component={AsyncReport} />
       </Content>
     );

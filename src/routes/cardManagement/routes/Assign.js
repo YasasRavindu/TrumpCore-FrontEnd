@@ -289,6 +289,10 @@ class Data extends React.Component {
     });
   };
 
+  addAssign = () => {
+    console.log('work');
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
     const { accountList, cardList, filteredAssignedList } = this.state;
@@ -417,7 +421,19 @@ class Data extends React.Component {
           </div>
           <div key="2">
             <div className="box box-default">
-              <div className="box-header">Card Management</div>
+              <div className="box-header">
+                Card Management
+                <Button
+                  type="primary"
+                  shape="round"
+                  icon="plus"
+                  onClick={() => this.addAssign()}
+                  className="float-right ml-1"
+                >
+                  Add
+                </Button>
+              </div>
+
               <div className="box-body">
                 <Form>
                   <Row gutter={24}>

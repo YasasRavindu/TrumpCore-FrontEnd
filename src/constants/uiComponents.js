@@ -1,5 +1,19 @@
 // optional `menuName` overrides default name for menu item if it's defined
 // hideInMenu hides item in menu
+export const ACCOUNT = [
+  {
+    name: 'Account Upload - Account',
+    menuName: 'Upload',
+    desc: 'Account Upload - Account - Description',
+    path: '/app/account/upload',
+  },
+  {
+    name: 'Account Management - Account',
+    menuName: 'Management',
+    desc: 'Account Management - Account - Description',
+    path: '/app/account/management',
+  },
+];
 
 export const USER_MANAGEMENT = [
   {
