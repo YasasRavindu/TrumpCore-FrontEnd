@@ -222,18 +222,19 @@ class AppMenu extends React.Component {
                   DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION04]
                 )}
               </SubMenu>
-              {/* <SubMenu
-                key="/app/account"
-                title={
-                  <span>
-                    <Icon type="mobile" />
-                    <span className="nav-text">Account</span>
-                  </span>
-                }
-              >
-                {this.getNavMenuItems(ACCOUNT)}
-              </SubMenu> */}
             )}
+
+            {/* <SubMenu
+              key="/app/account"
+              title={
+                <span>
+                  <Icon type="mobile" />
+                  <span className="nav-text">Account</span>
+                </span>
+              }
+            >
+              {this.getNavMenuItems(ACCOUNT)}
+            </SubMenu> */}
             {/* <SubMenu
               key="/app/cardManagement"
               title={
