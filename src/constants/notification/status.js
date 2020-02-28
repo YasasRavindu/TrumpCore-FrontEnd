@@ -29,6 +29,7 @@ const STATUS = {
     12: { color: 'purple', label: 'TELKO' },
     13: { color: 'black', label: 'B Mobile' },
     14: { color: 'pink', label: 'NPF' },
+    15: { color: 'coral', label: 'Cash Transfer' },
   },
   CARD_TYPE: {
     DEBIT: { color: 'green', label: 'Debit' },

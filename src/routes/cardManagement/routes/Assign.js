@@ -292,6 +292,10 @@ class Data extends React.Component {
       });
   };
 
+  handleSubmit = type => {
+    console.log('type', type);
+  };
+
   submit = e => {
     e.preventDefault();
     this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
@@ -721,7 +725,19 @@ class Data extends React.Component {
         <Modal
           visible={this.state.modelVisible}
           onCancel={this.handleModelCancel}
-          footer={null}
+          //onOk={this.handleSubmit(this.state.modelType)}
+          footer={[
+            (this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
+            this.state.account != undefined ? (
+              <Button
+                key="submit"
+                type="primary"
+                onClick={() => this.handleSubmit(this.state.modelType)}
+              >
+                Assign
+              </Button>
+            ) : null,
+          ]}
           width={800}
         >
           <Form layout="inline">
@@ -791,7 +807,17 @@ class Data extends React.Component {
                   this.state.account != undefined ? (
                     <div className="col-lg-6 mb-2">
                       <article className="profile-card-v1 h-100">
-                        <FormItem>
+                        {this.state.modelType ? (
+                          <Tag color="green" className="float-right">
+                            Not Assign
+                          </Tag>
+                        ) : (
+                          <Tag color="purple" className="float-right">
+                            Assign
+                          </Tag>
+                        )}
+
+                        <FormItem className="mt-4">
                           {getFieldDecorator('cardNumber', {
                             rules: [
                               {
@@ -804,7 +830,7 @@ class Data extends React.Component {
                             <AutoComplete
                               allowClear
                               dataSource={optionsCards}
-                              style={{ width: 200 }}
+                              style={{ width: 300 }}
                               onBlur={inputValue => {
                                 let keyCard = false;
                                 cardList.map(card => {
@@ -830,21 +856,11 @@ class Data extends React.Component {
                             />
                           )}
                         </FormItem>
-                        <h4>buddi</h4>
-                        <span>jenifer</span>
                       </article>
                     </div>
                   ) : null}
                 </div>
               </article>
-              <div className="row">
-                {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-                this.state.account != undefined ? (
-                  <Button type="primary" className={footer} onClick={this.submit}>
-                    Assign
-                  </Button>
-                ) : null}
-              </div>
             </React.Fragment>
           </Form>
         </Modal>
