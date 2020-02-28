@@ -191,12 +191,6 @@ class Data extends React.Component {
             checkedaccountId: accountId,
           },
           () => {
-            // this._isMounted &&
-            //   this.setState({
-            //     visible: true,
-            //   });
-            // console.log(this.state);
-
             this.state.accountList.map(account => {
               if (account.id.toUpperCase() === accountId.toUpperCase()) {
                 this.showAccountDetail(account);
@@ -209,59 +203,59 @@ class Data extends React.Component {
     }
   };
 
-  assignmentSubmit = e => {
-    e.preventDefault();
-    const { checkedID, checkedaccountId } = this.state;
-    this.props.form.validateFields(['updatecardNumber'], (err, values) => {
-      if (!err) {
-        axios
-          .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
-            account: {
-              id: checkedaccountId,
-            },
-            card: {
-              id: values.updatecardNumber,
-            },
-          })
-          .then(response => {
-            message.success('Card Successfully Assign to Account');
-            console.log('------------------- response - ', response);
-            this.loadData();
-            this.props.form.resetFields();
-            this._isMounted &&
-              this.setState({
-                visible: false,
-                checkedID: '',
-                checkedcardId: '',
-                checkedaccountId: '',
-              });
-          })
-          .catch(error => {
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              console.log('error code', errorCode);
+  // assignmentSubmit = e => {
+  //   e.preventDefault();
+  //   const { checkedID, checkedaccountId } = this.state;
+  //   this.props.form.validateFields(['updatecardNumber'], (err, values) => {
+  //     if (!err) {
+  //       axios
+  //         .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
+  //           account: {
+  //             id: checkedaccountId,
+  //           },
+  //           card: {
+  //             id: values.updatecardNumber,
+  //           },
+  //         })
+  //         .then(response => {
+  //           message.success('Card Successfully Assign to Account');
+  //           console.log('------------------- response - ', response);
+  //           this.loadData();
+  //           this.props.form.resetFields();
+  //           this._isMounted &&
+  //             this.setState({
+  //               visible: false,
+  //               checkedID: '',
+  //               checkedcardId: '',
+  //               checkedaccountId: '',
+  //             });
+  //         })
+  //         .catch(error => {
+  //           let msg = null;
+  //           if (
+  //             error &&
+  //             error.response &&
+  //             error.response.data &&
+  //             error.response.data.validationFailures &&
+  //             error.response.data.validationFailures[0] &&
+  //             error.response.data.validationFailures[0].code
+  //           ) {
+  //             let errorCode = error.response.data.validationFailures[0].code;
+  //             console.log('error code', errorCode);
 
-              msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-            }
-            message.error(msg);
-            console.log('------------------- error - ', error);
-          });
-      }
-    });
-  };
+  //             msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
+  //             if (msg === undefined) {
+  //               msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
+  //             }
+  //           } else {
+  //             msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
+  //           }
+  //           message.error(msg);
+  //           console.log('------------------- error - ', error);
+  //         });
+  //     }
+  //   });
+  // };
 
   handleCancel = e => {
     this._isMounted &&
@@ -293,53 +287,150 @@ class Data extends React.Component {
   };
 
   handleSubmit = type => {
-    console.log('type', type);
-  };
-
-  submit = e => {
-    e.preventDefault();
-    this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
-      if (!err) {
-        console.log(values);
-        axios
-          .post(environment.baseUrl + 'cardRegistry', {
-            account: {
-              id: values.accountNumber,
-            },
-            card: {
-              id: values.cardNumber,
-            },
-          })
-          .then(response => {
-            message.success('Card Successfully Assign to Account');
-            console.log('------------------- response - ', response);
-            this.loadData();
-            this.props.form.resetFields();
-          })
-          .catch(error => {
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
-              if (msg === undefined) {
+    if (type == 'assign') {
+      this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
+        if (!err) {
+          console.log(values);
+          axios
+            .post(environment.baseUrl + 'cardRegistry', {
+              account: {
+                id: values.accountNumber,
+              },
+              card: {
+                id: values.cardNumber,
+              },
+            })
+            .then(response => {
+              message.success('Card Successfully Assign to Account');
+              console.log('------------------- response - ', response);
+              this.loadData();
+              this.props.form.resetFields();
+              this._isMounted &&
+                this.setState({
+                  modelVisible: false,
+                });
+            })
+            .catch(error => {
+              let msg = null;
+              if (
+                error &&
+                error.response &&
+                error.response.data &&
+                error.response.data.validationFailures &&
+                error.response.data.validationFailures[0] &&
+                error.response.data.validationFailures[0].code
+              ) {
+                let errorCode = error.response.data.validationFailures[0].code;
+                msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
+                if (msg === undefined) {
+                  msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
+                }
+              } else {
                 msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
               }
-            } else {
-              msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
-            }
-            message.error(msg);
-            console.log('------------------- error - ', error);
-          });
-      }
-    });
+              message.error(msg);
+              console.log('------------------- error - ', error);
+            });
+        }
+      });
+    } else if (type == 'edit') {
+      const { checkedID, checkedaccountId } = this.state;
+      this.props.form.validateFields(['cardNumber'], (err, values) => {
+        if (!err) {
+          axios
+            .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
+              account: {
+                id: checkedaccountId,
+              },
+              card: {
+                id: values.cardNumber,
+              },
+            })
+            .then(response => {
+              message.success('Card Successfully Assign to Account');
+              console.log('------------------- response - ', response);
+              this.loadData();
+              this.props.form.resetFields();
+              this._isMounted &&
+                this.setState({
+                  checkedID: '',
+                  checkedcardId: '',
+                  checkedaccountId: '',
+                  modelVisible: false,
+                });
+            })
+            .catch(error => {
+              let msg = null;
+              if (
+                error &&
+                error.response &&
+                error.response.data &&
+                error.response.data.validationFailures &&
+                error.response.data.validationFailures[0] &&
+                error.response.data.validationFailures[0].code
+              ) {
+                let errorCode = error.response.data.validationFailures[0].code;
+                console.log('error code', errorCode);
+
+                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
+                if (msg === undefined) {
+                  msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
+                }
+              } else {
+                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
+              }
+              message.error(msg);
+              console.log('------------------- error - ', error);
+            });
+        }
+      });
+    }
   };
+
+  // submit = e => {
+  //   e.preventDefault();
+  //   this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
+  //     if (!err) {
+  //       console.log(values);
+  //       axios
+  //         .post(environment.baseUrl + 'cardRegistry', {
+  //           account: {
+  //             id: values.accountNumber,
+  //           },
+  //           card: {
+  //             id: values.cardNumber,
+  //           },
+  //         })
+  //         .then(response => {
+  //           message.success('Card Successfully Assign to Account');
+  //           console.log('------------------- response - ', response);
+  //           this.loadData();
+  //           this.props.form.resetFields();
+  //         })
+  //         .catch(error => {
+  //           let msg = null;
+  //           if (
+  //             error &&
+  //             error.response &&
+  //             error.response.data &&
+  //             error.response.data.validationFailures &&
+  //             error.response.data.validationFailures[0] &&
+  //             error.response.data.validationFailures[0].code
+  //           ) {
+  //             let errorCode = error.response.data.validationFailures[0].code;
+  //             msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
+  //             if (msg === undefined) {
+  //               msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
+  //             }
+  //           } else {
+  //             msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
+  //           }
+  //           message.error(msg);
+  //           console.log('------------------- error - ', error);
+  //         });
+  //     }
+  //   });
+  // };
 
   showAccountDetail = account => {
     if (
@@ -348,10 +439,11 @@ class Data extends React.Component {
       this.state.account.id !== account.id ||
       !this.state.displayDetail
     ) {
-      this.setState({
-        account: account,
-        displayDetail: true,
-      });
+      this._isMounted &&
+        this.setState({
+          account: account,
+          displayDetail: true,
+        });
     }
   };
 
@@ -535,7 +627,7 @@ class Data extends React.Component {
                   onClick={() => this.showModel('assign')}
                   className="float-right ml-1"
                 >
-                  Add
+                  Assign
                 </Button>
               </div>
 

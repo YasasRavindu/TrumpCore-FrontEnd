@@ -1,20 +1,20 @@
 const DEMO = {
   link: 'javascript:;', // javascript:;
-  home: 'app/dashboard',
+  home: '/app/dashboard',
   home2: '/app/dashboard',
   productLink: 'https://themeforest.net/item/ant-design-reactjs-admin-with-bootstrap/22194157',
   user: 'Lisa',
-  login: 'user/login',
-  signUp: 'user/sign-up',
-  forgotPassword: 'user/forgot-password',
+  login: '/user/login',
+  signUp: '/user/sign-up',
+  forgotPassword: '/user/forgot-password',
 };
 
 // header links
 DEMO.headerLink = {
-  profile: 'app/page/about',
-  about: 'app/page/about',
-  help: 'app/page/contact',
-  signOut: 'user/login', // redirect login page
+  profile: '/app/page/about',
+  about: '/app/page/about',
+  help: '/app/page/contact',
+  signOut: '/user/login', // redirect login page
 };
 
 DEMO.list = {
