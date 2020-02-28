@@ -36,6 +36,7 @@ import axios from 'axios';
 import CUSTOM_MESSAGE from 'constants/notification/message';
 import moment from 'moment';
 import STATUS from 'constants/notification/status';
+import profile_avatar from '../../../assets/images/profile_avatar.png';
 
 const dateFormat = 'YYYY-MM-DD';
 const formItemLayout = {
@@ -45,6 +46,13 @@ const formItemLayout = {
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
+const footer = {
+  position: 'fixed',
+  left: '0',
+  right: '0',
+  bottom: '0',
+  float: 'right',
+};
 
 class Data extends React.Component {
   constructor(props) {
@@ -61,6 +69,10 @@ class Data extends React.Component {
       checkedID: '',
       checkedcardId: '',
       checkedaccountId: '',
+      modelVisible: false,
+      modelType: undefined,
+      account: undefined,
+      displayDetail: false,
     };
   }
 
@@ -179,11 +191,19 @@ class Data extends React.Component {
             checkedaccountId: accountId,
           },
           () => {
-            this._isMounted &&
-              this.setState({
-                visible: true,
-              });
-            console.log(this.state);
+            // this._isMounted &&
+            //   this.setState({
+            //     visible: true,
+            //   });
+            // console.log(this.state);
+
+            this.state.accountList.map(account => {
+              if (account.id.toUpperCase() === accountId.toUpperCase()) {
+                this.showAccountDetail(account);
+                //keyCard = false;
+              }
+            });
+            this.showModel('edit');
           }
         );
     }
@@ -250,6 +270,13 @@ class Data extends React.Component {
       });
   };
 
+  handleModelCancel = e => {
+    this._isMounted &&
+      this.setState({
+        modelVisible: false,
+      });
+  };
+
   handleStatus = (id, value) => {
     axios
       .put(environment.baseUrl + 'card/update', {
@@ -310,10 +337,44 @@ class Data extends React.Component {
     });
   };
 
-  addAssign = () => {
-    console.log('work');
+  showAccountDetail = account => {
+    if (
+      this.state.account === null ||
+      this.state.account === undefined ||
+      this.state.account.id !== account.id ||
+      !this.state.displayDetail
+    ) {
+      this.setState({
+        account: account,
+        displayDetail: true,
+      });
+    }
   };
-  
+
+  getAccount = (accountList, inputValue) => {
+    let keyCard = true;
+    accountList.map(account => {
+      if (
+        inputValue !== undefined &&
+        (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+          account.id.toUpperCase() === inputValue.toUpperCase())
+      ) {
+        this.showAccountDetail(account);
+        keyCard = false;
+      }
+    });
+
+    return keyCard;
+  };
+
+  showModel = type => {
+    this._isMounted &&
+      this.setState({
+        modelVisible: true,
+        modelType: type,
+      });
+  };
+
   componentWillUnmount() {
     this._isMounted = false;
   }
@@ -340,7 +401,7 @@ class Data extends React.Component {
 
     const optionsAccounts = accountList.map(account => (
       <Option key={account.id} value={account.id}>
-        {account.accountNumber}
+        {`${account.accountNumber} - ${account.holder}`}
       </Option>
     ));
 
@@ -353,7 +414,7 @@ class Data extends React.Component {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
+          {/* {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
             <div key="1">
               <div className="box box-default mb-4">
                 <div className="box-header">Assign card to account</div>
@@ -457,7 +518,7 @@ class Data extends React.Component {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           <div key="2">
             <div className="box box-default">
@@ -467,7 +528,7 @@ class Data extends React.Component {
                   type="primary"
                   shape="round"
                   icon="plus"
-                  onClick={() => this.addAssign()}
+                  onClick={() => this.showModel('assign')}
                   className="float-right ml-1"
                 >
                   Add
@@ -657,6 +718,136 @@ class Data extends React.Component {
             </div>
           </div>
         </QueueAnim>
+        <Modal
+          visible={this.state.modelVisible}
+          onCancel={this.handleModelCancel}
+          footer={null}
+          width={800}
+        >
+          <Form layout="inline">
+            {this.state.modelType == 'assign' && (
+              <FormItem>
+                {getFieldDecorator('accountNumber', {
+                  rules: [
+                    {
+                      required: true,
+                      message: 'Please enter your Account number',
+                    },
+                  ],
+                })(
+                  // <Input placeholder="Account Number" />
+                  <AutoComplete
+                    dataSource={optionsAccounts}
+                    style={{ width: 600 }}
+                    onBlur={inputValue => {
+                      if (this.getAccount(accountList, inputValue)) {
+                        this.props.form.setFieldsValue({
+                          accountNumber: '',
+                        });
+                      }
+                    }}
+                    onChange={inputValue => {
+                      this.getAccount(accountList, inputValue);
+                    }}
+                    placeholder="Account Number"
+                    filterOption={(inputValue, option) =>
+                      option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                    }
+                  />
+                )}
+              </FormItem>
+            )}
+            <React.Fragment>
+              {this.state.modelType == 'assign' && this.state.account != undefined ? (
+                <Divider type="horizontal" />
+              ) : null}
+              <article className="article">
+                <div className="row mt-3">
+                  {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
+                  this.state.account != undefined ? (
+                    <div className="col-lg-6 mb-2">
+                      <article className="profile-card-v1 h-100">
+                        <img
+                          src={
+                            this.state.account &&
+                            environment.baseUrl +
+                              'file/downloadImg/account/' +
+                              this.state.account.id
+                          }
+                          onError={e => {
+                            e.target.onerror = null;
+                            e.target.src = profile_avatar;
+                          }}
+                          alt="Profile image"
+                          width="150"
+                        />
+
+                        <h4>{this.state.account && this.state.account.holder}</h4>
+                        <span>{this.state.account && this.state.account.accountNumber}</span>
+                      </article>
+                    </div>
+                  ) : null}
+                  {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
+                  this.state.account != undefined ? (
+                    <div className="col-lg-6 mb-2">
+                      <article className="profile-card-v1 h-100">
+                        <FormItem>
+                          {getFieldDecorator('cardNumber', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please enter your card number',
+                              },
+                            ],
+                          })(
+                            // (<Input placeholder="Serial Number" />)
+                            <AutoComplete
+                              allowClear
+                              dataSource={optionsCards}
+                              style={{ width: 200 }}
+                              onBlur={inputValue => {
+                                let keyCard = false;
+                                cardList.map(card => {
+                                  if (
+                                    inputValue !== undefined &&
+                                    card.id.toUpperCase() === inputValue.toUpperCase()
+                                  ) {
+                                    keyCard = true;
+                                  }
+                                });
+                                if (!keyCard) {
+                                  this.props.form.setFieldsValue({
+                                    cardNumber: '',
+                                  });
+                                }
+                              }}
+                              placeholder="Card Number"
+                              filterOption={(inputValue, option) =>
+                                option.props.children
+                                  .toUpperCase()
+                                  .indexOf(inputValue.toUpperCase()) !== -1
+                              }
+                            />
+                          )}
+                        </FormItem>
+                        <h4>buddi</h4>
+                        <span>jenifer</span>
+                      </article>
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+              <div className="row">
+                {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
+                this.state.account != undefined ? (
+                  <Button type="primary" className={footer} onClick={this.submit}>
+                    Assign
+                  </Button>
+                ) : null}
+              </div>
+            </React.Fragment>
+          </Form>
+        </Modal>
       </div>
     );
   }
