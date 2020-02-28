@@ -270,9 +270,15 @@ class Data extends React.Component {
   };
 
   handleModelCancel = e => {
+    this.props.form.setFieldsValue({
+      cardNumber: '',
+      accountNumber: '',
+    });
     this._isMounted &&
       this.setState({
         modelVisible: false,
+        selectedAccount: undefined,
+        selectedCard: undefined,
       });
   };
 
@@ -1038,7 +1044,7 @@ class Data extends React.Component {
                               onSelect={inputValue => {
                                 this.setCard(inputValue);
                               }}
-                              // placeholder="Card Number"
+                              placeholder="Card Number"
                               // onBlur={inputValue => {
                               //   let keyCard = false;
                               //   cardList.map(card => {
