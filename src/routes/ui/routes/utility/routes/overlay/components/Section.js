@@ -21,19 +21,19 @@ const Section = () => (
 
     <div className="divider my-5"></div>
     <p>Original image</p>
-    <div style={{backgroundImage: "url('assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded img-cover" ></div>
+    <div style={{backgroundImage: "url('/assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded img-cover" ></div>
 
     <div className="divider my-5"></div>
     <p><code>.overlay</code> class adds a simple overlay on top of the image </p>
-    <div style={{backgroundImage: "url('assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay img-cover" ></div>
+    <div style={{backgroundImage: "url('/assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay img-cover" ></div>
 
     <div className="divider my-5"></div>
     <p><code>.overlay-bottom-up</code> class adds a gradient overlay from bottom to top</p>
-    <div style={{backgroundImage: "url('assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay-bottom-up img-cover" ></div>
+    <div style={{backgroundImage: "url('/assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay-bottom-up img-cover" ></div>
 
     <div className="divider my-5"></div>
     <p><code>.overlay-top-down</code> class adds a gradient overlay from top to bottom</p>
-    <div style={{backgroundImage: "url('assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay-top-down img-cover" ></div>
+    <div style={{backgroundImage: "url('/assets/images-demo/assets/600_400-4.jpg')", height: '300px'}} alt="cover" className="rounded overlay-top-down img-cover" ></div>
   </article>
 )
 

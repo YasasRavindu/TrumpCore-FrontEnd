@@ -47,7 +47,7 @@ const Timeline = () => (
             <div className="tl-icon icon-btn-round icon-btn icon-btn-thin btn-success"><Icon type="camera" /></div>
             <div className="tl-content">
               <h4 className="tl-title text-warning">Soluta nihil</h4>
-              <img src="assets/images-demo/assets/600_400-4.jpg" className="rounded" alt="cover"/>
+              <img src="/assets/images-demo/assets/600_400-4.jpg" className="rounded" alt="cover"/>
               <p>Incidunt, molestias odio soluta nihil accusantium sit nostrum doloremque. Recusandae, ullam, odio consequatur facere totam reiciendis similique dicta explicabo!</p>
             </div>
           </div>
@@ -61,7 +61,7 @@ const Timeline = () => (
             <div className="tl-icon icon-btn-round icon-btn icon-btn-thin btn-danger"><Icon type="check" /></div>
             <div className="tl-content">
               <h4 className="tl-title text-success">Odio sit odit necessitatibus</h4>
-              <img src="assets/images-demo/assets/600_400-1.jpg" className="rounded" alt="cover"/>
+              <img src="/assets/images-demo/assets/600_400-1.jpg" className="rounded" alt="cover"/>
               <p>Ullam, commodi, modi, impedit nostrum odio sit odit necessitatibus accusantium enim voluptates culpa cupiditate cum pariatur a recusandae tenetur aspernatur at beatae.</p>
             </div>
           </div>

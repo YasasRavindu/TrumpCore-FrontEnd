@@ -307,7 +307,7 @@ class Data extends React.Component {
                   className="ant-btn float-right ant-btn-primary ant-btn-round"
                 >
                   <Icon type="download" />
-                  <span class="mr-1"></span>
+                  <span className="mr-1"></span>
                   CSV
                 </CSVLink>
               </div>

@@ -50,7 +50,7 @@ const Section = () => {
             </Popover>
             <Dropdown className="list-inline-item" overlay={avatarDropdown} trigger={['click']} placement="bottomRight">
               <a className="ant-dropdown-link no-link-style" href={DEMO.link}>
-                <Avatar src="assets/images-demo/avatars/4.jpg" size="small" />
+                <Avatar src="/assets/images-demo/avatars/4.jpg" size="small" />
               </a>
             </Dropdown>
           </div>

@@ -12,7 +12,7 @@ const Blockquote1 = () => (
 
 const Blockquote2 = () => (
   <article className="img-card-v2 text-body-reverse" style={{height: '350px'}}>
-    <div className="img-card__cover overlay" style={{backgroundImage: "url('assets/images-demo/covers/alexandre-perotto-75274-unsplash.jpg')"}}></div>
+    <div className="img-card__cover overlay" style={{backgroundImage: "url('/assets/images-demo/covers/alexandre-perotto-75274-unsplash.jpg')"}}></div>
     <div className="img-card__body">
       <blockquote className="blockquote-v1">“The difference between genius and stupidity is that genius has its limits.” <cite className="bq-author">- Albert Einstein</cite></blockquote>
     </div>

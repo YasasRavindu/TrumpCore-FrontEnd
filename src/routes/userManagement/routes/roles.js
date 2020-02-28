@@ -24,7 +24,7 @@ import {
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
 import {
-  DEFAULT_REDIRECT_ROUTE,
+  DEFAULT_EXCEPTION_ROUTE,
   USER_AUTHORITY_CODE,
   getActiveAuthorities,
   checkAuthority,
@@ -47,15 +47,16 @@ class Data extends React.Component {
     this._isMounted = false;
     this.state = {
       sections: [],
+      displayAuthorities: [],
       activeTab: '0',
       currentRole: undefined,
 
       visible: false,
       userRole: [],
 
-      checkedList: [],
-      indeterminate: false,
-      checkAll: false,
+      // checkedList: [],
+      // indeterminate: false,
+      // checkAll: false,
     };
   }
 
@@ -171,7 +172,6 @@ class Data extends React.Component {
 
   onCheckAllChange = e => {
     let sections = this.state.sections;
-    let checkedList = this.state.checkedList;
     let event = e.target;
     let tab = event.name;
 
@@ -191,8 +191,7 @@ class Data extends React.Component {
     let sections = this.state.sections;
 
     sections[tab].checkedList = checkedValues;
-    sections[tab].indeterminate =
-      !!checkedValues.length && checkedValues.length < sections[tab].plainOptions.length;
+    sections[tab].indeterminate = !!checkedValues.length && checkedValues.length < sections[tab].plainOptions.length;
     sections[tab].checkAll = checkedValues.length === sections[tab].plainOptions.length;
 
     this._isMounted &&
@@ -225,16 +224,6 @@ class Data extends React.Component {
       section.checkedList = [];
       section.indeterminate = false;
       section.checkAll = false;
-
-      // let displayAuthorities = [];
-      // let commonAuthorities = [];
-
-      // section.map(authority => {
-      //   if (authority.type === 'DISPLAY') {
-      //     displayAuthorities.push(authority);
-      //   } else if (authority.type === 'COMMON') {
-      //   }
-      // });
     });
 
     this._isMounted &&
@@ -251,6 +240,7 @@ class Data extends React.Component {
   submit = e => {
     e.preventDefault();
     const checkedList = this.getCheckedList();
+
     if (checkedList.length > 0) {
       this.props.form.validateFields((err, values) => {
         if (!err) {
@@ -331,7 +321,7 @@ class Data extends React.Component {
 
     // -------------- IF UNAUTHORIZED ------------------------------------------------
     if (viewAuthorities === 'UNAUTHORIZED') {
-      return <Redirect to={DEFAULT_REDIRECT_ROUTE} />;
+      return <Redirect to={DEFAULT_EXCEPTION_ROUTE} />;
     }
     // -------------------------------------------------------------------------------
 

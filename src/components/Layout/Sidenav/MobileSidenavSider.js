@@ -34,7 +34,7 @@ class AppSidenav extends React.Component {
           })}
         >
           <Logo />
-          <a href="#/" className="brand">
+          <a href="/" className="brand">
             {APPCONFIG.brand}
           </a>
         </section>

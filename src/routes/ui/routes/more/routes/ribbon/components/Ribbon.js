@@ -48,7 +48,7 @@ const Page = () => {
                     <div className="ribbon"> 30% Off </div>
                   </div>
                   <a href={DEMO.link} className="card__image">
-                    <img alt="product" src="assets/images-demo/products/watch-black.png" />
+                    <img alt="product" src="/assets/images-demo/products/watch-black.png" />
                   </a>
                   <div className="card__body card-white">
                     <div className="card__title">

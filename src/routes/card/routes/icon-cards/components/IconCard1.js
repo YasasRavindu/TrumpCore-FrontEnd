@@ -10,7 +10,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="media icon-card-v1">
         <div className="icon-card__icon icon--circle mr-3">
-          <img src="assets/images-demo/image-icons/imac.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/imac.png" alt="icon" />
         </div>
         <div className="media-body">
           <h4 className="icon-card__header">Responsive Design</h4>
@@ -21,7 +21,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="media icon-card-v1">
         <div className="icon-card__icon icon--circle mr-3">
-          <img src="assets/images-demo/image-icons/settings.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/settings.png" alt="icon" />
         </div>
         <div className="media-body">
           <h4 className="icon-card__header">Easy to Customize</h4>
@@ -32,7 +32,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="media icon-card-v1">
         <div className="icon-card__icon icon--circle mr-3">
-          <img src="assets/images-demo/image-icons/package.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/package.png" alt="icon" />
         </div>
         <div className="media-body">
           <h4 className="icon-card__header">Clean code</h4>

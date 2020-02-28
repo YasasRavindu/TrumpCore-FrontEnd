@@ -10,7 +10,7 @@ const Section = () => (
         <div className="ih-item ih-material">
           <a href={DEMO.link}>
             <div className="img">
-              <img src="assets/images-demo/assets/600_400-1.jpg" alt="" />
+              <img src="/assets/images-demo/assets/600_400-1.jpg" alt="" />
             </div>
             <div className="info">
               <div className="info-mask bg-primary" />
@@ -28,7 +28,7 @@ const Section = () => (
         <div className="ih-item ih-material">
           <a href={DEMO.link}>
             <div className="img">
-              <img src="assets/images-demo/assets/600_400-2.jpg" alt="" />
+              <img src="/assets/images-demo/assets/600_400-2.jpg" alt="" />
             </div>
             <div className="info">
               <div className="info-mask bg-info" />
@@ -46,7 +46,7 @@ const Section = () => (
         <div className="ih-item ih-material">
           <a href={DEMO.link}>
             <div className="img">
-              <img src="assets/images-demo/assets/600_400-3.jpg" alt="" />
+              <img src="/assets/images-demo/assets/600_400-3.jpg" alt="" />
             </div>
             <div className="info">
               <div className="info-mask bg-dark" />

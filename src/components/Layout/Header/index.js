@@ -7,7 +7,7 @@ import Logo from 'components/Logo';
 import { push } from 'react-router-redux';
 import { toggleCollapsedNav, toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import Notifications from 'routes/layout/routes/header/components/Notifications';
-import { Route, Redirect } from 'react-router-dom';
+import { Route, Redirect, Link } from 'react-router-dom';
 const { Header } = Layout;
 
 class AppHeader extends React.Component {
@@ -88,7 +88,24 @@ class AppHeader extends React.Component {
           <div className="header-left">
             <div className="list-unstyled list-inline">
               {showLogo && [<Logo key="logo" />, <Divider type="vertical" key="line" />]}
-              <a
+
+              <span
+                className="header-link list-inline-item d-none d-md-inline-block"
+                onClick={this.onToggleCollapsedNav}
+              >
+                <Icon type={collapsedNav ? 'menu-unfold' : 'menu-fold'} className="list-icon" />
+              </span>
+              <span
+                className="header-link list-inline-item d-md-none"
+                onClick={this.onToggleOffCanvasMobileNav}
+              >
+                <Icon
+                  type={offCanvasMobileNav ? 'menu-unfold' : 'menu-fold'}
+                  className="list-icon"
+                />
+              </span>
+
+              {/* <a
                 href={DEMO.link}
                 className="list-inline-item d-none d-md-inline-block"
                 onClick={this.onToggleCollapsedNav}
@@ -104,7 +121,7 @@ class AppHeader extends React.Component {
                   type={offCanvasMobileNav ? 'menu-unfold' : 'menu-fold'}
                   className="list-icon"
                 />
-              </a>
+              </a> */}
               {/* <Tooltip placement="bottom" title="UI Overview">
                 <a href="#/app/ui-overview" className="list-inline-item d-none d-md-inline-block">
                   <Icon type="shop" className="list-icon" />
@@ -142,14 +159,23 @@ class AppHeader extends React.Component {
                 trigger={['click']}
                 placement="bottomRight"
               >
-                <a className="ant-dropdown-link no-link-style" href={DEMO.link}>
-                  <Avatar src="assets/images-demo/avatars/6.png" size="small" />
+                <span className="header-link ant-dropdown-link">
+                  <Avatar src="/assets/images-demo/avatars/6.png" size="small" />
                   <span className="avatar-text d-none d-md-inline">
                     {this.currentUser && this.currentUser.accName
                       ? this.currentUser.accName
                       : 'user'}
                   </span>
-                </a>
+                </span>
+
+                {/* <a className="ant-dropdown-link no-link-style" href={DEMO.link}>
+                  <Avatar src="/assets/images-demo/avatars/6.png" size="small" />
+                  <span className="avatar-text d-none d-md-inline">
+                    {this.currentUser && this.currentUser.accName
+                      ? this.currentUser.accName
+                      : 'user'}
+                  </span>
+                </a> */}
               </Dropdown>
             </div>
           </div>

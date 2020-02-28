@@ -10,10 +10,10 @@ const Section1 = () => (
     <div className="box-body">
       <div className="row">
         <div className="col-md-6">
-          <img src="assets/images-demo/assets/600_400-1.jpg" alt="cover" className="rounded mw-100 hover-v1" />
+          <img src="/assets/images-demo/assets/600_400-1.jpg" alt="cover" className="rounded mw-100 hover-v1" />
         </div>
         <div className="col-md-6">
-          <img src="assets/images-demo/assets/600_400-2.jpg" alt="cover" className="rounded mw-100 hover-v1" />
+          <img src="/assets/images-demo/assets/600_400-2.jpg" alt="cover" className="rounded mw-100 hover-v1" />
         </div>
       </div>
     </div>
@@ -26,10 +26,10 @@ const Section2 = () => (
     <div className="box-body">
       <div className="row">
         <div className="col-md-6">
-          <img src="assets/images-demo/assets/600_400-3.jpg" alt="cover" className="rounded mw-100 hover-v2" />
+          <img src="/assets/images-demo/assets/600_400-3.jpg" alt="cover" className="rounded mw-100 hover-v2" />
         </div>
         <div className="col-md-6">
-          <img src="assets/images-demo/assets/600_400-4.jpg" alt="cover" className="rounded mw-100 hover-v2" />
+          <img src="/assets/images-demo/assets/600_400-4.jpg" alt="cover" className="rounded mw-100 hover-v2" />
         </div>
       </div>
     </div>

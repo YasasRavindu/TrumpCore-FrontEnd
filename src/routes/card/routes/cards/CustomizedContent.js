@@ -8,7 +8,7 @@ const Box = () => {
       <div className="box-body demo-style-card">
         <Card style={{ width: 300 }} bodyStyle={{ padding: 0 }}>
           <div className="custom-image">
-            <img alt="example" width="100%" src="assets/images-demo/assets/400_400-3.jpg" />
+            <img alt="example" width="100%" src="/assets/images-demo/assets/400_400-3.jpg" />
           </div>
           <div className="custom-card" >
             <h4>Europe Street beat</h4>

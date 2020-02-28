@@ -39,7 +39,7 @@ class AppSidenav extends React.Component {
           })}
         >
           <Logo />
-          <a href="#/app/cardGenerate" className="brand">
+          <a href="/app/cardGenerate" className="brand">
             {APPCONFIG.brand}
           </a>
         </section>

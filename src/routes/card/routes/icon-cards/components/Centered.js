@@ -10,7 +10,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="icon-card-v1 icon-card--center">
         <div className="icon-card__icon icon--circle">
-          <img src="assets/images-demo/image-icons/imac.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/imac.png" alt="icon" />
         </div>
         <h4 className="icon-card__header">Responsive Design</h4>
         <div className="icon-card__content"> Responsive design allows your website to fit on any screen and still be readable and usable. </div>
@@ -19,7 +19,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="icon-card-v1 icon-card--center">
         <div className="icon-card__icon icon--circle">
-          <img src="assets/images-demo/image-icons/settings.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/settings.png" alt="icon" />
         </div>
         <h4 className="icon-card__header">Easy to Customize</h4>
         <div className="icon-card__content"> Customizer make it easy. Build your own style simply by changing a few settings in the customizer. </div>
@@ -28,7 +28,7 @@ const ImageIconCards = () => (
     <div className="col-xl-4 mb-4">
       <div className="icon-card-v1 icon-card--center">
         <div className="icon-card__icon icon--circle">
-          <img src="assets/images-demo/image-icons/package.png" alt="icon" />
+          <img src="/assets/images-demo/image-icons/package.png" alt="icon" />
         </div>
         <h4 className="icon-card__header">Clean code</h4>
         <div className="icon-card__content"> Clean code with popular Style Guide recommend by official team. </div>

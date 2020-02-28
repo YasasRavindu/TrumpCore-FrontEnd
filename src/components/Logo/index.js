@@ -42,7 +42,7 @@ const Logo = () => (
   //     />
   //   </g>
   // </svg>
-  <img src="assets/trumpcore.svg" className="mb-2"></img>
+  <img src="/assets/trumpcore.svg" className="mb-2"></img>
 );
 
 export default Logo;

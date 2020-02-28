@@ -1,4 +1,5 @@
-export const DEFAULT_REDIRECT_ROUTE = '/app/';
+export const DEFAULT_EXCEPTION_ROUTE = '/exception/403';
+export const DEFAULT_REDIRECT_ROUTE = '/app/cardManagement/';
 
 export const USER_AUTHORITY_SECTION = {
   SECTION01: 'CARD',
