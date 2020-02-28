@@ -60,9 +60,11 @@ class Data extends React.Component {
     this._isMounted = false;
     this.state = {
       cardList: [],
+      filteredCardList: [],
       assignList: [],
       filteredAssignedList: [],
       accountList: [],
+      filteredAccountList: [],
       searchDate: ['', ''],
       searchText: '',
       visible: false,
@@ -71,7 +73,8 @@ class Data extends React.Component {
       checkedaccountId: '',
       modelVisible: false,
       modelType: undefined,
-      account: undefined,
+      selectedAccount: undefined,
+      selectedCard: undefined,
       displayDetail: false,
     };
   }
@@ -93,6 +96,7 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             cardList: cardList,
+            filteredCardList: cardList.slice(0, 100),
           });
       })
       .catch(error => {
@@ -109,6 +113,7 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             accountList: response.data.content,
+            filteredAccountList: response.data.content.slice(0, 100),
           });
       })
       .catch(error => {
@@ -181,19 +186,19 @@ class Data extends React.Component {
       );
   };
 
-  handleUpdate = (id, cardId, accountId) => {
+  handleUpdate = (id, selectedCard, selectedAccount) => {
     if (id) {
       this._isMounted &&
         this.setState(
           {
             checkedID: id,
-            checkedcardId: cardId,
-            checkedaccountId: accountId,
+            selectedAccount: selectedAccount,
+            selectedCard: selectedCard,
           },
           () => {
             this.state.accountList.map(account => {
-              if (account.id.toUpperCase() === accountId.toUpperCase()) {
-                this.showAccountDetail(account);
+              if (account.id.toUpperCase() === selectedAccount.id.toUpperCase()) {
+                // this.showAccountDetail(account);
                 //keyCard = false;
               }
             });
@@ -288,16 +293,17 @@ class Data extends React.Component {
 
   handleSubmit = type => {
     if (type == 'assign') {
+      const { selectedAccount, selectedCard } = this.state;
       this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
         if (!err) {
           console.log(values);
           axios
             .post(environment.baseUrl + 'cardRegistry', {
               account: {
-                id: values.accountNumber,
+                id: selectedAccount.id,
               },
               card: {
-                id: values.cardNumber,
+                id: selectedCard.id,
               },
             })
             .then(response => {
@@ -307,6 +313,8 @@ class Data extends React.Component {
               this.props.form.resetFields();
               this._isMounted &&
                 this.setState({
+                  selectedAccount: undefined,
+                  selectedCard: undefined,
                   modelVisible: false,
                 });
             })
@@ -334,16 +342,16 @@ class Data extends React.Component {
         }
       });
     } else if (type == 'edit') {
-      const { checkedID, checkedaccountId } = this.state;
+      const { checkedID, selectedAccount, selectedCard } = this.state;
       this.props.form.validateFields(['cardNumber'], (err, values) => {
         if (!err) {
           axios
             .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
               account: {
-                id: checkedaccountId,
+                id: selectedAccount.id,
               },
               card: {
-                id: values.cardNumber,
+                id: selectedCard.id,
               },
             })
             .then(response => {
@@ -354,8 +362,8 @@ class Data extends React.Component {
               this._isMounted &&
                 this.setState({
                   checkedID: '',
-                  checkedcardId: '',
-                  checkedaccountId: '',
+                  selectedAccount: undefined,
+                  selectedCard: undefined,
                   modelVisible: false,
                 });
             })
@@ -434,9 +442,9 @@ class Data extends React.Component {
 
   showAccountDetail = account => {
     if (
-      this.state.account === null ||
-      this.state.account === undefined ||
-      this.state.account.id !== account.id ||
+      this.state.selectedAccount === null ||
+      this.state.selectedAccount === undefined ||
+      this.state.selectedAccount.id !== account.id ||
       !this.state.displayDetail
     ) {
       this._isMounted &&
@@ -471,6 +479,83 @@ class Data extends React.Component {
       });
   };
 
+  updateCardList = input => {
+    let cardList;
+    if (input === '' || input === undefined) {
+      cardList = this.state.cardList;
+    } else {
+      cardList = this.state.cardList.filter(card => {
+        return card.cardNo.indexOf(input) !== -1;
+      });
+    }
+    this.setState({
+      filteredCardList: cardList.slice(0, 100),
+    });
+  };
+
+  setCard = inputValue => {
+    let selectedCard = undefined;
+    this.state.cardList.map(card => {
+      if (
+        inputValue !== undefined &&
+        (card.id.toUpperCase() === inputValue.toUpperCase() ||
+          card.cardNo.toUpperCase() === inputValue.toUpperCase())
+      ) {
+        selectedCard = card;
+      }
+    });
+    if (selectedCard === undefined) {
+      this.updateCardList('');
+    }
+    this.setState({
+      selectedCard: selectedCard,
+    });
+    this.props.form.setFieldsValue({
+      cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
+    });
+  };
+
+  updateAccountList = input => {
+    let accountList;
+    if (input === '' || input === undefined) {
+      accountList = this.state.accountList;
+    } else {
+      accountList = this.state.accountList.filter(account => {
+        return account.accountNumber.indexOf(input) !== -1 || account.holder.indexOf(input) !== -1;
+      });
+    }
+    this.setState({
+      filteredAccountList: accountList.slice(0, 100),
+    });
+  };
+
+  setAccount = inputValue => {
+    let selectedAccount = undefined;
+    this.state.accountList.map(account => {
+      if (
+        inputValue !== undefined &&
+        (account.id.toUpperCase() === inputValue.toUpperCase() ||
+          account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
+          inputValue.toUpperCase().includes(account.accountNumber.toUpperCase()))
+      ) {
+        selectedAccount = account;
+        // this.showAccountDetail(account);
+      }
+    });
+    if (selectedAccount === undefined) {
+      this.updateAccountList('');
+    }
+    this.setState({
+      selectedAccount: selectedAccount,
+    });
+    this.props.form.setFieldsValue({
+      accountNumber:
+        selectedAccount === undefined
+          ? ''
+          : `${selectedAccount.accountNumber} - ${selectedAccount.holder}`,
+    });
+  };
+
   componentWillUnmount() {
     this._isMounted = false;
   }
@@ -487,15 +572,21 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const { accountList, cardList, filteredAssignedList } = this.state;
+    const {
+      accountList,
+      filteredAccountList,
+      cardList,
+      filteredCardList,
+      filteredAssignedList,
+    } = this.state;
 
-    const optionsCards = cardList.map(card => (
+    const optionsCards = filteredCardList.map(card => (
       <Option key={card.id} value={card.id}>
         {card.cardNo}
       </Option>
     ));
 
-    const optionsAccounts = accountList.map(account => (
+    const optionsAccounts = filteredAccountList.map(account => (
       <Option key={account.id} value={account.id}>
         {`${account.accountNumber} - ${account.holder}`}
       </Option>
@@ -750,7 +841,7 @@ class Data extends React.Component {
                               <Tooltip title="Assign New Card">
                                 <Icon
                                   onClick={() =>
-                                    this.handleUpdate(record.id, record.card.id, record.account.id)
+                                    this.handleUpdate(record.id, record.card, record.account)
                                   }
                                   type="edit"
                                 />
@@ -820,7 +911,7 @@ class Data extends React.Component {
           //onOk={this.handleSubmit(this.state.modelType)}
           footer={[
             (this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-            this.state.account != undefined ? (
+            this.state.selectedAccount != undefined ? (
               <Button
                 key="submit"
                 type="primary"
@@ -847,40 +938,53 @@ class Data extends React.Component {
                   <AutoComplete
                     dataSource={optionsAccounts}
                     style={{ width: 600 }}
+                    placeholder="Account Number"
                     onBlur={inputValue => {
-                      if (this.getAccount(accountList, inputValue)) {
-                        this.props.form.setFieldsValue({
-                          accountNumber: '',
-                        });
-                      }
+                      console.log('onblur');
+                      console.log(inputValue);
+                      this.setAccount(inputValue);
                     }}
                     onChange={inputValue => {
-                      this.getAccount(accountList, inputValue);
+                      console.log('onchange');
+                      this.updateAccountList(inputValue);
                     }}
-                    placeholder="Account Number"
-                    filterOption={(inputValue, option) =>
-                      option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    }
+                    onSelect={inputValue => {
+                      console.log('onselect');
+                      this.setAccount(inputValue);
+                    }}
+                    // onBlur={inputValue => {
+                    //   if (this.getAccount(accountList, inputValue)) {
+                    //     this.props.form.setFieldsValue({
+                    //       accountNumber: '',
+                    //     });
+                    //   }
+                    // }}
+                    // onChange={inputValue => {
+                    //   this.getAccount(accountList, inputValue);
+                    // }}
+                    // filterOption={(inputValue, option) =>
+                    //   option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                    // }
                   />
                 )}
               </FormItem>
             )}
             <React.Fragment>
-              {this.state.modelType == 'assign' && this.state.account != undefined ? (
+              {this.state.modelType == 'assign' && this.state.selectedAccount != undefined ? (
                 <Divider type="horizontal" />
               ) : null}
               <article className="article">
                 <div className="row mt-3">
                   {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-                  this.state.account != undefined ? (
+                  this.state.selectedAccount != undefined ? (
                     <div className="col-lg-6 mb-2">
                       <article className="profile-card-v1 h-100">
                         <img
                           src={
-                            this.state.account &&
+                            this.state.selectedAccount &&
                             environment.baseUrl +
                               'file/downloadImg/account/' +
-                              this.state.account.id
+                              this.state.selectedAccount.id
                           }
                           onError={e => {
                             e.target.onerror = null;
@@ -890,13 +994,15 @@ class Data extends React.Component {
                           width="150"
                         />
 
-                        <h4>{this.state.account && this.state.account.holder}</h4>
-                        <span>{this.state.account && this.state.account.accountNumber}</span>
+                        <h4>{this.state.selectedAccount && this.state.selectedAccount.holder}</h4>
+                        <span>
+                          {this.state.selectedAccount && this.state.selectedAccount.accountNumber}
+                        </span>
                       </article>
                     </div>
                   ) : null}
                   {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-                  this.state.account != undefined ? (
+                  this.state.selectedAccount != undefined ? (
                     <div className="col-lg-6 mb-2">
                       <article className="profile-card-v1 h-100">
                         {this.state.modelType ? (
@@ -924,27 +1030,36 @@ class Data extends React.Component {
                               dataSource={optionsCards}
                               style={{ width: 300 }}
                               onBlur={inputValue => {
-                                let keyCard = false;
-                                cardList.map(card => {
-                                  if (
-                                    inputValue !== undefined &&
-                                    card.id.toUpperCase() === inputValue.toUpperCase()
-                                  ) {
-                                    keyCard = true;
-                                  }
-                                });
-                                if (!keyCard) {
-                                  this.props.form.setFieldsValue({
-                                    cardNumber: '',
-                                  });
-                                }
+                                this.setCard(inputValue);
                               }}
-                              placeholder="Card Number"
-                              filterOption={(inputValue, option) =>
-                                option.props.children
-                                  .toUpperCase()
-                                  .indexOf(inputValue.toUpperCase()) !== -1
-                              }
+                              onChange={inputValue => {
+                                this.updateCardList(inputValue);
+                              }}
+                              onSelect={inputValue => {
+                                this.setCard(inputValue);
+                              }}
+                              // placeholder="Card Number"
+                              // onBlur={inputValue => {
+                              //   let keyCard = false;
+                              //   cardList.map(card => {
+                              //     if (
+                              //       inputValue !== undefined &&
+                              //       card.id.toUpperCase() === inputValue.toUpperCase()
+                              //     ) {
+                              //       keyCard = true;
+                              //     }
+                              //   });
+                              //   if (!keyCard) {
+                              //     this.props.form.setFieldsValue({
+                              //       cardNumber: '',
+                              //     });
+                              //   }
+                              // }}
+                              // filterOption={(inputValue, option) =>
+                              //   option.props.children
+                              //     .toUpperCase()
+                              //     .indexOf(inputValue.toUpperCase()) !== -1
+                              // }
                             />
                           )}
                         </FormItem>
