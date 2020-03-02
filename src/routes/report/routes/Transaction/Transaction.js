@@ -185,8 +185,8 @@ class Data extends React.Component {
     ];
 
     const realData = this.state.loadFilterLog.map(d => [
-      d.holder,
-      d.accountNo,
+      d.holder ? d.holder : 'N/A',
+      d.accountNo ? d.accountNo : 'N/A',
       d.serial,
       d.merchantAccNo,
       d.merchantName,
@@ -361,8 +361,8 @@ class Data extends React.Component {
                 </Button>
                 <CSVLink
                   data={this.state.loadFilterLog.map(d => ({
-                    holder: d.holder,
-                    accountNo: d.accountNo,
+                    holder: d.holder ? d.holder : 'N/A',
+                    accountNo: d.accountNo ? d.accountNo : 'N/A',
                     serial: d.serial,
                     merchantAccNo: d.merchantAccNo,
                     merchantName: d.merchantName,
@@ -411,8 +411,18 @@ class Data extends React.Component {
                     scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
                   >
-                    <Column title="Account Holder" dataIndex="holder" key="holder" />
-                    <Column title="Account No" dataIndex="accountNo" key="accountNo" />
+                    <Column
+                      title="Account Holder"
+                      dataIndex="holder"
+                      key="holder"
+                      render={holder => (holder ? holder : <span>N/A</span>)}
+                    />
+                    <Column
+                      title="Account No"
+                      dataIndex="accountNo"
+                      key="accountNo"
+                      render={accountNo => (accountNo ? accountNo : <span>N/A</span>)}
+                    />
                     <Column title="Serial No" dataIndex="serial" key="serial" />
                     <Column
                       title="Merchant Account No"
