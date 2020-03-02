@@ -598,135 +598,25 @@ class Data extends React.Component {
       </Option>
     ));
 
-    // const PageLayout = () => (
-    //   <Layout className="app-layout">
-    //     <AppContent/>
-    //   </Layout>
-    // )
-
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          {/* {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
-            <div key="1">
-              <div className="box box-default mb-4">
-                <div className="box-header">Assign card to account</div>
-                <div className="box-body">
-                  <Form layout="inline">
-                    <FormItem>
-                      {getFieldDecorator('cardNumber', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please enter your card number',
-                          },
-                        ],
-                      })(
-                        // (<Input placeholder="Serial Number" />)
-                        <AutoComplete
-                          allowClear
-                          dataSource={optionsCards}
-                          style={{ width: 200 }}
-                          onBlur={inputValue => {
-                            let keyCard = false;
-                            cardList.map(card => {
-                              if (
-                                inputValue !== undefined &&
-                                card.id.toUpperCase() === inputValue.toUpperCase()
-                              ) {
-                                keyCard = true;
-                              }
-                            });
-                            if (!keyCard) {
-                              this.props.form.setFieldsValue({
-                                cardNumber: '',
-                              });
-                            }
-                          }}
-                          placeholder="Card Number"
-                          filterOption={(inputValue, option) =>
-                            option.props.children
-                              .toUpperCase()
-                              .indexOf(inputValue.toUpperCase()) !== -1
-                          }
-                        />
-                      )}
-                    </FormItem>
-                    <FormItem>
-                      <Badge
-                        count={'Assign to >'}
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#999',
-                          boxShadow: '0 0 0 1px #d9d9d9 inset',
-                          marginTop: '10px',
-                        }}
-                      />
-                    </FormItem>
-
-                    <FormItem>
-                      {getFieldDecorator('accountNumber', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please enter your Account number',
-                          },
-                        ],
-                      })(
-                        // <Input placeholder="Account Number" />
-                        <AutoComplete
-                          dataSource={optionsAccounts}
-                          style={{ width: 200 }}
-                          onBlur={inputValue => {
-                            let keyCard = false;
-                            accountList.map(account => {
-                              if (
-                                inputValue !== undefined &&
-                                (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-                                  account.id.toUpperCase() === inputValue.toUpperCase())
-                              ) {
-                                keyCard = true;
-                              }
-                            });
-                            if (!keyCard) {
-                              this.props.form.setFieldsValue({
-                                accountNumber: '',
-                              });
-                            }
-                          }}
-                          placeholder="Account Number"
-                          filterOption={(inputValue, option) =>
-                            option.props.children
-                              .toUpperCase()
-                              .indexOf(inputValue.toUpperCase()) !== -1
-                          }
-                        />
-                      )}
-                    </FormItem>
-
-                    <Button type="primary" className="float-right" onClick={this.submit}>
-                      Assign
-                    </Button>
-                  </Form>
-                </div>
-              </div>
-            </div>
-          )} */}
-
-          <div key="2">
+          <div key="1">
             <div className="box box-default">
-              <div className="box-header">
-                Card Management
-                <Button
-                  type="primary"
-                  shape="round"
-                  icon="plus"
-                  onClick={() => this.showModel('assign')}
-                  className="float-right ml-1"
-                >
-                  Assign
-                </Button>
-              </div>
+              {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
+                <div className="box-header">
+                  Card Management
+                  <Button
+                    type="primary"
+                    shape="round"
+                    icon="plus"
+                    onClick={() => this.showModel('assign')}
+                    className="float-right ml-1"
+                  >
+                    Assign
+                  </Button>
+                </div>
+              )}
 
               <div className="box-body">
                 <Form>
@@ -958,19 +848,6 @@ class Data extends React.Component {
                       console.log('onselect');
                       this.setAccount(inputValue);
                     }}
-                    // onBlur={inputValue => {
-                    //   if (this.getAccount(accountList, inputValue)) {
-                    //     this.props.form.setFieldsValue({
-                    //       accountNumber: '',
-                    //     });
-                    //   }
-                    // }}
-                    // onChange={inputValue => {
-                    //   this.getAccount(accountList, inputValue);
-                    // }}
-                    // filterOption={(inputValue, option) =>
-                    //   option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    // }
                   />
                 )}
               </FormItem>

@@ -101,6 +101,7 @@ class Data extends React.Component {
       searchText: '',
       searchState: [],
       inputValue: 1,
+      tableLoading: true,
     };
   }
 
@@ -121,6 +122,7 @@ class Data extends React.Component {
         this.setState({
           loadCardRegistry: cardList,
           loadFilterCardRegistry: cardList,
+          tableLoading: false,
         });
       })
       .catch(error => {
@@ -343,6 +345,7 @@ class Data extends React.Component {
                   <Table
                     columns={columns}
                     dataSource={this.state.loadFilterCardRegistry}
+                    loading={this.state.tableLoading}
                     scroll={{ x: 1500, y: 300 }}
                     className="ant-table-v1"
                   />

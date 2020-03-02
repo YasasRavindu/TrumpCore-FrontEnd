@@ -124,7 +124,6 @@ class Data extends React.Component {
     this.state = {
       loadLog: [],
       loadFilterLog: [],
-      loading: false,
       searchDate: ['', ''],
       searchText: '',
       searchType: [],
@@ -132,6 +131,7 @@ class Data extends React.Component {
       logRequest: {},
       logResponse: {},
       visible: false,
+      tableLoading: true,
     };
   }
 
@@ -152,6 +152,7 @@ class Data extends React.Component {
         this.setState({
           loadLog: logList,
           loadFilterLog: logList,
+          tableLoading: false,
         });
       })
       .catch(error => {
@@ -410,6 +411,7 @@ class Data extends React.Component {
                     dataSource={this.state.loadFilterLog}
                     scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
+                    loading={this.state.tableLoading}
                   >
                     <Column
                       title="Account Holder"

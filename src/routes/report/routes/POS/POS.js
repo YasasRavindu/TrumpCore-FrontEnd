@@ -92,6 +92,7 @@ class Data extends React.Component {
       searchText: '',
       inputValue: 1,
       searchStatus: [],
+      tableLoading: true,
     };
   }
 
@@ -112,6 +113,7 @@ class Data extends React.Component {
         this.setState({
           loadDevices: devicesList,
           loadFilterDevices: devicesList,
+          tableLoading: false,
         });
       })
       .catch(error => {
@@ -343,6 +345,7 @@ class Data extends React.Component {
                   <Table
                     columns={columns}
                     dataSource={this.state.loadFilterDevices}
+                    loading={this.state.tableLoading}
                     expandedRowRender={record =>
                       record.account != null ? (
                         this.expandedRowRender(record.account.holder, record.account.accountNumber)
