@@ -32,7 +32,9 @@ export default class Root extends Component {
   _onIdle(e) {
     // console.log('user is idle', e);
     // console.log('last active', this.idleTimer.getLastActiveTime());
-    this.logOut();
+    if(DEMO.headerLink.signOut !== window.location.pathname){
+      this.logOut();
+    }
   }
 
   logOut = () => {
