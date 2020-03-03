@@ -1,4 +1,5 @@
-const CUSTOM_MESSAGE = {
+export const CUSTOM_MESSAGE = {
+  DEFAULT_ERROR: 'Something went wrong please try again!',
   LOGIN_ERROR: {
     userNotExist: 'Invalid Email!',
     incorrectPassword: 'Invalid Password!',
@@ -15,9 +16,9 @@ const CUSTOM_MESSAGE = {
     // invalidCount: 'Please check your card count!',
     defaultError: 'Something went wrong please try again!',
   },
-  
+
   USER_ROLE_ERROR: {
-    roleHasUsers : "Users have been assigned to this role!",
+    roleHasUsers: 'Users have been assigned to this role!',
     roleNameAlreadyExist: 'Role name already exist!',
     defaultError: 'Something went wrong please try again!',
   },
@@ -48,4 +49,34 @@ const CUSTOM_MESSAGE = {
   },
 };
 
-export default CUSTOM_MESSAGE;
+export function getErrorMessage(error, arrayKey) {
+  let msg = null;
+  let errorJSON = CUSTOM_MESSAGE[arrayKey];
+
+  if (errorJSON === undefined) {
+    console.log('Message : getErrorMessage : Invalid Array Key!');
+    msg = CUSTOM_MESSAGE.DEFAULT_ERROR;
+  } else {
+    if (
+      error &&
+      error.response &&
+      error.response.data &&
+      error.response.data.validationFailures &&
+      error.response.data.validationFailures[0] &&
+      error.response.data.validationFailures[0].code
+    ) {
+      let errorCode = error.response.data.validationFailures[0].code;
+      msg = errorJSON[errorCode];
+      if (msg === undefined) {
+        console.log('Message : getErrorMessage : Invalid Error Code!');
+        msg = errorJSON['defaultError'];
+      }
+    } else {
+      msg = errorJSON['defaultError'];
+    }
+  }
+
+  return msg;
+}
+
+export default getErrorMessage;

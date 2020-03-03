@@ -31,7 +31,7 @@ import {
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
 
 const FormItem = Form.Item;
@@ -141,24 +141,7 @@ class Data extends React.Component {
   };
 
   showErrorMsg = error => {
-    let msg = null;
-    if (
-      error &&
-      error.response &&
-      error.response.data &&
-      error.response.data.validationFailures &&
-      error.response.data.validationFailures[0] &&
-      error.response.data.validationFailures[0].code
-    ) {
-      let errorCode = error.response.data.validationFailures[0].code;
-      msg = CUSTOM_MESSAGE.USER_SAVE_ERROR[errorCode];
-      if (msg === undefined) {
-        msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-      }
-    } else {
-      msg = CUSTOM_MESSAGE.USER_SAVE_ERROR['defaultError'];
-    }
-    message.error(msg);
+    message.error(getErrorMessage(error, 'USER_SAVE_ERROR'));
   };
 
   onRoleSelect = e => {

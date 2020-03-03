@@ -33,7 +33,7 @@ import {
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
 import moment from 'moment';
 
@@ -128,24 +128,7 @@ class Data extends React.Component {
         this.loadData();
       })
       .catch(error => {
-        let msg = null;
-        if (
-          error &&
-          error.response &&
-          error.response.data &&
-          error.response.data.validationFailures &&
-          error.response.data.validationFailures[0] &&
-          error.response.data.validationFailures[0].code
-        ) {
-          let errorCode = error.response.data.validationFailures[0].code;
-          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR[errorCode];
-          if (msg === undefined) {
-            msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
-          }
-        } else {
-          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
-        }
-        message.error(msg);
+        message.error(getErrorMessage(error, 'DEVICES_STATUS_CHANGE_ERROR'));
         console.log('------------------- error - ', error);
       });
   };
@@ -211,24 +194,7 @@ class Data extends React.Component {
             this.props.form.resetFields();
           })
           .catch(error => {
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DEVICE_ASSIGN_ERROR['defaultError'];
-            }
-            message.error(msg);
+            message.error(getErrorMessage(error, 'DEVICE_ASSIGN_ERROR'));
             console.log('------------------- error - ', error);
           });
       }

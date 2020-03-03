@@ -28,7 +28,7 @@ import {
 import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
@@ -121,25 +121,8 @@ class Data extends React.Component {
         this.loadTable();
       })
       .catch(error => {
-        let msg = null;
-        if (
-          error &&
-          error.response &&
-          error.response.data &&
-          error.response.data.validationFailures &&
-          error.response.data.validationFailures[0] &&
-          error.response.data.validationFailures[0].code
-        ) {
-          let errorCode = error.response.data.validationFailures[0].code;
-          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR[errorCode];
-          if (msg === undefined) {
-            msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
-          }
-        } else {
-          msg = CUSTOM_MESSAGE.DEVICES_STATUS_CHANGE_ERROR['defaultError'];
-        }
-        message.error(msg);
         console.log('------------------- error - ', error);
+        message.error(getErrorMessage(error, 'DEVICES_STATUS_CHANGE_ERROR'));
       });
   };
 
