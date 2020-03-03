@@ -101,14 +101,18 @@ export const ACCOUNT = [
     menuName: 'Upload',
     desc: 'Account Upload - Account - Description',
     path: '/app/account/upload',
+    authorityCode: USER_AUTHORITY_CODE.ACCOUNT_UPLOAD,
   },
   {
     name: 'Account Management - Account',
     menuName: 'Management',
     desc: 'Account Management - Account - Description',
     path: '/app/account/management',
+    authorityCode: USER_AUTHORITY_CODE.ACCOUNT_MANAGEMENT,
   },
 ];
+
+// ====================================================
 
 export const CARDS = [
   {
