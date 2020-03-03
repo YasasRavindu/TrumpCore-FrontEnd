@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Icon, Input, Button, notification } from 'antd';
 import { withRouter } from 'react-router-dom';
 import APPCONFIG from 'constants/appConfig';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import DEMO from 'constants/demoData';
 import { environment, commonUrl } from '../../../../../environments';
 import axios from 'axios';
@@ -30,27 +30,6 @@ class NormalLoginForm extends React.Component {
       message: type === 'error' ? 'Login Error!' : 'Login Success!',
       description: msg,
     });
-  };
-
-  showLoginReqError = error => {
-    let msg = null;
-    if (
-      error &&
-      error.response &&
-      error.response.data &&
-      error.response.data.validationFailures &&
-      error.response.data.validationFailures[0] &&
-      error.response.data.validationFailures[0].code
-    ) {
-      let errorCode = error.response.data.validationFailures[0].code;
-      msg = CUSTOM_MESSAGE.LOGIN_ERROR[errorCode];
-      if (msg === undefined) {
-        msg = CUSTOM_MESSAGE.LOGIN_ERROR['defaultError'];
-      }
-    } else {
-      msg = CUSTOM_MESSAGE.LOGIN_ERROR['defaultError'];
-    }
-    return msg;
   };
 
   handleSubmit = e => {
@@ -81,7 +60,7 @@ class NormalLoginForm extends React.Component {
             this.setState({
               loading: false,
             });
-            this.openNotificationWithIcon('error', this.showLoginReqError(error));
+            this.openNotificationWithIcon('error', getErrorMessage(error, 'LOGIN_ERROR'));
           });
       }
     });

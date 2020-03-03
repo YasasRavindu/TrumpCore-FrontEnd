@@ -18,7 +18,7 @@ import {
   Tooltip,
 } from 'antd';
 import { environment, commonUrl } from '../../../environments';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
@@ -213,25 +213,7 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.CARD_GENERATE_ERROR['defaultError'];
-            }
-            message.error(msg);
+            message.error(getErrorMessage(error, 'CARD_GENERATE_ERROR'));
             this._isMounted && this.setState({ loading: false });
           });
       } else {

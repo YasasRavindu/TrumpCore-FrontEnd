@@ -33,7 +33,7 @@ import {
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 
 const { TabPane } = Tabs;
 
@@ -290,24 +290,7 @@ class Data extends React.Component {
   };
 
   errorHandler = error => {
-    let msg = null;
-    if (
-      error &&
-      error.response &&
-      error.response.data &&
-      error.response.data.validationFailures &&
-      error.response.data.validationFailures[0] &&
-      error.response.data.validationFailures[0].code
-    ) {
-      let errorCode = error.response.data.validationFailures[0].code;
-      msg = CUSTOM_MESSAGE.USER_ROLE_ERROR[errorCode];
-      if (msg === undefined) {
-        msg = CUSTOM_MESSAGE.USER_ROLE_ERROR['defaultError'];
-      }
-    } else {
-      msg = CUSTOM_MESSAGE.USER_ROLE_ERROR['defaultError'];
-    }
-    message.error(msg);
+    message.error(getErrorMessage(error, 'USER_ROLE_ERROR'));
   };
 
   componentWillUnmount() {

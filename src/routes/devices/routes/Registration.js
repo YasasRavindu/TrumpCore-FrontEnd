@@ -13,7 +13,7 @@ import {
 import { environment } from '../../../environments';
 import axios from 'axios';
 import moment from 'moment';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
 
 const Search = Input.Search;
@@ -85,24 +85,7 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-            let msg = null;
-            if (
-              error &&
-              error.response &&
-              error.response.data &&
-              error.response.data.validationFailures &&
-              error.response.data.validationFailures[0] &&
-              error.response.data.validationFailures[0].code
-            ) {
-              let errorCode = error.response.data.validationFailures[0].code;
-              msg = CUSTOM_MESSAGE.DEVICES_REGISTRATION_ERROR[errorCode];
-              if (msg === undefined) {
-                msg = CUSTOM_MESSAGE.DEVICES_REGISTRATION_ERROR['defaultError'];
-              }
-            } else {
-              msg = CUSTOM_MESSAGE.DEVICES_REGISTRATION_ERROR['defaultError'];
-            }
-            message.error(msg);
+            message.error(getErrorMessage(error, 'DEVICES_REGISTRATION_ERROR'));
             this._isMounted && this.setState({ loading: false });
           });
       } else {

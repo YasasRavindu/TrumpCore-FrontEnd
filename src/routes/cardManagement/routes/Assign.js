@@ -33,7 +33,7 @@ import {
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
-import CUSTOM_MESSAGE from 'constants/notification/message';
+import getErrorMessage from 'constants/notification/message';
 import moment from 'moment';
 import STATUS from 'constants/notification/status';
 import profile_avatar from '../../../assets/images/profile_avatar.png';
@@ -325,24 +325,7 @@ class Data extends React.Component {
                 });
             })
             .catch(error => {
-              let msg = null;
-              if (
-                error &&
-                error.response &&
-                error.response.data &&
-                error.response.data.validationFailures &&
-                error.response.data.validationFailures[0] &&
-                error.response.data.validationFailures[0].code
-              ) {
-                let errorCode = error.response.data.validationFailures[0].code;
-                msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
-                if (msg === undefined) {
-                  msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
-                }
-              } else {
-                msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
-              }
-              message.error(msg);
+              message.error(getErrorMessage(error, 'CARD_ASSIGN_ERROR'));
               console.log('------------------- error - ', error);
             });
         }
@@ -374,26 +357,7 @@ class Data extends React.Component {
                 });
             })
             .catch(error => {
-              let msg = null;
-              if (
-                error &&
-                error.response &&
-                error.response.data &&
-                error.response.data.validationFailures &&
-                error.response.data.validationFailures[0] &&
-                error.response.data.validationFailures[0].code
-              ) {
-                let errorCode = error.response.data.validationFailures[0].code;
-                console.log('error code', errorCode);
-
-                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
-                if (msg === undefined) {
-                  msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-                }
-              } else {
-                msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-              }
-              message.error(msg);
+              message.error(getErrorMessage(error, 'CARD_ASSIGN_ERROR'));
               console.log('------------------- error - ', error);
             });
         }
