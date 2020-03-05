@@ -1,27 +1,42 @@
 import React from 'react';
 import { Icon, Upload, message, Button, Table } from 'antd';
 import QueueAnim from 'rc-queue-anim';
+import CSVReader from 'react-csv-reader';
+const definedHeader = ['purseName', 'purseUserLastName', 'mobileNumber', 'dob', 'gender'];
 
 const Dragger = Upload.Dragger;
 const { Column, ColumnGroup } = Table;
 
-const props = {
-  name: 'file',
-  multiple: false,
-  action: '//jsonplaceholder.typicode.com/posts/',
-  onChange(info) {
-    console.log('---info', info);
+// const props = {
+//   name: 'file',
+//   multiple: false,
+//   action: '//jsonplaceholder.typicode.com/posts/',
+//   onChange(info) {
+//     console.log('---info', info);
 
-    const status = info.file.status;
-    if (status !== 'uploading') {
-      console.log(info.file, info.fileList);
-    }
-    if (status === 'done') {
-      message.success(`${info.file.name} file uploaded successfully.`);
-    } else if (status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
+//     const status = info.file.status;
+//     if (status !== 'uploading') {
+//       console.log(info.file, info.fileList);
+//     }
+//     if (status === 'done') {
+//       message.success(`${info.file.name} file uploaded successfully.`);
+//     } else if (status === 'error') {
+//       message.error(`${info.file.name} file upload failed.`);
+//     }
+//   },
+// };
+
+const handleForce = (data, fileName) => {
+  console.log(data, fileName);
+
+  const headerCheck = definedHeader.some(r => data[0].indexOf(r) >= 0);
+  if (headerCheck) {
+    const i = 0;
+    const dataList = data.slice(0, i).concat(data.slice(i + 1, data.length));
+    console.log('datalist========', dataList);
+  } else {
+    message.error("Uploaded csv header doesn't match");
+  }
 };
 
 const tableData = [
@@ -47,7 +62,7 @@ class UploadAccount extends React.Component {
               <div className="number-card-v1 mb-4">
                 <div className="box box-default">
                   <div className="box-body">
-                    <Dragger {...props}>
+                    {/* <Dragger {...props}>
                       <p className="ant-upload-drag-icon">
                         <Icon type="inbox" />
                       </p>
@@ -56,7 +71,12 @@ class UploadAccount extends React.Component {
                         Support for a single or bulk upload. Strictly prohibit from uploading
                         company data or other band files
                       </p>
-                    </Dragger>
+                    </Dragger> */}
+                    <CSVReader
+                      cssClass="react-csv-input"
+                      label="Upload"
+                      onFileLoaded={handleForce}
+                    />
                   </div>
                 </div>
               </div>
