@@ -1,14 +1,17 @@
 import React from 'react';
-import { Icon, Upload, message, Button } from 'antd';
+import { Icon, Upload, message, Button, Table } from 'antd';
 import QueueAnim from 'rc-queue-anim';
 
 const Dragger = Upload.Dragger;
+const { Column, ColumnGroup } = Table;
 
 const props = {
   name: 'file',
-  multiple: true,
+  multiple: false,
   action: '//jsonplaceholder.typicode.com/posts/',
   onChange(info) {
+    console.log('---info', info);
+
     const status = info.file.status;
     if (status !== 'uploading') {
       console.log(info.file, info.fileList);
@@ -20,6 +23,15 @@ const props = {
     }
   },
 };
+
+const tableData = [
+  { key: 1, AccountNo: '1234567', reason: 'wrong account number' },
+  {
+    key: 2,
+    AccountNo: '1234567',
+    reason: 'wrong account number',
+  },
+];
 
 class UploadAccount extends React.Component {
   constructor(props) {
@@ -78,6 +90,16 @@ class UploadAccount extends React.Component {
                   <Icon type="frown-o" className="text-info" />
                 </div>
               </div>
+            </div>
+          </div>
+          <div className="box box-default">
+            <div className="box-body">
+              <article className="article mt-2">
+                <Table dataSource={tableData}>
+                  <Column title="Account Number" dataIndex="AccountNo" key="AccountNo" />
+                  <Column title="Reason" dataIndex="reason" key="reason" />
+                </Table>
+              </article>
             </div>
           </div>
         </QueueAnim>
