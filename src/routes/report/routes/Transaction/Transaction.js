@@ -38,6 +38,7 @@ const csvHeader = [
   { label: 'Merchant Account Name', key: 'merchantName' },
   { label: 'Device Account No', key: 'deviceAccNo' },
   { label: 'Device Account Name', key: 'deviceAcctName' },
+  { label: 'Amount', key: 'amount' },
   { label: 'Log Time', key: 'logTime' },
   { label: 'Type', key: 'type' },
 ];
@@ -180,6 +181,7 @@ class Data extends React.Component {
         'Merchant Name',
         'Device Account',
         'Device Acc name',
+        'Amount',
         'Log Time',
         'Transaction Type',
       ],
@@ -193,6 +195,7 @@ class Data extends React.Component {
       d.merchantName,
       d.deviceAccNo,
       d.deviceAcctName,
+      d.amount,
       moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
       STATUS.TRANSACTION_TYPE[d.type].label,
     ]);
@@ -254,7 +257,8 @@ class Data extends React.Component {
                 d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
                 d.merchantName.toLowerCase().includes(searchText.toLowerCase()) ||
                 d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase());
+                d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.amount.toLowerCase().includes(searchText.toLowerCase());
             }
             if (
               returnable &&
@@ -369,6 +373,7 @@ class Data extends React.Component {
                     merchantName: d.merchantName,
                     deviceAccNo: d.deviceAccNo,
                     deviceAcctName: d.deviceAcctName,
+                    amount: d.amount,
                     logTime: moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
                     type: STATUS.TRANSACTION_TYPE[d.type].label,
                   }))}
@@ -442,6 +447,7 @@ class Data extends React.Component {
                       dataIndex="deviceAcctName"
                       key="deviceAcctName"
                     />
+                    <Column title="Amount" dataIndex="amount" key="amount" />
                     <Column
                       title="Log Time"
                       dataIndex="logTime"
