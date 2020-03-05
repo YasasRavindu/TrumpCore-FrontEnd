@@ -113,6 +113,11 @@ const treeData = [
     value: '14',
     key: '14',
   },
+  {
+    title: 'Cash Transfer',
+    value: '15',
+    key: '15',
+  },
 ];
 
 const FormItem = Form.Item;
@@ -258,7 +263,7 @@ class Data extends React.Component {
                 d.merchantName.toLowerCase().includes(searchText.toLowerCase()) ||
                 d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
                 d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.amount.toLowerCase().includes(searchText.toLowerCase());
+                d.amount.toString().includes(searchText.toLowerCase());
             }
             if (
               returnable &&
