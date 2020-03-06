@@ -18,6 +18,7 @@ import {
   Badge,
   AutoComplete,
   Tooltip,
+  Upload,
   Breadcrumb,
 } from 'antd';
 
@@ -29,6 +30,24 @@ const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
 
+function getBase64(img, callback) {
+  const reader = new FileReader();
+  reader.addEventListener('load', () => callback(reader.result));
+  reader.readAsDataURL(img);
+}
+
+function beforeUpload(file) {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+  if (!isJpgOrPng) {
+    message.error('You can only upload JPG/PNG file!');
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    message.error('Image must smaller than 2MB!');
+  }
+  return isJpgOrPng && isLt2M;
+}
+
 class Data extends React.Component {
   constructor(props) {
     super(props);
@@ -36,6 +55,7 @@ class Data extends React.Component {
     this.state = {
       accountList: [],
       selectedAccount: undefined,
+      loading: false,
     };
   }
 
@@ -79,6 +99,7 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             selectedAccount: response.data.content,
+            imageUrl: environment.baseUrl + 'file/downloadImg/account/' + response.data.content.id,
           });
       })
       .catch(error => {
@@ -93,8 +114,57 @@ class Data extends React.Component {
       });
   };
 
+  handleChange = info => {
+    if (info.file.status === 'uploading') {
+      this.setState({ loading: true });
+      return;
+    }
+    if (info.file.status === 'done') {
+      // Get this url from response in real world.
+      getBase64(info.file.originFileObj, imageUrl =>
+        this.setState(
+          {
+            imageUrl,
+            loading: false,
+          },
+          () => {
+            // console.log(this.state.imageUrl.split(',').pop());
+            if (this.state.imageUrl && this.state.selectedAccount) {
+              axios
+                .post(environment.baseUrl + 'file/commonImageUpload', {
+                  context: 'account',
+                  contextId: this.state.selectedAccount.id,
+                  imgString: this.state.imageUrl.split(',').pop(),
+                })
+                .then(response => {
+                  console.log('------------------- response - ', response.data.content);
+                  message.success('Successfully uploaded!');
+                })
+                .catch(error => {
+                  console.log('------------------- error - ', error);
+                  message.error('Something went wrong!');
+                });
+            } else {
+              message.error('Something went wrong!');
+              this.setState({
+                imageUrl: undefined,
+              });
+            }
+          }
+        )
+      );
+    }
+  };
+
   render() {
     const { accountList, selectedAccount } = this.state;
+    const uploadButton = (
+      <div>
+        <Icon type={this.state.loading ? 'loading' : 'plus'} />
+        <div className="ant-upload-text">Upload</div>
+      </div>
+    );
+    const imageUrl = this.state.imageUrl;
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         {/* <QueueAnim type="bottom" className="ui-animate">
@@ -202,9 +272,43 @@ class Data extends React.Component {
               <div className="row">
                 <div className="col-lg-4 mb-4">
                   <article className="profile-card-v2 h-100">
-                    <h4>Account Details</h4>
+                    <h4>
+                      Account Details
+                      {/* <Button
+                        type="primary"
+                        shape="circle"
+                        icon="edit"
+                        size="default"
+                        className="float-right"
+                      /> */}
+                    </h4>
                     <div className="divider divider-solid my-4" />
-                    <img src={profile_avatar} alt="avatar" />
+                    {/* <img src={profile_avatar} alt="avatar" /> */}
+                    <div className="mt-2 mb-4">
+                      <Upload
+                        name="avatar"
+                        listType="picture-card"
+                        showUploadList={false}
+                        action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+                        beforeUpload={beforeUpload}
+                        onChange={this.handleChange}
+                      >
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt="avatar"
+                            className="no_border"
+                            onError={e => {
+                              e.target.onerror = null;
+                              e.target.src = profile_avatar;
+                            }}
+                          />
+                        ) : (
+                          uploadButton
+                        )}
+                      </Upload>
+                    </div>
+
                     <div className="mt-2 mb-4">
                       {selectedAccount.holder && <h5>{selectedAccount.holder}</h5>}
                       <h5>
@@ -218,9 +322,7 @@ class Data extends React.Component {
                         {selectedAccount.accountNumber ? selectedAccount.accountNumber : ' - '}
                       </h5>
                     </div>
-                    <div>
-                      <Button type="primary" shape="circle" icon="edit" size="default" />
-                    </div>
+                    <div></div>
                   </article>
                 </div>
                 <div className="col-lg-4 mb-4">
