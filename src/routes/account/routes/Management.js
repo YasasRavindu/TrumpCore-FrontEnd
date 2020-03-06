@@ -18,13 +18,15 @@ import {
   Badge,
   AutoComplete,
   Tooltip,
-  Breadcrumb,
   Upload,
+  Breadcrumb,
+  Alert,
 } from 'antd';
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
 import profile_avatar from '../../../assets/images/profile_avatar.png';
+import picture_attachment_avatar from '../../../assets/images/picture_attachment_avatar.jpg';
 
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -49,6 +51,24 @@ function beforeUploadTest2(file) {
   return isJPG && isLt2M;
 }
 
+function getBase64(img, callback) {
+  const reader = new FileReader();
+  reader.addEventListener('load', () => callback(reader.result));
+  reader.readAsDataURL(img);
+}
+
+function beforeUpload(file) {
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+  if (!isJpgOrPng) {
+    message.error('You can only upload JPG/PNG file!');
+  }
+  const isLt2M = file.size / 1024 / 1024 < 2;
+  if (!isLt2M) {
+    message.error('Image must smaller than 2MB!');
+  }
+  return isJpgOrPng && isLt2M;
+}
+
 class Data extends React.Component {
   constructor(props) {
     super(props);
@@ -57,10 +77,13 @@ class Data extends React.Component {
       accountList: [],
       selectedAccount: undefined,
       kycModalVisible: false,
+      kycImgModalVisible: false,
       simNoModalVisible: false,
       dobModalVisible: false,
-      loadingTest2: false,
+      loadingKYC: false,
+      profileImageUrl: undefined,
       identityImage: undefined,
+      loading: false,
     };
   }
 
@@ -120,6 +143,9 @@ class Data extends React.Component {
     this._isMounted &&
       this.setState({
         selectedAccount: selectedAccount,
+        profileImageUrl: environment.baseUrl + 'file/downloadImg/account/' + selectedAccount.id,
+        identityImage:
+          environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
       });
   }
 
@@ -131,13 +157,37 @@ class Data extends React.Component {
   };
 
   toggleModal = key => {
+    const { selectedAccount } = this.state;
     let value = false;
     if (key === 'kycModalVisible') {
       value = !this.state.kycModalVisible;
+      if (value) {
+        this.props.form.setFieldsValue({
+          identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
+        });
+      }
     } else if (key === 'simNoModalVisible') {
       value = !this.state.simNoModalVisible;
+      if (value) {
+        this.props.form.setFieldsValue({
+          simNo:
+            selectedAccount.simRegistry && selectedAccount.simRegistry.simNo
+              ? selectedAccount.simRegistry.simNo
+              : '',
+        });
+      }
     } else if (key === 'dobModalVisible') {
       value = !this.state.dobModalVisible;
+      // if (value) {
+      //   this.props.form.setFieldsValue({
+      //     dob:
+      //       selectedAccount.simRegistry && selectedAccount.simRegistry.dob
+      //         ? selectedAccount.simRegistry.dob
+      //         : '',
+      //   });
+      // }
+    } else if (key === 'kycImgModalVisible') {
+      value = !this.state.kycImgModalVisible;
     }
 
     this._isMounted &&
@@ -146,26 +196,68 @@ class Data extends React.Component {
       });
   };
 
-  handleChange = info => {
+  handleChangeKYC = info => {
     if (info.file.status === 'uploading') {
-      this.setState({ loadingTest2: true });
+      this.setState({ loadingKYC: true });
       return;
     }
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64Test2(info.file.originFileObj, imageUrl => {
+      getBase64Test2(info.file.originFileObj, identityImage => {
         this.setState({
-          imageUrl,
-          loadingTest2: false,
+          identityImage,
+          loadingKYC: false,
         });
       });
+    }
+  };
+
+  handleChange = info => {
+    if (info.file.status === 'uploading') {
+      this.setState({ loading: true });
+      return;
+    }
+    if (info.file.status === 'done') {
+      // Get this url from response in real world.
+      getBase64(info.file.originFileObj, profileImageUrl =>
+        this.setState(
+          {
+            profileImageUrl,
+            loading: false,
+          },
+          () => {
+            // console.log(this.state.profileImageUrl.split(',').pop());
+            if (this.state.profileImageUrl && this.state.selectedAccount) {
+              axios
+                .post(environment.baseUrl + 'file/commonImageUpload', {
+                  context: 'account',
+                  contextId: this.state.selectedAccount.id,
+                  imgString: this.state.profileImageUrl.split(',').pop(),
+                })
+                .then(response => {
+                  console.log('------------------- response - ', response.data.content);
+                  message.success('Successfully uploaded!');
+                })
+                .catch(error => {
+                  console.log('------------------- error - ', error);
+                  message.error('Something went wrong!');
+                });
+            } else {
+              message.error('Something went wrong!');
+              this.setState({
+                profileImageUrl: undefined,
+              });
+            }
+          }
+        )
+      );
     }
   };
 
   submitKYC = () => {
     console.log(this.state);
 
-    const { selectedAccount, imageUrl } = this.state;
+    const { selectedAccount, identityImage } = this.state;
     if (selectedAccount !== undefined) {
       this.props.form.validateFields(['identityNo'], (err, values) => {
         if (!err) {
@@ -173,11 +265,15 @@ class Data extends React.Component {
           axios
             .put(environment.baseUrl + 'account/updateKYC/' + selectedAccount.id, {
               identityNo: values.identityNo,
-              identityImg: imageUrl.split(',')[1],
+              identityImg: identityImage.split(',')[1],
             })
             .then(response => {
               console.log('------------------- response - ', response.data.content);
               this.toggleModal('kycModalVisible');
+              this.setState({
+                identityImage:
+                  environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
+              });
             })
             .catch(error => {
               console.log('------------------- error - ', error);
@@ -247,19 +343,21 @@ class Data extends React.Component {
   render() {
     const uploadButton = (
       <div>
-        <Icon type={this.state.loadingTest2 ? 'loading' : 'plus'} />
+        <Icon type={this.state.loadingKYC ? 'loading' : 'plus'} />
         <div className="ant-upload-text">Upload</div>
       </div>
     );
-    const imageUrl = this.state.imageUrl;
 
     const { getFieldDecorator } = this.props.form;
     const {
       accountList,
       selectedAccount,
       kycModalVisible,
+      kycImgModalVisible,
       simNoModalVisible,
       dobModalVisible,
+      profileImageUrl,
+      identityImage,
     } = this.state;
     return (
       <>
@@ -328,9 +426,43 @@ class Data extends React.Component {
                 <div className="row">
                   <div className="col-lg-4 mb-4">
                     <article className="profile-card-v2 h-100">
-                      <h4>Account Details</h4>
+                      <h4>
+                        Account Details
+                        {/* <Button
+                        type="primary"
+                        shape="circle"
+                        icon="edit"
+                        size="default"
+                        className="float-right"
+                      /> */}
+                      </h4>
                       <div className="divider divider-solid my-4" />
-                      <img src={profile_avatar} alt="avatar" />
+                      {/* <img src={profile_avatar} alt="avatar" /> */}
+                      <div className="mt-2 mb-4">
+                        <Upload
+                          name="avatar"
+                          listType="picture-card"
+                          showUploadList={false}
+                          action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+                          beforeUpload={beforeUpload}
+                          onChange={this.handleChange}
+                        >
+                          {profileImageUrl ? (
+                            <img
+                              src={profileImageUrl}
+                              alt="avatar"
+                              className="no_border"
+                              onError={e => {
+                                e.target.onerror = null;
+                                e.target.src = profile_avatar;
+                              }}
+                            />
+                          ) : (
+                            uploadButton
+                          )}
+                        </Upload>
+                      </div>
+
                       <div className="mt-2 mb-4">
                         {selectedAccount.holder && <h5>{selectedAccount.holder}</h5>}
                         <h5>
@@ -344,9 +476,7 @@ class Data extends React.Component {
                           {selectedAccount.accountNumber ? selectedAccount.accountNumber : ' - '}
                         </h5>
                       </div>
-                      <div>
-                        <Button type="primary" shape="circle" icon="edit" size="default" />
-                      </div>
+                      <div></div>
                     </article>
                   </div>
 
@@ -354,7 +484,38 @@ class Data extends React.Component {
                     <article className="profile-card-v2 h-100">
                       <h4>Identity Card Details</h4>
                       <div className="divider divider-solid my-4" />
-                      <img src={profile_avatar} alt="avatar" className="no_border" />
+                      {/* <img
+                        src={identityImage}
+                        alt="avatar"
+                        className="no_border"
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = picture_attachment_avatar;
+                        }}
+                      /> */}
+                      {selectedAccount.profileImg && (
+                        <>
+                          <Alert
+                            message="Identity Attachment"
+                            // description="Detailed description and advices about successful copywriting."
+                            type="success"
+                            // showIcon
+                          />
+                          <Button
+                            className="mt-2"
+                            type="default"
+                            shape="circle"
+                            icon="eye-o"
+                            size="default"
+                            onClick={() => this.toggleModal('kycImgModalVisible')}
+                          />
+                        </>
+                      )}
+
+                      {selectedAccount.profileImg === null && (
+                        <Alert message="No Identity Attachment" type="error" />
+                      )}
+
                       <div className="mt-4 mb-4">
                         <h5>
                           ID No -{' '}
@@ -363,7 +524,7 @@ class Data extends React.Component {
                       </div>
                       <div>
                         <Button
-                          type="primary"
+                          type="default"
                           shape="circle"
                           icon="edit"
                           size="default"
@@ -462,10 +623,19 @@ class Data extends React.Component {
                         showUploadList={false}
                         action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
                         beforeUpload={beforeUploadTest2}
-                        onChange={this.handleChange}
+                        onChange={this.handleChangeKYC}
                       >
-                        {imageUrl ? (
-                          <img src={imageUrl} alt="avatar" style={{ width: '100%' }} />
+                        {identityImage ? (
+                          <img
+                            src={identityImage}
+                            alt="avatar"
+                            style={{ width: '100%' }}
+                            className="no_border"
+                            onError={e => {
+                              e.target.onerror = null;
+                              e.target.src = picture_attachment_avatar;
+                            }}
+                          />
                         ) : (
                           uploadButton
                         )}
@@ -487,6 +657,29 @@ class Data extends React.Component {
                         })(<Input placeholder="Identity No" />)}
                       </FormItem>
                     </Form>
+                  </Col>
+                </Row>
+              </Modal>
+
+              <Modal
+                title="Identity Attachment"
+                visible={kycImgModalVisible}
+                footer={null}
+                onCancel={() => this.toggleModal('kycImgModalVisible')}
+                centered
+              >
+                <Row gutter={24}>
+                  <Col span={24}>
+                    <img
+                      style={{ width: '100%' }}
+                      src={identityImage}
+                      alt="avatar"
+                      className="no_border"
+                      onError={e => {
+                        e.target.onerror = null;
+                        e.target.src = picture_attachment_avatar;
+                      }}
+                    />
                   </Col>
                 </Row>
               </Modal>

@@ -195,12 +195,12 @@ class Data extends React.Component {
     const realData = this.state.loadFilterLog.map(d => [
       d.holder ? d.holder : 'N/A',
       d.accountNo ? d.accountNo : 'N/A',
-      d.serial,
-      d.merchantAccNo,
-      d.merchantName,
-      d.deviceAccNo,
-      d.deviceAcctName,
-      d.amount,
+      d.serial ? d.serial : 'N/A',
+      d.merchantAccNo ? d.merchantAccNo : 'N/A',
+      d.merchantName ? d.merchantName : 'N/A',
+      d.deviceAccNo ? d.deviceAccNo : 'N/A',
+      d.deviceAcctName ? d.deviceAcctName : 'N/A',
+      d.amount ? d.amount : 'N/A',
       moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
       STATUS.TRANSACTION_TYPE[d.type].label,
     ]);
@@ -256,14 +256,17 @@ class Data extends React.Component {
             returnable = true;
             if (returnable && searchText) {
               returnable =
-                d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.accountNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.merchantName.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.amount.toString().includes(searchText.toLowerCase());
+                (d.holder && d.holder.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.accountNo && d.accountNo.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.serial && d.serial.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.merchantAccNo &&
+                  d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.merchantName &&
+                  d.merchantName.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.deviceAccNo && d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.deviceAcctName &&
+                  d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase())) ||
+                (d.amount && d.amount.toString().includes(searchText.toLowerCase()));
             }
             if (
               returnable &&
@@ -373,12 +376,12 @@ class Data extends React.Component {
                   data={this.state.loadFilterLog.map(d => ({
                     holder: d.holder ? d.holder : 'N/A',
                     accountNo: d.accountNo ? d.accountNo : 'N/A',
-                    serial: d.serial,
-                    merchantAccNo: d.merchantAccNo,
-                    merchantName: d.merchantName,
-                    deviceAccNo: d.deviceAccNo,
-                    deviceAcctName: d.deviceAcctName,
-                    amount: d.amount,
+                    serial: d.serial ? d.serial : 'N/A',
+                    merchantAccNo: d.merchantAccNo ? d.merchantAccNo : 'N/A',
+                    merchantName: d.merchantName ? d.merchantName : 'N/A',
+                    deviceAccNo: d.deviceAccNo ? d.deviceAccNo : 'N/A',
+                    deviceAcctName: d.deviceAcctName ? d.deviceAcctName : 'N/A',
+                    amount: d.amount ? d.amount : 'N/A',
                     logTime: moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
                     type: STATUS.TRANSACTION_TYPE[d.type].label,
                   }))}
