@@ -641,7 +641,7 @@ class Data extends React.Component {
                         listType="picture-card"
                         showUploadList={false}
                         action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                        beforeUpload={beforeUploadTest2}
+                        beforeUpload={beforeUpload}
                         onChange={this.handleChangeKYC}
                       >
                         {identityImage ? (
