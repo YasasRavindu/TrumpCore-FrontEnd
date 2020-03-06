@@ -435,24 +435,25 @@ class Data extends React.Component {
             <>
               <article className="article">
                 <div className="row">
-                  <h2 className="article-title">Account View</h2>
+                  <Button
+                    type="primary"
+                    //shape="circle"
+                    icon="arrow-left"
+                    size="default"
+                    className="float-left"
+                    onClick={() => this.resetAccount()}
+                  >
+                    Back
+                  </Button>
+                  <h2 className="article-title mr-5">Account View</h2>
                 </div>
                 <div className="row">
                   <div className="col-lg-4 mb-4">
                     <article className="profile-card-v2 h-100">
-                      <h4>
-                        Account Details
-                        {/* <Button
-                        type="primary"
-                        shape="circle"
-                        icon="edit"
-                        size="default"
-                        className="float-right"
-                      /> */}
-                      </h4>
+                      <h4>Account Details</h4>
                       <div className="divider divider-solid my-4" />
-                      {/* <img src={profile_avatar} alt="avatar" /> */}
-                      <div className="mt-2 mb-4">
+
+                      <div>
                         <Upload
                           name="avatar"
                           listType="picture-card"
