@@ -84,6 +84,7 @@ class Data extends React.Component {
       profileImageUrl: undefined,
       identityImage: undefined,
       loading: false,
+      kycImgError: false,
     };
   }
 
@@ -153,6 +154,15 @@ class Data extends React.Component {
     this._isMounted &&
       this.setState({
         selectedAccount: undefined,
+        kycModalVisible: false,
+        kycImgModalVisible: false,
+        simNoModalVisible: false,
+        dobModalVisible: false,
+        loadingKYC: false,
+        profileImageUrl: undefined,
+        identityImage: undefined,
+        loading: false,
+        kycImgError: false,
       });
   };
 
@@ -193,6 +203,7 @@ class Data extends React.Component {
     this._isMounted &&
       this.setState({
         [key]: value,
+        kycImgError: false,
       });
   };
 
@@ -207,6 +218,7 @@ class Data extends React.Component {
         this.setState({
           identityImage,
           loadingKYC: false,
+          kycImgError: false,
         });
       });
     }
@@ -261,23 +273,24 @@ class Data extends React.Component {
     if (selectedAccount !== undefined) {
       this.props.form.validateFields(['identityNo'], (err, values) => {
         if (!err) {
-          console.log(values);
-          axios
-            .put(environment.baseUrl + 'account/updateKYC/' + selectedAccount.id, {
-              identityNo: values.identityNo,
-              identityImg: identityImage.split(',')[1],
-            })
-            .then(response => {
-              console.log('------------------- response - ', response.data.content);
-              this.toggleModal('kycModalVisible');
-              this.setState({
-                identityImage:
-                  environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
+          if (identityImage !== undefined) {
+            axios
+              .put(environment.baseUrl + 'account/updateKYC/' + selectedAccount.id, {
+                identityNo: values.identityNo,
+                identityImg: identityImage.split(',')[1],
+              })
+              .then(response => {
+                console.log('------------------- response - ', response.data.content);
+                this.toggleModal('kycModalVisible');
+              })
+              .catch(error => {
+                console.log('------------------- error - ', error);
               });
-            })
-            .catch(error => {
-              console.log('------------------- error - ', error);
+          } else {
+            this.setState({
+              kycImgError: true,
             });
+          }
         }
       });
     }
@@ -502,14 +515,14 @@ class Data extends React.Component {
                             type="success"
                             // showIcon
                           />
-                          <Button
+                          {/* <Button
                             className="mt-2"
                             type="default"
                             shape="circle"
                             icon="eye-o"
                             size="default"
                             onClick={() => this.toggleModal('kycImgModalVisible')}
-                          />
+                          /> */}
                         </>
                       )}
 
@@ -658,6 +671,9 @@ class Data extends React.Component {
                         })(<Input placeholder="Identity No" />)}
                       </FormItem>
                     </Form>
+                    {this.state.kycImgError && (
+                      <span style={{ color: '#ff4d4f' }}>Identity Image is Required!</span>
+                    )}
                   </Col>
                 </Row>
               </Modal>
@@ -673,7 +689,11 @@ class Data extends React.Component {
                   <Col span={24}>
                     <img
                       style={{ width: '100%' }}
-                      src={identityImage}
+                      src={
+                        environment.baseUrl +
+                        'file/downloadImg/identification/' +
+                        this.state.selectedAccount.id
+                      }
                       alt="avatar"
                       className="no_border"
                       onError={e => {
