@@ -282,6 +282,7 @@ class Data extends React.Component {
               .then(response => {
                 console.log('------------------- response - ', response.data.content);
                 this.toggleModal('kycModalVisible');
+                this.viewAccount(selectedAccount.id);
               })
               .catch(error => {
                 console.log('------------------- error - ', error);
@@ -506,7 +507,7 @@ class Data extends React.Component {
                           e.target.src = picture_attachment_avatar;
                         }}
                       /> */}
-                      {selectedAccount.profileImg && (
+                      {selectedAccount.identityImg && (
                         <>
                           <Alert
                             message="Identity Attachment"
@@ -525,7 +526,7 @@ class Data extends React.Component {
                         </>
                       )}
 
-                      {selectedAccount.profileImg === null && (
+                      {selectedAccount.identityImg === null && (
                         <Alert message="No Identity Attachment" type="error" />
                       )}
 
