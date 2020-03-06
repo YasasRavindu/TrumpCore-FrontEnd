@@ -145,8 +145,8 @@ class Data extends React.Component {
       this.setState({
         selectedAccount: selectedAccount,
         profileImageUrl: environment.baseUrl + 'file/downloadImg/account/' + selectedAccount.id,
-        identityImage:
-          environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
+        // identityImage:
+        //   environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
       });
   }
 
@@ -171,11 +171,11 @@ class Data extends React.Component {
     let value = false;
     if (key === 'kycModalVisible') {
       value = !this.state.kycModalVisible;
-      if (value) {
-        this.props.form.setFieldsValue({
-          identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
-        });
-      }
+      // if (value) {
+      //   this.props.form.setFieldsValue({
+      //     identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
+      //   });
+      // }
     } else if (key === 'simNoModalVisible') {
       value = !this.state.simNoModalVisible;
       if (value) {
@@ -282,7 +282,7 @@ class Data extends React.Component {
               .then(response => {
                 console.log('------------------- response - ', response.data.content);
                 this.toggleModal('kycModalVisible');
-                this.viewAccount(selectedAccount.id);
+                window.location.reload();
               })
               .catch(error => {
                 console.log('------------------- error - ', error);
@@ -499,16 +499,20 @@ class Data extends React.Component {
                     <article className="profile-card-v2 h-100">
                       <h4>Identity Card Details</h4>
                       <div className="divider divider-solid my-4" />
-                      {/* <img
-                        src={identityImage}
+                      <img
+                        src={
+                          environment.baseUrl +
+                          'file/downloadImg/identification/' +
+                          selectedAccount.id
+                        }
                         alt="avatar"
                         className="no_border"
                         onError={e => {
                           e.target.onerror = null;
                           e.target.src = picture_attachment_avatar;
                         }}
-                      /> */}
-                      {selectedAccount.identityImg && (
+                      />
+                      {/* {selectedAccount.identityImg && (
                         <>
                           <Alert
                             message="Identity Attachment"
@@ -516,20 +520,20 @@ class Data extends React.Component {
                             type="success"
                             // showIcon
                           />
-                          {/* <Button
+                          <Button
                             className="mt-2"
                             type="default"
                             shape="circle"
                             icon="eye-o"
                             size="default"
                             onClick={() => this.toggleModal('kycImgModalVisible')}
-                          /> */}
+                          />
                         </>
                       )}
 
                       {selectedAccount.identityImg === null && (
                         <Alert message="No Identity Attachment" type="error" />
-                      )}
+                      )} */}
 
                       <div className="mt-4 mb-4">
                         <h5>
