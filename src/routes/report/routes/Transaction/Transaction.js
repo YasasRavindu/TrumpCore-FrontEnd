@@ -17,6 +17,7 @@ import {
   Tooltip,
   Modal,
   Divider,
+  ConfigProvider,
 } from 'antd';
 import { environment } from '../../../../environments';
 import axios from 'axios';
@@ -29,6 +30,12 @@ import STATUS from 'constants/notification/status';
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
 const { SHOW_PARENT } = TreeSelect;
+
+const customizeRenderEmpty = () => (
+  <div style={{ textAlign: 'center' }}>
+    <Tag color="orange">Please filter any of the above fields to get the reports.</Tag>
+  </div>
+);
 
 const csvHeader = [
   { label: 'Account Holder', key: 'holder' },
@@ -137,12 +144,13 @@ class Data extends React.Component {
       logRequest: {},
       logResponse: {},
       visible: false,
-      tableLoading: true,
+      customize: true,
+      loading: false,
     };
   }
 
   async componentDidMount() {
-    this.loadTable();
+    // this.loadTable();
   }
 
   loadTable = () => {
@@ -155,11 +163,15 @@ class Data extends React.Component {
           return log;
         });
 
-        this.setState({
-          loadLog: logList,
-          loadFilterLog: logList,
-          tableLoading: false,
-        });
+        this.setState(
+          {
+            loadLog: logList,
+            loadFilterLog: logList,
+          },
+          () => {
+            this.dataFilter();
+          }
+        );
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -195,12 +207,12 @@ class Data extends React.Component {
     const realData = this.state.loadFilterLog.map(d => [
       d.holder ? d.holder : 'N/A',
       d.accountNo ? d.accountNo : 'N/A',
-      d.serial,
-      d.merchantAccNo,
-      d.merchantName,
-      d.deviceAccNo,
-      d.deviceAcctName,
-      d.amount,
+      d.serial ? d.serial : 'N/A',
+      d.merchantAccNo ? d.merchantAccNo : 'N/A',
+      d.merchantName ? d.merchantName : 'N/A',
+      d.deviceAccNo ? d.deviceAccNo : 'N/A',
+      d.deviceAcctName ? d.deviceAcctName : 'N/A',
+      d.amount ? d.amount : 'N/A',
       moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
       STATUS.TRANSACTION_TYPE[d.type].label,
     ]);
@@ -220,14 +232,14 @@ class Data extends React.Component {
   };
 
   searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
+    this.setFilters('searchDate', dateString);
   };
 
   searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
+    this.setFilters('searchText', e.target.value);
   };
   searchTypeHandler = v => {
-    this.dataFilter('searchType', v);
+    this.setFilters('searchType', v);
   };
 
   onChange = value => {
@@ -236,57 +248,73 @@ class Data extends React.Component {
     });
   };
 
-  dataFilter = (key, value) => {
+  setFilters = (key, value) => {
     this.setState(
       {
         [key]: value,
+        loading: true,
       },
       () => {
-        let data = this.state.loadLog;
-        let searchDate = this.state.searchDate;
-        let searchText = this.state.searchText;
-        let searchType = this.state.searchType;
-        if (
-          searchText ||
-          (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
-          searchType.length > 0
-        ) {
-          let returnable;
-          data = data.filter(d => {
-            returnable = true;
-            if (returnable && searchText) {
-              returnable =
-                d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.accountNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.merchantName.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.amount.toString().includes(searchText.toLowerCase());
-            }
-            if (
-              returnable &&
-              searchDate.length > 0 &&
-              searchDate[0] !== '' &&
-              searchDate[1] !== ''
-            ) {
-              var startDate = moment(searchDate[0]);
-              var endDate = moment(searchDate[1]);
-              var date = moment(d.logTime);
-              returnable = date.isAfter(startDate) && date.isBefore(endDate);
-            }
+        if (this.state.loadLog.length > 0) {
+          this.dataFilter();
+        } else {
+          this.loadTable();
+        }
+      }
+    );
+  };
 
-            if (returnable && searchType.length > 0) {
-              returnable = searchType.includes(d.type.toString());
-            }
-            return returnable;
-          });
+
+  dataFilter = () => {
+    let data = this.state.loadLog;
+    let searchDate = this.state.searchDate;
+    let searchText = this.state.searchText;
+    let searchType = this.state.searchType;
+    if (
+      searchText ||
+      (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
+      searchType.length > 0
+    ) {
+      let returnable;
+      data = data.filter(d => {
+        returnable = true;
+        if (returnable && searchText) {
+          returnable =
+            (d.holder && d.holder.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.accountNo && d.accountNo.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.serial && d.serial.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.merchantAccNo && d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.merchantName && d.merchantName.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.deviceAccNo && d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.deviceAcctName &&
+              d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase())) ||
+            (d.amount && d.amount.toString().includes(searchText.toLowerCase()));
+        }
+        if (returnable && searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
+          var startDate = moment(searchDate[0]);
+          var endDate = moment(searchDate[1]);
+          var date = moment(d.logTime);
+          returnable = date.isAfter(startDate) && date.isBefore(endDate);
         }
 
-        this.setState({
-          loadFilterLog: data,
-        });
+        if (returnable && searchType.length > 0) {
+          returnable = searchType.includes(d.type.toString());
+        }
+        return returnable;
+      });
+    }
+
+    this.setState(
+      {
+        loadFilterLog: data,
+        loading: false,
+      },
+      () => {
+        if (this.state.loadFilterLog.length <= 0) {
+          this.setState({
+            customize: false,
+          });
+        }
       }
     );
   };
@@ -352,6 +380,7 @@ class Data extends React.Component {
         width: '100%',
       },
     };
+    const { customize } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -373,12 +402,12 @@ class Data extends React.Component {
                   data={this.state.loadFilterLog.map(d => ({
                     holder: d.holder ? d.holder : 'N/A',
                     accountNo: d.accountNo ? d.accountNo : 'N/A',
-                    serial: d.serial,
-                    merchantAccNo: d.merchantAccNo,
-                    merchantName: d.merchantName,
-                    deviceAccNo: d.deviceAccNo,
-                    deviceAcctName: d.deviceAcctName,
-                    amount: d.amount,
+                    serial: d.serial ? d.serial : 'N/A',
+                    merchantAccNo: d.merchantAccNo ? d.merchantAccNo : 'N/A',
+                    merchantName: d.merchantName ? d.merchantName : 'N/A',
+                    deviceAccNo: d.deviceAccNo ? d.deviceAccNo : 'N/A',
+                    deviceAcctName: d.deviceAcctName ? d.deviceAcctName : 'N/A',
+                    amount: d.amount ? d.amount : 'N/A',
                     logTime: moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
                     type: STATUS.TRANSACTION_TYPE[d.type].label,
                   }))}
@@ -416,69 +445,71 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  <Table
-                    //columns={columns}
-                    dataSource={this.state.loadFilterLog}
-                    scroll={{ x: 1500, y: 400 }}
-                    className="ant-table-v1"
-                    loading={this.state.tableLoading}
-                  >
-                    <Column
-                      title="Account Holder"
-                      dataIndex="holder"
-                      key="holder"
-                      render={holder => (holder ? holder : <span>N/A</span>)}
-                    />
-                    <Column
-                      title="Account No"
-                      dataIndex="accountNo"
-                      key="accountNo"
-                      render={accountNo => (accountNo ? accountNo : <span>N/A</span>)}
-                    />
-                    <Column title="Serial No" dataIndex="serial" key="serial" />
-                    <Column
-                      title="Merchant Account No"
-                      dataIndex="merchantAccNo"
-                      key="merchantAccNo"
-                    />
-                    <Column
-                      title="Merchant Account Name"
-                      dataIndex="merchantName"
-                      key="merchantName"
-                    />
-                    <Column title="Device Account No" dataIndex="deviceAccNo" key="deviceAccNo" />
-                    <Column
-                      title="Device Account Name"
-                      dataIndex="deviceAcctName"
-                      key="deviceAcctName"
-                    />
-                    <Column title="Amount" dataIndex="amount" key="amount" />
-                    <Column
-                      title="Log Time"
-                      dataIndex="logTime"
-                      key="logTime"
-                      render={logTime => moment(logTime).format('MMMM Do YYYY, h:mm:ss a')}
-                    />
-                    <Column
-                      title="Type"
-                      dataIndex="type"
-                      key="type"
-                      render={type => (
-                        <Tag color={STATUS.TRANSACTION_TYPE[type].color}>
-                          {STATUS.TRANSACTION_TYPE[type].label}
-                        </Tag>
-                      )}
-                    />
-                    <Column
-                      title="Action"
-                      key="status"
-                      render={(text, record) => (
-                        <Tooltip title="Information">
-                          <Icon onClick={() => this.viewLog(record.id)} type="plus-square" />
-                        </Tooltip>
-                      )}
-                    />
-                  </Table>
+                  <ConfigProvider renderEmpty={customize && customizeRenderEmpty}>
+                    <Table
+                      //columns={columns}
+                      dataSource={this.state.loadFilterLog}
+                      scroll={{ x: 1500, y: 400 }}
+                      className="ant-table-v1"
+                      loading={this.state.loading}
+                    >
+                      <Column
+                        title="Account Holder"
+                        dataIndex="holder"
+                        key="holder"
+                        render={holder => (holder ? holder : <span>N/A</span>)}
+                      />
+                      <Column
+                        title="Account No"
+                        dataIndex="accountNo"
+                        key="accountNo"
+                        render={accountNo => (accountNo ? accountNo : <span>N/A</span>)}
+                      />
+                      <Column title="Serial No" dataIndex="serial" key="serial" />
+                      <Column
+                        title="Merchant Account No"
+                        dataIndex="merchantAccNo"
+                        key="merchantAccNo"
+                      />
+                      <Column
+                        title="Merchant Account Name"
+                        dataIndex="merchantName"
+                        key="merchantName"
+                      />
+                      <Column title="Device Account No" dataIndex="deviceAccNo" key="deviceAccNo" />
+                      <Column
+                        title="Device Account Name"
+                        dataIndex="deviceAcctName"
+                        key="deviceAcctName"
+                      />
+                      <Column title="Amount" dataIndex="amount" key="amount" />
+                      <Column
+                        title="Log Time"
+                        dataIndex="logTime"
+                        key="logTime"
+                        render={logTime => moment(logTime).format('MMMM Do YYYY, h:mm:ss a')}
+                      />
+                      <Column
+                        title="Type"
+                        dataIndex="type"
+                        key="type"
+                        render={type => (
+                          <Tag color={STATUS.TRANSACTION_TYPE[type].color}>
+                            {STATUS.TRANSACTION_TYPE[type].label}
+                          </Tag>
+                        )}
+                      />
+                      <Column
+                        title="Action"
+                        key="status"
+                        render={(text, record) => (
+                          <Tooltip title="Information">
+                            <Icon onClick={() => this.viewLog(record.id)} type="plus-square" />
+                          </Tooltip>
+                        )}
+                      />
+                    </Table>
+                  </ConfigProvider>
                 </article>
               </div>
             </div>

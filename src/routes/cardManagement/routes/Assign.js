@@ -67,10 +67,7 @@ class Data extends React.Component {
       filteredAccountList: [],
       searchDate: ['', ''],
       searchText: '',
-      visible: false,
       checkedID: '',
-      checkedcardId: '',
-      checkedaccountId: '',
       modelVisible: false,
       modelType: undefined,
       selectedAccount: undefined,
@@ -186,102 +183,6 @@ class Data extends React.Component {
       );
   };
 
-  handleUpdate = (id, selectedCard, selectedAccount) => {
-    if (id) {
-      this._isMounted &&
-        this.setState(
-          {
-            checkedID: id,
-            selectedAccount: selectedAccount,
-            selectedCard: selectedCard,
-          },
-          () => {
-            this.state.accountList.map(account => {
-              if (account.id.toUpperCase() === selectedAccount.id.toUpperCase()) {
-                // this.showAccountDetail(account);
-                //keyCard = false;
-              }
-            });
-            this.showModel('edit');
-          }
-        );
-    }
-  };
-
-  // assignmentSubmit = e => {
-  //   e.preventDefault();
-  //   const { checkedID, checkedaccountId } = this.state;
-  //   this.props.form.validateFields(['updatecardNumber'], (err, values) => {
-  //     if (!err) {
-  //       axios
-  //         .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
-  //           account: {
-  //             id: checkedaccountId,
-  //           },
-  //           card: {
-  //             id: values.updatecardNumber,
-  //           },
-  //         })
-  //         .then(response => {
-  //           message.success('Card Successfully Assign to Account');
-  //           console.log('------------------- response - ', response);
-  //           this.loadData();
-  //           this.props.form.resetFields();
-  //           this._isMounted &&
-  //             this.setState({
-  //               visible: false,
-  //               checkedID: '',
-  //               checkedcardId: '',
-  //               checkedaccountId: '',
-  //             });
-  //         })
-  //         .catch(error => {
-  //           let msg = null;
-  //           if (
-  //             error &&
-  //             error.response &&
-  //             error.response.data &&
-  //             error.response.data.validationFailures &&
-  //             error.response.data.validationFailures[0] &&
-  //             error.response.data.validationFailures[0].code
-  //           ) {
-  //             let errorCode = error.response.data.validationFailures[0].code;
-  //             console.log('error code', errorCode);
-
-  //             msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR[errorCode];
-  //             if (msg === undefined) {
-  //               msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-  //             }
-  //           } else {
-  //             msg = CUSTOM_MESSAGE.CARD_REGISTRY_ERROR['defaultError'];
-  //           }
-  //           message.error(msg);
-  //           console.log('------------------- error - ', error);
-  //         });
-  //     }
-  //   });
-  // };
-
-  handleCancel = e => {
-    this._isMounted &&
-      this.setState({
-        visible: false,
-      });
-  };
-
-  handleModelCancel = e => {
-    this.props.form.setFieldsValue({
-      cardNumber: '',
-      accountNumber: '',
-    });
-    this._isMounted &&
-      this.setState({
-        modelVisible: false,
-        selectedAccount: undefined,
-        selectedCard: undefined,
-      });
-  };
-
   handleStatus = (id, value) => {
     axios
       .put(environment.baseUrl + 'card/update', {
@@ -294,6 +195,40 @@ class Data extends React.Component {
       })
       .catch(error => {
         console.log('------------------- error - ', error);
+      });
+  };
+
+  handleUpdate = (id, selectedCard, selectedAccount) => {
+    if (id) {
+      this._isMounted &&
+        this.setState(
+          {
+            checkedID: id,
+            selectedAccount: selectedAccount,
+            selectedCard: selectedCard,
+          },
+          () => {
+            this.showModel('edit');
+          }
+        );
+    }
+  };
+
+  showModel = type => {
+    this._isMounted &&
+      this.setState({
+        modelVisible: true,
+        modelType: type,
+      });
+  };
+
+  handleModelCancel = e => {
+    this.props.form.resetFields();
+    this._isMounted &&
+      this.setState({
+        modelVisible: false,
+        selectedAccount: undefined,
+        selectedCard: undefined,
       });
   };
 
@@ -365,51 +300,6 @@ class Data extends React.Component {
     }
   };
 
-  // submit = e => {
-  //   e.preventDefault();
-  //   this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
-  //     if (!err) {
-  //       console.log(values);
-  //       axios
-  //         .post(environment.baseUrl + 'cardRegistry', {
-  //           account: {
-  //             id: values.accountNumber,
-  //           },
-  //           card: {
-  //             id: values.cardNumber,
-  //           },
-  //         })
-  //         .then(response => {
-  //           message.success('Card Successfully Assign to Account');
-  //           console.log('------------------- response - ', response);
-  //           this.loadData();
-  //           this.props.form.resetFields();
-  //         })
-  //         .catch(error => {
-  //           let msg = null;
-  //           if (
-  //             error &&
-  //             error.response &&
-  //             error.response.data &&
-  //             error.response.data.validationFailures &&
-  //             error.response.data.validationFailures[0] &&
-  //             error.response.data.validationFailures[0].code
-  //           ) {
-  //             let errorCode = error.response.data.validationFailures[0].code;
-  //             msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR[errorCode];
-  //             if (msg === undefined) {
-  //               msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
-  //             }
-  //           } else {
-  //             msg = CUSTOM_MESSAGE.CARD_ASSIGN_ERROR['defaultError'];
-  //           }
-  //           message.error(msg);
-  //           console.log('------------------- error - ', error);
-  //         });
-  //     }
-  //   });
-  // };
-
   showAccountDetail = account => {
     if (
       this.state.selectedAccount === null ||
@@ -420,7 +310,7 @@ class Data extends React.Component {
       this._isMounted &&
         this.setState({
           account: account,
-          displayDetail: true,
+          // displayDetail: true,
         });
     }
   };
@@ -439,14 +329,6 @@ class Data extends React.Component {
     });
 
     return keyCard;
-  };
-
-  showModel = type => {
-    this._isMounted &&
-      this.setState({
-        modelVisible: true,
-        modelType: type,
-      });
   };
 
   updateCardList = input => {
@@ -543,9 +425,7 @@ class Data extends React.Component {
 
     const { getFieldDecorator } = this.props.form;
     const {
-      accountList,
       filteredAccountList,
-      cardList,
       filteredCardList,
       filteredAssignedList,
     } = this.state;
@@ -712,55 +592,6 @@ class Data extends React.Component {
                     />
                   </Table>
                 </article>
-                <Modal
-                  title="Update card registry"
-                  visible={this.state.visible}
-                  onOk={this.assignmentSubmit}
-                  onCancel={this.handleCancel}
-                  okText="Assign"
-                  centered
-                >
-                  <Form>
-                    <FormItem>
-                      {getFieldDecorator('updatecardNumber', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please enter your card number',
-                          },
-                        ],
-                      })(
-                        // (<Input placeholder="Serial Number" />)
-                        <AutoComplete
-                          dataSource={optionsCards}
-                          style={{ width: 200 }}
-                          onBlur={inputValue => {
-                            let keyCard = false;
-                            cardList.map(card => {
-                              if (
-                                inputValue !== undefined &&
-                                card.id.toUpperCase() === inputValue.toUpperCase()
-                              ) {
-                                keyCard = true;
-                              }
-                            });
-                            if (!keyCard) {
-                              this.props.form.setFieldsValue({
-                                updatecardNumber: '',
-                              });
-                            }
-                          }}
-                          placeholder="Card Number"
-                          filterOption={(inputValue, option) =>
-                            option.props.children
-                              .toUpperCase()
-                              .indexOf(inputValue.toUpperCase()) !== -1
-                          }
-                        />
-                      )}
-                    </FormItem>
-                  </Form>
-                </Modal>
               </div>
             </div>
           </div>
@@ -794,22 +625,17 @@ class Data extends React.Component {
                     },
                   ],
                 })(
-                  // <Input placeholder="Account Number" />
                   <AutoComplete
                     dataSource={optionsAccounts}
                     style={{ width: 600 }}
                     placeholder="Account Number"
                     onBlur={inputValue => {
-                      console.log('onblur');
-                      console.log(inputValue);
                       this.setAccount(inputValue);
                     }}
                     onChange={inputValue => {
-                      console.log('onchange');
                       this.updateAccountList(inputValue);
                     }}
                     onSelect={inputValue => {
-                      console.log('onselect');
                       this.setAccount(inputValue);
                     }}
                   />
@@ -871,7 +697,6 @@ class Data extends React.Component {
                               },
                             ],
                           })(
-                            // (<Input placeholder="Serial Number" />)
                             <AutoComplete
                               allowClear
                               dataSource={optionsCards}
@@ -886,27 +711,6 @@ class Data extends React.Component {
                                 this.setCard(inputValue);
                               }}
                               placeholder="Card Number"
-                              // onBlur={inputValue => {
-                              //   let keyCard = false;
-                              //   cardList.map(card => {
-                              //     if (
-                              //       inputValue !== undefined &&
-                              //       card.id.toUpperCase() === inputValue.toUpperCase()
-                              //     ) {
-                              //       keyCard = true;
-                              //     }
-                              //   });
-                              //   if (!keyCard) {
-                              //     this.props.form.setFieldsValue({
-                              //       cardNumber: '',
-                              //     });
-                              //   }
-                              // }}
-                              // filterOption={(inputValue, option) =>
-                              //   option.props.children
-                              //     .toUpperCase()
-                              //     .indexOf(inputValue.toUpperCase()) !== -1
-                              // }
                             />
                           )}
                         </FormItem>

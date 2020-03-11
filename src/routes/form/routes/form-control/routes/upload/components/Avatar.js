@@ -24,19 +24,21 @@ class Avatar extends React.Component {
     loading: false,
   };
 
-  handleChange = (info) => {
+  handleChange = info => {
     if (info.file.status === 'uploading') {
       this.setState({ loading: true });
       return;
     }
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, imageUrl => this.setState({
-        imageUrl,
-        loading: false,
-      }));
+      getBase64(info.file.originFileObj, imageUrl =>
+        this.setState({
+          imageUrl,
+          loading: false,
+        })
+      );
     }
-  }
+  };
 
   render() {
     const uploadButton = (
@@ -50,7 +52,7 @@ class Avatar extends React.Component {
       <Upload
         name="avatar"
         listType="picture-card"
-        showUploadList={false}
+        showUploadList={true}
         action="//jsonplaceholder.typicode.com/posts/"
         beforeUpload={beforeUpload}
         onChange={this.handleChange}
@@ -62,14 +64,14 @@ class Avatar extends React.Component {
 }
 
 const Box = () => {
-  return(
+  return (
     <div className="box box-default">
       <div className="box-header">Avatar</div>
       <div className="box-body">
         <Avatar />
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Box;
