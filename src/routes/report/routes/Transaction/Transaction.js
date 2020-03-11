@@ -264,6 +264,7 @@ class Data extends React.Component {
     );
   };
 
+
   dataFilter = () => {
     let data = this.state.loadLog;
     let searchDate = this.state.searchDate;
