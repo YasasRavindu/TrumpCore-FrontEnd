@@ -75,6 +75,7 @@ class Data extends React.Component {
     this._isMounted = false;
     this.state = {
       accountList: [],
+      filterdAccountList: [],
       selectedAccount: undefined,
       kycModalVisible: false,
       kycImgModalVisible: false,
@@ -85,6 +86,7 @@ class Data extends React.Component {
       identityImage: undefined,
       loading: false,
       kycImgError: false,
+      searchText: '',
     };
   }
 
@@ -109,6 +111,7 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             accountList: accountList,
+            filterdAccountList: accountList,
           });
       })
       .catch(error => {
@@ -266,6 +269,37 @@ class Data extends React.Component {
     }
   };
 
+  searchTextHandler = e => {
+    this.dataFilter('searchText', e.target.value);
+  };
+
+  dataFilter = (key, value) => {
+    this._isMounted &&
+      this.setState(
+        {
+          [key]: value,
+        },
+        () => {
+          let data = this.state.accountList;
+          let searchText = this.state.searchText;
+
+          if (searchText) {
+            data = data.filter(d => {
+              return (
+                d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+              );
+            });
+          }
+
+          this._isMounted &&
+            this.setState({
+              filterdAccountList: data,
+            });
+        }
+      );
+  };
+
   submitKYC = () => {
     console.log(this.state);
 
@@ -365,6 +399,7 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
     const {
       accountList,
+      filterdAccountList,
       selectedAccount,
       kycModalVisible,
       kycImgModalVisible,
@@ -373,6 +408,7 @@ class Data extends React.Component {
       profileImageUrl,
       identityImage,
     } = this.state;
+
     return (
       <>
         <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -391,7 +427,7 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                    {/* <Col span={6}>
                       <FormItem>
                         <Select placeholder="Search Type" defaultValue="name">
                           <Option value="name">Holder Name</Option>
@@ -406,12 +442,12 @@ class Data extends React.Component {
                           <Option value="number">Account Number</Option>
                         </Select>
                       </FormItem>
-                    </Col>
+                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={accountList}>
+                  <Table dataSource={filterdAccountList}>
                     <Column title="Holder Name" dataIndex="holder" key="holder" />
                     <Column title="Account Number" dataIndex="accountNumber" key="accountNumber" />
                     <Column
@@ -466,7 +502,7 @@ class Data extends React.Component {
                             <img
                               src={profileImageUrl}
                               alt="avatar"
-                              className="no_border"
+                              className="no_border mt"
                               onError={e => {
                                 e.target.onerror = null;
                                 e.target.src = profile_avatar;
