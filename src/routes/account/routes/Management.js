@@ -25,6 +25,7 @@ import {
 
 import { environment, commonUrl } from '../../../environments';
 import axios from 'axios';
+import moment from 'moment';
 import profile_avatar from '../../../assets/images/profile_avatar.png';
 import picture_attachment_avatar from '../../../assets/images/picture_attachment_avatar.jpg';
 
@@ -32,24 +33,6 @@ const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
 const dateFormat = 'YYYY-MM-DD';
-
-function getBase64Test2(img, callback) {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result));
-  reader.readAsDataURL(img);
-}
-
-function beforeUploadTest2(file) {
-  const isJPG = file.type === 'image/jpeg';
-  if (!isJPG) {
-    message.error('You can only upload JPG file!');
-  }
-  const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isLt2M) {
-    message.error('Image must smaller than 2MB!');
-  }
-  return isJPG && isLt2M;
-}
 
 function getBase64(img, callback) {
   const reader = new FileReader();
@@ -69,13 +52,29 @@ function beforeUpload(file) {
   return isJpgOrPng && isLt2M;
 }
 
+function convertImgToBase64URL(url, callback, outputFormat) {
+  var img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = function() {
+    var canvas = document.createElement('CANVAS'),
+      ctx = canvas.getContext('2d'),
+      dataURL;
+    canvas.height = img.height;
+    canvas.width = img.width;
+    ctx.drawImage(img, 0, 0);
+    dataURL = canvas.toDataURL(outputFormat);
+    callback(dataURL);
+    canvas = null;
+  };
+  img.src = url;
+}
+
 class Data extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
     this.state = {
       accountList: [],
-      filterdAccountList: [],
       selectedAccount: undefined,
       kycModalVisible: false,
       kycImgModalVisible: false,
@@ -84,9 +83,9 @@ class Data extends React.Component {
       loadingKYC: false,
       profileImageUrl: undefined,
       identityImage: undefined,
+      dob: undefined,
       loading: false,
       kycImgError: false,
-      searchText: '',
     };
   }
 
@@ -111,7 +110,6 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             accountList: accountList,
-            filterdAccountList: accountList,
           });
       })
       .catch(error => {
@@ -125,12 +123,13 @@ class Data extends React.Component {
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         let selectedAccount = response.data.content;
+        this.updateAccount(selectedAccount);
         axios
           .get(environment.baseUrl + 'maintenance/account/' + selectedAccount.id)
           .then(response => {
             console.log('------------------- response - ', response.data.content);
             selectedAccount['simRegistry'] = response.data.content;
-            this.updateAccount(selectedAccount);
+            this.UpdateIdentityImage(selectedAccount);
             console.log('------------------- selectedAccount - ', selectedAccount);
           })
           .catch(error => {
@@ -143,13 +142,22 @@ class Data extends React.Component {
       });
   }
 
+  UpdateIdentityImage(selectedAccount) {
+    let newThis = this;
+    const url = environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id;
+    convertImgToBase64URL(url, function(base64Img) {
+      newThis._isMounted &&
+        newThis.setState({
+          identityImage: base64Img,
+        });
+    });
+  }
+
   updateAccount(selectedAccount) {
     this._isMounted &&
       this.setState({
         selectedAccount: selectedAccount,
         profileImageUrl: environment.baseUrl + 'file/downloadImg/account/' + selectedAccount.id,
-        // identityImage:
-        //   environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id,
       });
   }
 
@@ -174,11 +182,11 @@ class Data extends React.Component {
     let value = false;
     if (key === 'kycModalVisible') {
       value = !this.state.kycModalVisible;
-      // if (value) {
-      //   this.props.form.setFieldsValue({
-      //     identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
-      //   });
-      // }
+      if (value) {
+        this.props.form.setFieldsValue({
+          identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
+        });
+      }
     } else if (key === 'simNoModalVisible') {
       value = !this.state.simNoModalVisible;
       if (value) {
@@ -191,14 +199,14 @@ class Data extends React.Component {
       }
     } else if (key === 'dobModalVisible') {
       value = !this.state.dobModalVisible;
-      // if (value) {
-      //   this.props.form.setFieldsValue({
-      //     dob:
-      //       selectedAccount.simRegistry && selectedAccount.simRegistry.dob
-      //         ? selectedAccount.simRegistry.dob
-      //         : '',
-      //   });
-      // }
+      if (value) {
+        this.props.form.setFieldsValue({
+          dob:
+            selectedAccount.simRegistry && selectedAccount.simRegistry.dob
+              ? moment(selectedAccount.simRegistry.dob, dateFormat)
+              : '',
+        });
+      }
     } else if (key === 'kycImgModalVisible') {
       value = !this.state.kycImgModalVisible;
     }
@@ -217,7 +225,7 @@ class Data extends React.Component {
     }
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64Test2(info.file.originFileObj, identityImage => {
+      getBase64(info.file.originFileObj, identityImage => {
         this.setState({
           identityImage,
           loadingKYC: false,
@@ -241,7 +249,6 @@ class Data extends React.Component {
             loading: false,
           },
           () => {
-            // console.log(this.state.profileImageUrl.split(',').pop());
             if (this.state.profileImageUrl && this.state.selectedAccount) {
               axios
                 .post(environment.baseUrl + 'file/commonImageUpload', {
@@ -269,40 +276,7 @@ class Data extends React.Component {
     }
   };
 
-  searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
-  };
-
-  dataFilter = (key, value) => {
-    this._isMounted &&
-      this.setState(
-        {
-          [key]: value,
-        },
-        () => {
-          let data = this.state.accountList;
-          let searchText = this.state.searchText;
-
-          if (searchText) {
-            data = data.filter(d => {
-              return (
-                d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.accountNumber.toLowerCase().includes(searchText.toLowerCase())
-              );
-            });
-          }
-
-          this._isMounted &&
-            this.setState({
-              filterdAccountList: data,
-            });
-        }
-      );
-  };
-
   submitKYC = () => {
-    console.log(this.state);
-
     const { selectedAccount, identityImage } = this.state;
     if (selectedAccount !== undefined) {
       this.props.form.validateFields(['identityNo'], (err, values) => {
@@ -316,7 +290,8 @@ class Data extends React.Component {
               .then(response => {
                 console.log('------------------- response - ', response.data.content);
                 this.toggleModal('kycModalVisible');
-                window.location.reload();
+                selectedAccount.identityNo = values.identityNo;
+                this.updateAccount(selectedAccount);
               })
               .catch(error => {
                 console.log('------------------- error - ', error);
@@ -332,11 +307,8 @@ class Data extends React.Component {
   };
 
   submitSIMNO = () => {
-    console.log(this.state);
-
     this.props.form.validateFields(['simNo'], (err, values) => {
       if (!err) {
-        console.log(values);
         const { selectedAccount } = this.state;
         if (selectedAccount.simRegistry !== undefined) {
           selectedAccount.simRegistry.simNo = values.simNo;
@@ -349,7 +321,6 @@ class Data extends React.Component {
   submitDob = () => {
     this.props.form.validateFields(['dob'], (err, values) => {
       if (!err) {
-        console.log(values);
         const { selectedAccount } = this.state;
         if (selectedAccount.simRegistry !== undefined) {
           this.updateSimRegistry('dobModalVisible');
@@ -359,33 +330,33 @@ class Data extends React.Component {
   };
 
   searchDateHandler = (date, dateString) => {
-    const { selectedAccount } = this.state;
-    selectedAccount.simRegistry.dob = dateString;
     this.setState({
-      selectedAccount: selectedAccount,
+      dob: dateString,
     });
   };
 
   updateSimRegistry(key) {
-    console.log(this.state);
-
-    const { selectedAccount } = this.state;
-    console.log(selectedAccount.simRegistry);
+    const { selectedAccount, dob } = this.state;
     if (selectedAccount.simRegistry !== undefined) {
       axios
         .put(environment.baseUrl + 'maintenance/updateRegistry', {
           id: selectedAccount.simRegistry.id,
           simNo: selectedAccount.simRegistry.simNo,
-          dob: selectedAccount.simRegistry.dob,
+          dob: dob,
         })
         .then(response => {
           console.log('------------------- response - ', response.data.content);
+          selectedAccount.simRegistry.dob = dob;
           this.toggleModal(key);
         })
         .catch(error => {
           console.log('------------------- error - ', error);
         });
     }
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   render() {
@@ -399,7 +370,6 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
     const {
       accountList,
-      filterdAccountList,
       selectedAccount,
       kycModalVisible,
       kycImgModalVisible,
@@ -427,7 +397,7 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    {/* <Col span={6}>
+                    <Col span={6}>
                       <FormItem>
                         <Select placeholder="Search Type" defaultValue="name">
                           <Option value="name">Holder Name</Option>
@@ -442,12 +412,12 @@ class Data extends React.Component {
                           <Option value="number">Account Number</Option>
                         </Select>
                       </FormItem>
-                    </Col> */}
+                    </Col>
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={filterdAccountList}>
+                  <Table dataSource={accountList}>
                     <Column title="Holder Name" dataIndex="holder" key="holder" />
                     <Column title="Account Number" dataIndex="accountNumber" key="accountNumber" />
                     <Column
@@ -502,7 +472,7 @@ class Data extends React.Component {
                             <img
                               src={profileImageUrl}
                               alt="avatar"
-                              className="no_border mt"
+                              className="no_border"
                               onError={e => {
                                 e.target.onerror = null;
                                 e.target.src = profile_avatar;
@@ -527,7 +497,6 @@ class Data extends React.Component {
                           {selectedAccount.accountNumber ? selectedAccount.accountNumber : ' - '}
                         </h5>
                       </div>
-                      <div></div>
                     </article>
                   </div>
 
@@ -536,11 +505,7 @@ class Data extends React.Component {
                       <h4>Identity Card Details</h4>
                       <div className="divider divider-solid my-4" />
                       <img
-                        src={
-                          environment.baseUrl +
-                          'file/downloadImg/identification/' +
-                          selectedAccount.id
-                        }
+                        src={identityImage}
                         alt="avatar"
                         className="no_border"
                         onError={e => {
@@ -548,14 +513,8 @@ class Data extends React.Component {
                           e.target.src = picture_attachment_avatar;
                         }}
                       />
-                      {/* {selectedAccount.identityImg && (
-                        <>
-                          <Alert
-                            message="Identity Attachment"
-                            // description="Detailed description and advices about successful copywriting."
-                            type="success"
-                            // showIcon
-                          />
+                      {selectedAccount.identityImg && (
+                        <div className="mt-1 mb-4">
                           <Button
                             className="mt-2"
                             type="default"
@@ -564,13 +523,8 @@ class Data extends React.Component {
                             size="default"
                             onClick={() => this.toggleModal('kycImgModalVisible')}
                           />
-                        </>
+                        </div>
                       )}
-
-                      {selectedAccount.identityImg === null && (
-                        <Alert message="No Identity Attachment" type="error" />
-                      )} */}
-
                       <div className="mt-4 mb-4">
                         <h5>
                           ID No -{' '}
@@ -730,11 +684,7 @@ class Data extends React.Component {
                   <Col span={24}>
                     <img
                       style={{ width: '100%' }}
-                      src={
-                        environment.baseUrl +
-                        'file/downloadImg/identification/' +
-                        this.state.selectedAccount.id
-                      }
+                      src={identityImage}
                       alt="avatar"
                       className="no_border"
                       onError={e => {
