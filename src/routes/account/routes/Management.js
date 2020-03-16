@@ -81,8 +81,8 @@ class Data extends React.Component {
       simNoModalVisible: false,
       dobModalVisible: false,
       loadingKYC: false,
-      profileImageUrl: undefined,
-      identityImage: undefined,
+      profileImageUrl: '',
+      identityImage: '',
       dob: undefined,
       loading: false,
       kycImgError: false,
@@ -123,18 +123,18 @@ class Data extends React.Component {
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         let selectedAccount = response.data.content;
-        this.updateAccount(selectedAccount);
+        this.UpdateIdentityImage(selectedAccount);
         axios
           .get(environment.baseUrl + 'maintenance/account/' + selectedAccount.id)
           .then(response => {
             console.log('------------------- response - ', response.data.content);
             selectedAccount['simRegistry'] = response.data.content;
-            this.UpdateIdentityImage(selectedAccount);
+            this.updateAccount(selectedAccount);
             console.log('------------------- selectedAccount - ', selectedAccount);
           })
           .catch(error => {
-            console.log('------------------- error - ', error);
             this.updateAccount(selectedAccount);
+            console.log('------------------- error - ', error);
           });
       })
       .catch(error => {
@@ -170,8 +170,8 @@ class Data extends React.Component {
         simNoModalVisible: false,
         dobModalVisible: false,
         loadingKYC: false,
-        profileImageUrl: undefined,
-        identityImage: undefined,
+        profileImageUrl: '',
+        identityImage: '',
         loading: false,
         kycImgError: false,
       });
@@ -267,7 +267,7 @@ class Data extends React.Component {
             } else {
               message.error('Something went wrong!');
               this.setState({
-                profileImageUrl: undefined,
+                profileImageUrl: '',
               });
             }
           }
@@ -281,7 +281,7 @@ class Data extends React.Component {
     if (selectedAccount !== undefined) {
       this.props.form.validateFields(['identityNo'], (err, values) => {
         if (!err) {
-          if (identityImage !== undefined) {
+          if (identityImage !== '') {
             axios
               .put(environment.baseUrl + 'account/updateKYC/' + selectedAccount.id, {
                 identityNo: values.identityNo,
