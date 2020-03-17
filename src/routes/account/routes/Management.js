@@ -126,10 +126,6 @@ class Data extends React.Component {
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const simProviderList = response.data.content;
-        // .map(provider => {
-        //   provider.key = provider.id;
-        //   return provider;
-        // });
         this._isMounted &&
           this.setState({
             simProviderList: simProviderList,
@@ -166,10 +162,8 @@ class Data extends React.Component {
   }
 
   dataFilter = e => {
-    console.log(e.target.value);
     let searchText = e.target.value;
     let data = this.state.accountList;
-
     if (data.length > 0 && searchText && searchText !== '') {
       data = data.filter(d => {
         return (
@@ -224,7 +218,7 @@ class Data extends React.Component {
   };
 
   toggleModal = key => {
-    const { selectedAccount, identityImage, tempIdentityImage } = this.state;
+    const { selectedAccount, identityImage } = this.state;
     let value = false;
     if (key === 'kycModalVisible') {
       value = !this.state.kycModalVisible;
@@ -293,7 +287,6 @@ class Data extends React.Component {
       return;
     }
     if (info.file.status === 'done') {
-      // Get this url from response in real world.
       getBase64(info.file.originFileObj, profileImageUrl =>
         this.setState(
           {
@@ -434,16 +427,19 @@ class Data extends React.Component {
 
   updateSimRegistry(key) {
     const { selectedAccount, dob } = this.state;
+    let newDob = dob !== undefined ? dob : selectedAccount.simRegistry.dob;
+    console.log(newDob);
+
     if (selectedAccount.simRegistry !== undefined) {
       axios
         .put(environment.baseUrl + 'maintenance/updateRegistry', {
           id: selectedAccount.simRegistry.id,
           simNo: selectedAccount.simRegistry.simNo,
-          dob: dob,
+          dob: newDob,
         })
         .then(response => {
           console.log('------------------- response - ', response.data.content);
-          selectedAccount.simRegistry.dob = dob;
+          selectedAccount.simRegistry.dob = newDob;
           this.toggleModal(key);
         })
         .catch(error => {
