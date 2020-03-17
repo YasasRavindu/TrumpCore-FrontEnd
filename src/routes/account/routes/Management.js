@@ -74,15 +74,20 @@ class Data extends React.Component {
     super(props);
     this._isMounted = false;
     this.state = {
+      pageNo: 1,
+      simProviderList: [],
       accountList: [],
+      filteredAccountList: [],
       selectedAccount: undefined,
       kycModalVisible: false,
       kycImgModalVisible: false,
       simNoModalVisible: false,
       dobModalVisible: false,
+      simRegModalVisible: false,
       loadingKYC: false,
       profileImageUrl: '',
       identityImage: '',
+      tempIdentityImage: '',
       dob: undefined,
       loading: false,
       kycImgError: false,
@@ -110,6 +115,24 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             accountList: accountList,
+            filteredAccountList: accountList,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+    axios
+      .get(environment.baseUrl + 'maintenance/searchProviders')
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const simProviderList = response.data.content;
+        // .map(provider => {
+        //   provider.key = provider.id;
+        //   return provider;
+        // });
+        this._isMounted &&
+          this.setState({
+            simProviderList: simProviderList,
           });
       })
       .catch(error => {
@@ -123,7 +146,7 @@ class Data extends React.Component {
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         let selectedAccount = response.data.content;
-        this.UpdateIdentityImage(selectedAccount);
+        this.updateIdentityImage(selectedAccount);
         axios
           .get(environment.baseUrl + 'maintenance/account/' + selectedAccount.id)
           .then(response => {
@@ -142,13 +165,33 @@ class Data extends React.Component {
       });
   }
 
-  UpdateIdentityImage(selectedAccount) {
+  dataFilter = e => {
+    console.log(e.target.value);
+    let searchText = e.target.value;
+    let data = this.state.accountList;
+
+    if (data.length > 0 && searchText && searchText !== '') {
+      data = data.filter(d => {
+        return (
+          d.holder.toLowerCase().includes(searchText.toLowerCase()) ||
+          d.accountNumber.toLowerCase().includes(searchText.toLowerCase())
+        );
+      });
+    }
+    this._isMounted &&
+      this.setState({
+        filteredAccountList: data,
+      });
+  };
+
+  updateIdentityImage(selectedAccount) {
     let newThis = this;
     const url = environment.baseUrl + 'file/downloadImg/identification/' + selectedAccount.id;
     convertImgToBase64URL(url, function(base64Img) {
       newThis._isMounted &&
         newThis.setState({
           identityImage: base64Img,
+          tempIdentityImage: base64Img,
         });
     });
   }
@@ -169,22 +212,29 @@ class Data extends React.Component {
         kycImgModalVisible: false,
         simNoModalVisible: false,
         dobModalVisible: false,
+        simRegModalVisible: false,
         loadingKYC: false,
         profileImageUrl: '',
         identityImage: '',
+        tempIdentityImage: '',
+        dob: undefined,
         loading: false,
         kycImgError: false,
       });
   };
 
   toggleModal = key => {
-    const { selectedAccount } = this.state;
+    const { selectedAccount, identityImage, tempIdentityImage } = this.state;
     let value = false;
     if (key === 'kycModalVisible') {
       value = !this.state.kycModalVisible;
       if (value) {
         this.props.form.setFieldsValue({
           identityNo: selectedAccount.identityNo === null ? '' : selectedAccount.identityNo,
+        });
+      } else {
+        this.setState({
+          tempIdentityImage: identityImage,
         });
       }
     } else if (key === 'simNoModalVisible') {
@@ -209,6 +259,8 @@ class Data extends React.Component {
       }
     } else if (key === 'kycImgModalVisible') {
       value = !this.state.kycImgModalVisible;
+    } else if (key === 'simRegModalVisible') {
+      value = !this.state.simRegModalVisible;
     }
 
     this._isMounted &&
@@ -225,9 +277,9 @@ class Data extends React.Component {
     }
     if (info.file.status === 'done') {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, identityImage => {
+      getBase64(info.file.originFileObj, tempIdentityImage => {
         this.setState({
-          identityImage,
+          tempIdentityImage,
           loadingKYC: false,
           kycImgError: false,
         });
@@ -277,21 +329,25 @@ class Data extends React.Component {
   };
 
   submitKYC = () => {
-    const { selectedAccount, identityImage } = this.state;
+    const { selectedAccount, tempIdentityImage } = this.state;
     if (selectedAccount !== undefined) {
       this.props.form.validateFields(['identityNo'], (err, values) => {
         if (!err) {
-          if (identityImage !== '') {
+          if (tempIdentityImage !== '') {
             axios
               .put(environment.baseUrl + 'account/updateKYC/' + selectedAccount.id, {
                 identityNo: values.identityNo,
-                identityImg: identityImage.split(',')[1],
+                identityImg: tempIdentityImage.split(',')[1],
               })
               .then(response => {
                 console.log('------------------- response - ', response.data.content);
-                this.toggleModal('kycModalVisible');
                 selectedAccount.identityNo = values.identityNo;
-                this.updateAccount(selectedAccount);
+                selectedAccount.identityImg = tempIdentityImage;
+                this.setState({
+                  selectedAccount,
+                  identityImage: tempIdentityImage,
+                });
+                this.toggleModal('kycModalVisible');
               })
               .catch(error => {
                 console.log('------------------- error - ', error);
@@ -329,9 +385,50 @@ class Data extends React.Component {
     });
   };
 
-  searchDateHandler = (date, dateString) => {
+  submitSimReg = () => {
+    const { selectedAccount, dob } = this.state;
+    this.props.form.validateFields(
+      ['firstName', 'lastName', 'gender', 'dob', 'simProvider', 'mobileNo', 'simNo'],
+      (err, values) => {
+        if (!err) {
+          axios
+            .post(environment.baseUrl + 'maintenance/saveRegistry', {
+              firstName: values.firstName,
+              lastName: values.lastName,
+              simNo: values.simNo,
+              mobileNo: values.mobileNo,
+              dob: dob,
+              gender: values.gender,
+              account: {
+                id: selectedAccount.id,
+              },
+              provider: {
+                id: values.simProvider,
+              },
+            })
+            .then(response => {
+              console.log('------------------- response - ', response.data.content);
+              this.toggleModal('simRegModalVisible');
+              this.props.form.resetFields();
+              this.viewAccount(selectedAccount.id);
+            })
+            .catch(error => {
+              console.log('------------------- error - ', error);
+            });
+        }
+      }
+    );
+  };
+
+  dateHandler = (date, dateString) => {
     this.setState({
       dob: dateString,
+    });
+  };
+
+  paginationHandler = (pageNo, pageSize) => {
+    this.setState({
+      pageNo,
     });
   };
 
@@ -369,14 +466,18 @@ class Data extends React.Component {
 
     const { getFieldDecorator } = this.props.form;
     const {
-      accountList,
+      pageNo,
+      simProviderList,
+      filteredAccountList,
       selectedAccount,
       kycModalVisible,
       kycImgModalVisible,
       simNoModalVisible,
       dobModalVisible,
+      simRegModalVisible,
       profileImageUrl,
       identityImage,
+      tempIdentityImage,
     } = this.state;
 
     return (
@@ -391,33 +492,28 @@ class Data extends React.Component {
                     <Col span={12}>
                       <FormItem>
                         <Input.Search
-                          placeholder="input search text"
-                          onChange={this.searchTextHandler}
+                          placeholder="Search here..."
+                          onChange={this.dataFilter}
                           style={{ width: '100% ' }}
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                    {/* <Col span={6}>
                       <FormItem>
                         <Select placeholder="Search Type" defaultValue="name">
                           <Option value="name">Holder Name</Option>
                           <Option value="number">Account Number</Option>
                         </Select>
                       </FormItem>
-                    </Col>
-                    <Col span={6}>
-                      <FormItem>
-                        <Select placeholder="Role" defaultValue="name">
-                          <Option value="name">Holder Name</Option>
-                          <Option value="number">Account Number</Option>
-                        </Select>
-                      </FormItem>
-                    </Col>
+                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={accountList}>
+                  <Table
+                    dataSource={filteredAccountList}
+                    pagination={{ current: pageNo, onChange: this.paginationHandler }}
+                  >
                     <Column title="Holder Name" dataIndex="holder" key="holder" />
                     <Column title="Account Number" dataIndex="accountNumber" key="accountNumber" />
                     <Column
@@ -504,50 +600,80 @@ class Data extends React.Component {
                     <article className="profile-card-v2 h-100">
                       <h4>Identity Card Details</h4>
                       <div className="divider divider-solid my-4" />
-                      <img
-                        src={identityImage}
-                        alt="avatar"
-                        className="no_border"
-                        onError={e => {
-                          e.target.onerror = null;
-                          e.target.src = picture_attachment_avatar;
-                        }}
-                      />
-                      {selectedAccount.identityImg && (
+
+                      {!(selectedAccount.identityImg && selectedAccount.identityNo) && (
                         <div className="mt-1 mb-4">
-                          <Button
-                            className="mt-2"
-                            type="default"
-                            shape="circle"
-                            icon="eye-o"
-                            size="default"
-                            onClick={() => this.toggleModal('kycImgModalVisible')}
-                          />
+                          <h3 className="hero-title">Not Updated Yet!</h3>
+                          <p className="hero-lead">
+                            KYC details have not yet updated. You can update it here.
+                          </p>
+                          <div className="hero-cta">
+                            <Button onClick={() => this.toggleModal('kycModalVisible')}>
+                              Update KYC
+                            </Button>
+                          </div>
                         </div>
                       )}
-                      <div className="mt-4 mb-4">
-                        <h5>
-                          ID No -{' '}
-                          {selectedAccount.identityNo ? selectedAccount.identityNo : ' NaN '}
-                        </h5>
-                      </div>
-                      <div>
-                        <Button
-                          type="default"
-                          shape="circle"
-                          icon="edit"
-                          size="default"
-                          onClick={() => this.toggleModal('kycModalVisible')}
-                        />
-                      </div>
+
+                      {selectedAccount.identityImg && selectedAccount.identityNo && (
+                        <>
+                          <img
+                            src={identityImage}
+                            alt="avatar"
+                            className="no_border"
+                            onError={e => {
+                              e.target.onerror = null;
+                              e.target.src = picture_attachment_avatar;
+                            }}
+                          />
+                          <div className="mt-1 mb-4">
+                            <Button
+                              className="mt-2"
+                              type="default"
+                              shape="circle"
+                              icon="eye-o"
+                              size="default"
+                              onClick={() => this.toggleModal('kycImgModalVisible')}
+                            />
+                          </div>
+                          <div className="mt-4 mb-4">
+                            <h5>ID No -{selectedAccount.identityNo}</h5>
+                          </div>
+                          <div>
+                            <Button
+                              type="default"
+                              shape="circle"
+                              icon="edit"
+                              size="default"
+                              onClick={() => this.toggleModal('kycModalVisible')}
+                            />
+                          </div>
+                        </>
+                      )}
                     </article>
                   </div>
 
-                  {selectedAccount.simRegistry && (
-                    <div className="col-lg-4 mb-4">
-                      <article className="profile-card-v2 h-100">
-                        <h4>Sim Registry Details</h4>
-                        <div className="divider divider-solid my-4" />
+                  <div className="col-lg-4 mb-4">
+                    <article className="profile-card-v2 h-100">
+                      <h4>SIM Registry Details</h4>
+                      <div className="divider divider-solid my-4" />
+
+                      {selectedAccount.simRegistry === undefined && (
+                        <div className="mt-1 mb-4">
+                          <h3 className="hero-title">No SIM Registry Details!</h3>
+                          <p className="hero-lead">
+                            There is no SIM Registry Record for this Account. If you need, You can
+                            create it here.
+                          </p>
+                          <div className="hero-cta">
+                            <Button onClick={() => this.toggleModal('simRegModalVisible')}>
+                              Add SIM Registry Details
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedAccount.simRegistry && (
                         <div className="mt-4 mb-4">
                           <Row>
                             <Col span={24}>
@@ -604,9 +730,9 @@ class Data extends React.Component {
                             </Col>
                           </Row>
                         </div>
-                      </article>
-                    </div>
-                  )}
+                      )}
+                    </article>
+                  </div>
                 </div>
               </article>
 
@@ -634,9 +760,9 @@ class Data extends React.Component {
                         beforeUpload={beforeUpload}
                         onChange={this.handleChangeKYC}
                       >
-                        {identityImage ? (
+                        {tempIdentityImage ? (
                           <img
-                            src={identityImage}
+                            src={tempIdentityImage}
                             alt="avatar"
                             style={{ width: '100%' }}
                             className="no_border"
@@ -714,7 +840,7 @@ class Data extends React.Component {
                               message: 'Please enter your simNo',
                             },
                           ],
-                        })(<Input placeholder="Sim No" />)}
+                        })(<Input placeholder="SIM No" />)}
                       </FormItem>
                     </Form>
                   </Col>
@@ -739,11 +865,133 @@ class Data extends React.Component {
                               message: 'Please enter your Birthday',
                             },
                           ],
-                        })(<DatePicker onChange={this.searchDateHandler} format={dateFormat} />)}
+                        })(<DatePicker onChange={this.dateHandler} format={dateFormat} />)}
                       </FormItem>
                     </Form>
                   </Col>
                 </Row>
+              </Modal>
+
+              <Modal
+                title="SIM Registration"
+                visible={simRegModalVisible}
+                onOk={this.submitSimReg}
+                onCancel={() => this.toggleModal('simRegModalVisible')}
+                centered
+              >
+                <Form>
+                  <Row gutter={24}>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('firstName', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please enter First Name',
+                            },
+                          ],
+                        })(<Input placeholder="First Name" />)}
+                      </FormItem>
+                    </Col>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('lastName', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please enter Last Name',
+                            },
+                          ],
+                        })(<Input placeholder="Last Name" />)}
+                      </FormItem>
+                    </Col>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('gender', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please select Gender.',
+                            },
+                          ],
+                        })(
+                          <Select placeholder="Gender">
+                            <Option value="M">Male</Option>
+                            <Option value="F">Female</Option>
+                            <Option value="O">Other</Option>
+                          </Select>
+                        )}
+                      </FormItem>
+                    </Col>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('dob', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please enter your Birthday',
+                            },
+                          ],
+                        })(
+                          <DatePicker
+                            onChange={this.dateHandler}
+                            format={dateFormat}
+                            placeholder="Birthday"
+                            style={{ width: '100%' }}
+                          />
+                        )}
+                      </FormItem>
+                    </Col>
+
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('simProvider', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please select SIM Provider.',
+                            },
+                          ],
+                        })(
+                          <Select placeholder="SIM Provider">
+                            {simProviderList &&
+                              simProviderList.map(provider => {
+                                return (
+                                  <Option key={provider.id} value={provider.id}>
+                                    {provider.providerName}
+                                  </Option>
+                                );
+                              })}
+                          </Select>
+                        )}
+                      </FormItem>
+                    </Col>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('mobileNo', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please enter your mobileNo',
+                            },
+                          ],
+                        })(<Input placeholder="Mobile No" />)}
+                      </FormItem>
+                    </Col>
+                    <Col span={12}>
+                      <FormItem>
+                        {getFieldDecorator('simNo', {
+                          rules: [
+                            {
+                              required: true,
+                              message: 'Please enter your simNo',
+                            },
+                          ],
+                        })(<Input placeholder="SIM No" />)}
+                      </FormItem>
+                    </Col>
+                  </Row>
+                </Form>
               </Modal>
             </>
           )}
