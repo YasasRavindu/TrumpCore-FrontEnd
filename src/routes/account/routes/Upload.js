@@ -1,43 +1,12 @@
 import React from 'react';
-import { Icon, Upload, message, Button, Table } from 'antd';
+import { Icon, Upload, message, Button, Table, Empty } from 'antd';
 import QueueAnim from 'rc-queue-anim';
-import CSVReader from 'react-csv-reader';
+import { CSVReader } from 'react-papaparse';
+import axios from 'axios';
+import { environment, commonUrl } from '../../../environments';
 const definedHeader = ['purseName', 'purseUserLastName', 'mobileNumber', 'dob', 'gender'];
 
-const Dragger = Upload.Dragger;
 const { Column, ColumnGroup } = Table;
-
-// const props = {
-//   name: 'file',
-//   multiple: false,
-//   action: '//jsonplaceholder.typicode.com/posts/',
-//   onChange(info) {
-//     console.log('---info', info);
-
-//     const status = info.file.status;
-//     if (status !== 'uploading') {
-//       console.log(info.file, info.fileList);
-//     }
-//     if (status === 'done') {
-//       message.success(`${info.file.name} file uploaded successfully.`);
-//     } else if (status === 'error') {
-//       message.error(`${info.file.name} file upload failed.`);
-//     }
-//   },
-// };
-
-const handleForce = (data, fileName) => {
-  console.log(data, fileName);
-
-  const headerCheck = definedHeader.some(r => data[0].indexOf(r) >= 0);
-  if (headerCheck) {
-    const i = 0;
-    const dataList = data.slice(0, i).concat(data.slice(i + 1, data.length));
-    console.log('datalist========', dataList);
-  } else {
-    message.error("Uploaded csv header doesn't match");
-  }
-};
 
 const tableData = [
   { key: 1, AccountNo: '1234567', reason: 'wrong account number' },
@@ -51,8 +20,110 @@ const tableData = [
 class UploadAccount extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      showBtn: false,
+      csvObject: {},
+      csvAccount: 0,
+    };
   }
+
+  onDrop = data => {
+    console.log('=====data', data);
+    this.setState({
+      showBtn: false,
+    });
+    const headerCheck = definedHeader.some(r => data[0].data.indexOf(r) >= 0);
+
+    if (headerCheck) {
+      const i = 0;
+      const dataList = data
+        .slice(0, i)
+        .concat(data.slice(i + 1, data.length))
+        .map(d => d.data);
+      let nullCount = 0;
+      dataList.forEach(element => {
+        const checkValue = element.includes('');
+        if (checkValue) {
+          nullCount++;
+        }
+      });
+      if (nullCount === 0) {
+        let account = 0;
+        let obj = {};
+        let dataObject = {};
+        dataList.map((data, index) => {
+          dataObject = {
+            purseName: data[0],
+            purseUserLastName: data[1],
+            mobileNumber: data[2],
+            dob: data[3],
+            gender: data[4],
+          };
+          obj[index] = dataObject;
+          account++;
+        });
+        //console.log(obj, account);
+
+        if (obj && account > 0) {
+          this.setState({
+            showBtn: true,
+            csvObject: obj,
+            csvAccount: account,
+          });
+        } else {
+          message.error('Something Wrong');
+        }
+      } else {
+        message.error(
+          'We have identified ' +
+            nullCount +
+            ' empty values in your CSV file. Please fill them out and upload again.'
+        );
+      }
+    } else {
+      message.error("Uploaded csv header doesn't match");
+    }
+  };
+
+  onError = (err, file, inputElem, reason) => {
+    console.log(err);
+    message.error(err);
+  };
+
+  dataParse = () => {
+    console.log('====show', this.state.showBtn, this.state.csvObject, this.state.csvAccount);
+    // let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    // if (currentUser.id) {
+    //   //console.log(currentUser.id);
+    //   axios
+    //     .post(environment.baseUrl + 'maintenance/bulkAccount', {
+    //       accounts: this.state.csvAccount,
+    //       user: {
+    //         id: currentUser.id,
+    //       },
+    //       records: [this.state.csvObject],
+    //     })
+    //     .then(response => {
+    //       console.log('------------------- response - ', response);
+    // this.setState({
+    //   showBtn:false,
+    //   csvObject:{},
+    //   csvAccount:0
+    // })
+    //     })
+    //     .catch(error => {
+    //       console.log('------------------- error - ', error);
+    // this.setState({
+    //   showBtn:false,
+    //   csvObject:{},
+    //   csvAccount:0
+    // })
+    //     });
+    // } else {
+    //   message.error("Couldn't verify your credentials. Please sign in again and try uploading.");
+    // }
+  };
+
   render() {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -62,21 +133,23 @@ class UploadAccount extends React.Component {
               <div className="number-card-v1 mb-4">
                 <div className="box box-default">
                   <div className="box-body">
-                    {/* <Dragger {...props}>
-                      <p className="ant-upload-drag-icon">
-                        <Icon type="inbox" />
-                      </p>
-                      <p className="ant-upload-text">Click or drag file to this area to upload</p>
-                      <p className="ant-upload-hint">
-                        Support for a single or bulk upload. Strictly prohibit from uploading
-                        company data or other band files
-                      </p>
-                    </Dragger> */}
                     <CSVReader
-                      cssClass="react-csv-input"
-                      label="Upload"
-                      onFileLoaded={handleForce}
-                    />
+                      onDrop={this.onDrop}
+                      onError={this.onError}
+                      style={{ maxHeight: 140 }}
+                      config={{ skipEmptyLines: true }}
+                    >
+                      <span>Drop CSV file here or click to upload.</span>
+                    </CSVReader>
+                    {this.state.showBtn && (
+                      <Button
+                        type="primary"
+                        className="float-right mt-2"
+                        onClick={() => this.dataParse()}
+                      >
+                        submit
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
