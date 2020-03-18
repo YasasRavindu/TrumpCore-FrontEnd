@@ -5,4 +5,5 @@ export const environment = {
   //baseUrl: 'http://172.16.160.219:10001/api/', //PROD_Old
   //baseUrl: 'http://103.21.251.245:10001/api/', //PROD
   //baseUrl: 'http://trumpcore.mobilecash.sb:10001/api/', //PROD new http://trumpcore.trumpcode.com
+
 };
