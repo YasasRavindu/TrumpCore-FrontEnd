@@ -106,12 +106,12 @@ const treeData = [
     key: '11',
   },
   {
-    title: 'TELKO',
+    title: 'B Mobile',
     value: '12',
     key: '12',
   },
   {
-    title: 'B Mobile',
+    title: 'TELKO',
     value: '13',
     key: '13',
   },
@@ -263,7 +263,6 @@ class Data extends React.Component {
       }
     );
   };
-
 
   dataFilter = () => {
     let data = this.state.loadLog;
