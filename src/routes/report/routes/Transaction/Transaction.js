@@ -18,6 +18,7 @@ import {
   Modal,
   Divider,
   ConfigProvider,
+  Pagination,
 } from 'antd';
 import { environment } from '../../../../environments';
 import axios from 'axios';
@@ -36,6 +37,16 @@ const customizeRenderEmpty = () => (
     <Tag color="orange">Please filter any of the above fields to get the reports.</Tag>
   </div>
 );
+
+const columnList = [
+  { label: 'Account Holder', value: 'account' },
+  { label: 'Account No', value: 'accountNo' },
+  { label: 'Serial No', value: 'serial' },
+  { label: 'Device Account Name', value: 'deviceAccount' },
+  { label: 'Device Account No', value: 'deviceAccountNo' },
+  { label: 'Merchant Account Name', value: 'merchant' },
+  { label: 'Merchant Account No', value: 'merchantNo' },
+];
 
 const csvHeader = [
   { label: 'Account Holder', key: 'holder' },
@@ -134,13 +145,16 @@ const { Column, ColumnGroup } = Table;
 class Data extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       loadLog: [],
-      loadFilterLog: [],
       searchDate: ['', ''],
+      searchColumn: 'account',
       searchText: '',
       searchType: [],
-      inputValue: 1,
+      pageSize: 10,
+      pageNumber: 1,
+      totalRecord: 0,
       logRequest: {},
       logResponse: {},
       visible: false,
@@ -150,32 +164,78 @@ class Data extends React.Component {
   }
 
   async componentDidMount() {
-    // this.loadTable();
+    this.loadTable();
   }
 
   loadTable = () => {
     axios
-      .get(environment.baseUrl + 'report/allLogs')
+      .post(environment.baseUrl + 'report/log/filterSearch', this.createReqBody())
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const logList = response.data.content.map(log => {
+        let data = response.data;
+        const logList = data.content.map(log => {
           log.key = log.id;
           return log;
         });
-
         this.setState(
           {
             loadLog: logList,
-            loadFilterLog: logList,
+            totalRecord: data.pagination.totalRecords,
           },
           () => {
-            this.dataFilter();
+            console.log(this.state);
           }
         );
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
+  };
+
+  createReqBody() {
+    console.log(this.state);
+    let { searchDate, searchColumn, searchText, searchType, pageSize, pageNumber } = this.state;
+
+    let reqBody = {
+      context: 'all',
+      colName: '',
+      colValue: '',
+      types: [],
+      startDate: null,
+      endDate: null,
+      pageSize: pageSize,
+      pageNumber: pageNumber,
+    };
+    if (
+      searchText !== '' ||
+      searchType.length > 0 ||
+      searchDate[0] !== '' ||
+      searchDate[1] !== ''
+    ) {
+      reqBody.context = 'filter';
+      reqBody.colName = searchColumn;
+      reqBody.colValue = searchText;
+      reqBody.types = searchType;
+      reqBody.startDate = searchDate[0] === '' ? null : `${searchDate[0]} 00:00:00`;
+      reqBody.endDate = searchDate[1] === '' ? null : `${searchDate[1]} 00:00:00`;
+    }
+    return reqBody;
+  }
+
+  paginationHandler = (pageNumber, pageSize) => {
+    this.setState(
+      {
+        pageNumber,
+        pageSize,
+      },
+      () => {
+        this.loadTable();
+      }
+    );
+  };
+
+  pageSizeHandler = (pageNumber, pageSize) => {
+    this.paginationHandler(1, pageSize);
   };
 
   exportPDF = () => {
@@ -204,7 +264,7 @@ class Data extends React.Component {
       ],
     ];
 
-    const realData = this.state.loadFilterLog.map(d => [
+    const realData = this.state.loadLog.map(d => [
       d.holder ? d.holder : 'N/A',
       d.accountNo ? d.accountNo : 'N/A',
       d.serial ? d.serial : 'N/A',
@@ -236,87 +296,38 @@ class Data extends React.Component {
   };
 
   searchTextHandler = e => {
-    this.setFilters('searchText', e.target.value);
+    let keyWord = e.target.value;
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+    this.timeout = setTimeout(
+      function() {
+        this.setFilters('searchText', keyWord);
+      }.bind(this),
+      3000
+    );
+  };
+
+  searchColumnHandler = v => {
+    this.setFilters('searchColumn', v);
   };
   searchTypeHandler = v => {
     this.setFilters('searchType', v);
-  };
-
-  onChange = value => {
-    this.setState({
-      inputValue: value,
-    });
   };
 
   setFilters = (key, value) => {
     this.setState(
       {
         [key]: value,
-        loading: true,
+        pageNumber: 1,
       },
       () => {
-        if (this.state.loadLog.length > 0) {
-          this.dataFilter();
-        } else {
-          this.loadTable();
-        }
+        this.loadTable();
       }
     );
   };
 
-  dataFilter = () => {
-    let data = this.state.loadLog;
-    let searchDate = this.state.searchDate;
-    let searchText = this.state.searchText;
-    let searchType = this.state.searchType;
-    if (
-      searchText ||
-      (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
-      searchType.length > 0
-    ) {
-      let returnable;
-      data = data.filter(d => {
-        returnable = true;
-        if (returnable && searchText) {
-          returnable =
-            (d.holder && d.holder.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.accountNo && d.accountNo.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.serial && d.serial.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.merchantAccNo && d.merchantAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.merchantName && d.merchantName.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.deviceAccNo && d.deviceAccNo.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.deviceAcctName &&
-              d.deviceAcctName.toLowerCase().includes(searchText.toLowerCase())) ||
-            (d.amount && d.amount.toString().includes(searchText.toLowerCase()));
-        }
-        if (returnable && searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-          var startDate = moment(searchDate[0]);
-          var endDate = moment(searchDate[1]);
-          var date = moment(d.logTime);
-          returnable = date.isAfter(startDate) && date.isBefore(endDate);
-        }
-
-        if (returnable && searchType.length > 0) {
-          returnable = searchType.includes(d.type.toString());
-        }
-        return returnable;
-      });
-    }
-
-    this.setState(
-      {
-        loadFilterLog: data,
-        loading: false,
-      },
-      () => {
-        if (this.state.loadFilterLog.length <= 0) {
-          this.setState({
-            customize: false,
-          });
-        }
-      }
-    );
-  };
   viewLog = id => {
     axios
       .get(environment.baseUrl + 'report/log/' + id)
@@ -367,19 +378,29 @@ class Data extends React.Component {
   };
 
   render() {
-    const { getFieldDecorator } = this.props.form;
+    const {
+      customize,
+      loading,
+      loadLog,
+      visible,
+      logRequest,
+      logResponse,
+      searchType,
+      totalRecord,
+      pageNumber,
+    } = this.state;
+
     const tProps = {
       treeData,
-      value: this.state.searchType,
+      value: searchType,
       onChange: this.searchTypeHandler,
       treeCheckable: true,
       showCheckedStrategy: SHOW_PARENT,
-      searchPlaceholder: 'Please select',
+      searchPlaceholder: 'Please Select',
       style: {
         width: '100%',
       },
     };
-    const { customize } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -398,7 +419,7 @@ class Data extends React.Component {
                   PDF
                 </Button>
                 <CSVLink
-                  data={this.state.loadFilterLog.map(d => ({
+                  data={loadLog.map(d => ({
                     holder: d.holder ? d.holder : 'N/A',
                     accountNo: d.accountNo ? d.accountNo : 'N/A',
                     serial: d.serial ? d.serial : 'N/A',
@@ -428,6 +449,20 @@ class Data extends React.Component {
                       </FormItem>
                     </Col>
                     <Col span={6}>
+                      <FormItem label="Search Column">
+                        <Select defaultValue="account" onChange={this.searchColumnHandler}>
+                          {columnList &&
+                            columnList.map(col => {
+                              return (
+                                <Option key={col.value} value={col.value}>
+                                  {col.label}
+                                </Option>
+                              );
+                            })}
+                        </Select>
+                      </FormItem>
+                    </Col>
+                    <Col span={6}>
                       <FormItem label="Log time">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
@@ -435,7 +470,7 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={8}>
+                    <Col span={6}>
                       <FormItem label="Transaction type">
                         <TreeSelect {...tProps} />
                       </FormItem>
@@ -447,10 +482,17 @@ class Data extends React.Component {
                   <ConfigProvider renderEmpty={customize && customizeRenderEmpty}>
                     <Table
                       //columns={columns}
-                      dataSource={this.state.loadFilterLog}
+                      dataSource={loadLog}
                       scroll={{ x: 1500, y: 400 }}
                       className="ant-table-v1"
-                      loading={this.state.loading}
+                      loading={loading}
+                      pagination={{
+                        showSizeChanger: true,
+                        total: totalRecord,
+                        onChange: this.paginationHandler,
+                        current: pageNumber,
+                        onShowSizeChange: this.pageSizeHandler,
+                      }}
                     >
                       <Column
                         title="Account Holder"
@@ -514,14 +556,9 @@ class Data extends React.Component {
             </div>
           </div>
         </QueueAnim>
-        <Modal
-          title="Log Details"
-          onCancel={this.handleCancel}
-          visible={this.state.visible}
-          footer={null}
-        >
+        <Modal title="Log Details" onCancel={this.handleCancel} visible={visible} footer={null}>
           <h3>Request</h3>
-          {Object.entries(this.state.logRequest).map(([key, value]) => {
+          {Object.entries(logRequest).map(([key, value]) => {
             return (
               <h4 key={key}>
                 {key} : {value}
@@ -530,7 +567,7 @@ class Data extends React.Component {
           })}
           <Divider type="horizontal" />
           <h3>Response</h3>
-          {Object.entries(this.state.logResponse).map(([key, value]) => {
+          {Object.entries(logResponse).map(([key, value]) => {
             return (
               <h4 key={key}>
                 {key} : {value}

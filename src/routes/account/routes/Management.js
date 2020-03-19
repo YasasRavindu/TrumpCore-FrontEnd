@@ -428,8 +428,6 @@ class Data extends React.Component {
   updateSimRegistry(key) {
     const { selectedAccount, dob } = this.state;
     let newDob = dob !== undefined ? dob : selectedAccount.simRegistry.dob;
-    console.log(newDob);
-
     if (selectedAccount.simRegistry !== undefined) {
       axios
         .put(environment.baseUrl + 'maintenance/updateRegistry', {
