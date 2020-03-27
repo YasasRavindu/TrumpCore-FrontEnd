@@ -94,6 +94,13 @@ export const REPORT = [
     children: REPORTCARDS,
     authorityCode: USER_AUTHORITY_CODE.REPORT_CARDS,
   },
+  {
+    name: 'Report - CoreBank',
+    menuName: 'CoreBank',
+    desc: 'Report - CoreBank - Description',
+    path: '/app/report/corebank',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_COREBANK,
+  },
 ];
 export const ACCOUNT = [
   {
@@ -109,6 +116,15 @@ export const ACCOUNT = [
     desc: 'Account Management - Account - Description',
     path: '/app/account/management',
     authorityCode: USER_AUTHORITY_CODE.ACCOUNT_MANAGEMENT,
+  },
+];
+export const PAYEE_SERVICES = [
+  {
+    name: 'Salary Upload - Payee service',
+    menuName: 'Salary Upload',
+    desc: 'Salary Upload - Payee service - Description',
+    path: '/app/payeeService/salaryUpload',
+    authorityCode: USER_AUTHORITY_CODE.SALARY_UPLOAD,
   },
 ];
 

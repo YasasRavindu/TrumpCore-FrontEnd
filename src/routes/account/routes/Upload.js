@@ -92,36 +92,36 @@ class UploadAccount extends React.Component {
 
   dataParse = () => {
     console.log('====show', this.state.showBtn, this.state.csvObject, this.state.csvAccount);
-    // let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    // if (currentUser.id) {
-    //   //console.log(currentUser.id);
-    //   axios
-    //     .post(environment.baseUrl + 'maintenance/bulkAccount', {
-    //       accounts: this.state.csvAccount,
-    //       user: {
-    //         id: currentUser.id,
-    //       },
-    //       records: [this.state.csvObject],
-    //     })
-    //     .then(response => {
-    //       console.log('------------------- response - ', response);
-    // this.setState({
-    //   showBtn:false,
-    //   csvObject:{},
-    //   csvAccount:0
-    // })
-    //     })
-    //     .catch(error => {
-    //       console.log('------------------- error - ', error);
-    // this.setState({
-    //   showBtn:false,
-    //   csvObject:{},
-    //   csvAccount:0
-    // })
-    //     });
-    // } else {
-    //   message.error("Couldn't verify your credentials. Please sign in again and try uploading.");
-    // }
+    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser.id) {
+      //console.log(currentUser.id);
+      axios
+        .post(environment.baseUrl + 'maintenance/bulkAccount', {
+          accounts: this.state.csvAccount,
+          user: {
+            id: currentUser.id,
+          },
+          records: [this.state.csvObject],
+        })
+        .then(response => {
+          console.log('------------------- response - ', response);
+          this.setState({
+            showBtn: false,
+            csvObject: {},
+            csvAccount: 0,
+          });
+        })
+        .catch(error => {
+          console.log('------------------- error - ', error);
+          this.setState({
+            showBtn: false,
+            csvObject: {},
+            csvAccount: 0,
+          });
+        });
+    } else {
+      message.error("Couldn't verify your credentials. Please sign in again and try uploading.");
+    }
   };
 
   render() {
