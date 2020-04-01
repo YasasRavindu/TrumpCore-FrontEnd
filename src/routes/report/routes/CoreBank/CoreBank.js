@@ -37,6 +37,11 @@ const columns = [
     key: 'TransactionTypeName',
   },
   {
+    title: 'Transaction Date',
+    dataIndex: 'TransactionDate',
+    key: 'TransactionDate',
+  },
+  {
     title: 'Sender Account',
     dataIndex: 'SenderAccount',
     key: 'SenderAccount',
@@ -197,6 +202,9 @@ class Data extends React.Component {
           console.log('------------------- response - ', response.data.content);
           const transactionRecord = response.data.content.map(record => {
             record.key = record.TransactionId;
+            record.TransactionDate = record.TransactionDate
+              ? moment(record.TransactionDate).format('MMMM Do YYYY, h:mm:ss a')
+              : 'N/A';
             return record;
           });
 
@@ -223,14 +231,10 @@ class Data extends React.Component {
       <React.Fragment>
         <Row>
           <Col span={6}>
-            <Tag color={'geekblue'}>Transaction Date</Tag>
+            <Tag color={'geekblue'}>TC Transaction Type</Tag>
           </Col>
           <Col span={6}>
-            <p>
-              {record.TransactionDate
-                ? moment(record.TransactionDate).format('MMMM Do YYYY, h:mm:ss a')
-                : 'N/A'}
-            </p>
+            <p>{record.TC_TransactionType ? record.TC_TransactionType : 'N/A'}</p>
           </Col>
           <Col span={6}>
             <Tag color={'geekblue'}>Sender Account Name</Tag>
@@ -293,14 +297,6 @@ class Data extends React.Component {
           </Col>
           <Col span={6}>
             <p>{record.ChannelType ? record.ChannelType : 'N/A'}</p>
-          </Col>
-        </Row>
-        <Row>
-          <Col span={6}>
-            <Tag color={'geekblue'}>TC Transaction Type</Tag>
-          </Col>
-          <Col span={6}>
-            <p>{record.TC_TransactionType ? record.TC_TransactionType : 'N/A'}</p>
           </Col>
         </Row>
       </React.Fragment>

@@ -168,19 +168,26 @@ class Data extends React.Component {
   }
 
   loadTable = () => {
+    let { pageSize, pageNumber } = this.state;
+    this.setState({
+      loading: true,
+    });
     axios
       .post(environment.baseUrl + 'report/log/filterSearch', this.createReqBody())
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         let data = response.data;
+        let i = pageSize * pageNumber - (pageSize - 1);
         const logList = data.content.map(log => {
-          log.key = log.id;
+          log.key = i;
+          i++;
           return log;
         });
         this.setState(
           {
             loadLog: logList,
             totalRecord: data.pagination.totalRecords,
+            loading: false,
           },
           () => {
             console.log(this.state);
@@ -189,6 +196,9 @@ class Data extends React.Component {
       })
       .catch(error => {
         console.log('------------------- error - ', error);
+        this.setState({
+          loading: false,
+        });
       });
   };
 
@@ -479,78 +489,80 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  <ConfigProvider renderEmpty={customize && customizeRenderEmpty}>
-                    <Table
-                      //columns={columns}
-                      dataSource={loadLog}
-                      scroll={{ x: 1500, y: 400 }}
-                      className="ant-table-v1"
-                      loading={loading}
-                      pagination={{
-                        showSizeChanger: true,
-                        total: totalRecord,
-                        onChange: this.paginationHandler,
-                        current: pageNumber,
-                        onShowSizeChange: this.pageSizeHandler,
-                      }}
-                    >
-                      <Column
-                        title="Account Holder"
-                        dataIndex="holder"
-                        key="holder"
-                        render={holder => (holder ? holder : <span>N/A</span>)}
-                      />
-                      <Column
-                        title="Account No"
-                        dataIndex="accountNo"
-                        key="accountNo"
-                        render={accountNo => (accountNo ? accountNo : <span>N/A</span>)}
-                      />
-                      <Column title="Serial No" dataIndex="serial" key="serial" />
-                      <Column
-                        title="Merchant Account No"
-                        dataIndex="merchantAccNo"
-                        key="merchantAccNo"
-                      />
-                      <Column
-                        title="Merchant Account Name"
-                        dataIndex="merchantName"
-                        key="merchantName"
-                      />
-                      <Column title="Device Account No" dataIndex="deviceAccNo" key="deviceAccNo" />
-                      <Column
-                        title="Device Account Name"
-                        dataIndex="deviceAcctName"
-                        key="deviceAcctName"
-                      />
-                      <Column title="Amount" dataIndex="amount" key="amount" />
-                      <Column
-                        title="Log Time"
-                        dataIndex="logTime"
-                        key="logTime"
-                        render={logTime => moment(logTime).format('MMMM Do YYYY, h:mm:ss a')}
-                      />
-                      <Column
-                        title="Type"
-                        dataIndex="type"
-                        key="type"
-                        render={type => (
-                          <Tag color={STATUS.TRANSACTION_TYPE[type].color}>
-                            {STATUS.TRANSACTION_TYPE[type].label}
-                          </Tag>
-                        )}
-                      />
-                      <Column
-                        title="Action"
-                        key="status"
-                        render={(text, record) => (
-                          <Tooltip title="Information">
-                            <Icon onClick={() => this.viewLog(record.id)} type="plus-square" />
-                          </Tooltip>
-                        )}
-                      />
-                    </Table>
-                  </ConfigProvider>
+                  {/* <ConfigProvider renderEmpty={customize && customizeRenderEmpty}> */}
+                  <Table
+                    //columns={columns}
+                    dataSource={loadLog}
+                    scroll={{ x: 1500, y: 400 }}
+                    className="ant-table-v1"
+                    loading={loading}
+                    pagination={{
+                      showSizeChanger: true,
+                      total: totalRecord,
+                      onChange: this.paginationHandler,
+                      current: pageNumber,
+                      onShowSizeChange: this.pageSizeHandler,
+                      pageSizeOptions: ['10', '20', '30', '40', '50', '100'],
+                    }}
+                  >
+                    <Column title="No" dataIndex="key" key="key" width="70px" />
+                    <Column
+                      title="Account Holder"
+                      dataIndex="holder"
+                      key="holder"
+                      render={holder => (holder ? holder : <span>N/A</span>)}
+                    />
+                    <Column
+                      title="Account No"
+                      dataIndex="accountNo"
+                      key="accountNo"
+                      render={accountNo => (accountNo ? accountNo : <span>N/A</span>)}
+                    />
+                    <Column title="Serial No" dataIndex="serial" key="serial" />
+                    <Column
+                      title="Merchant Account No"
+                      dataIndex="merchantAccNo"
+                      key="merchantAccNo"
+                    />
+                    <Column
+                      title="Merchant Account Name"
+                      dataIndex="merchantName"
+                      key="merchantName"
+                    />
+                    <Column title="Device Account No" dataIndex="deviceAccNo" key="deviceAccNo" />
+                    <Column
+                      title="Device Account Name"
+                      dataIndex="deviceAcctName"
+                      key="deviceAcctName"
+                    />
+                    <Column title="Amount" dataIndex="amount" key="amount" />
+                    <Column
+                      title="Log Time"
+                      dataIndex="logTime"
+                      key="logTime"
+                      render={logTime => moment(logTime).format('MMMM Do YYYY, h:mm:ss a')}
+                    />
+                    <Column
+                      title="Type"
+                      dataIndex="type"
+                      key="type"
+                      render={type => (
+                        <Tag color={STATUS.TRANSACTION_TYPE[type].color}>
+                          {STATUS.TRANSACTION_TYPE[type].label}
+                        </Tag>
+                      )}
+                    />
+                    <Column
+                      title="Action"
+                      key="status"
+                      render={(text, record) => (
+                        <Tooltip title="Information">
+                          <Icon onClick={() => this.viewLog(record.id)} type="plus-square" />
+                        </Tooltip>
+                      )}
+                    />
+                  </Table>
+                  {/* </ConfigProvider> */}
                 </article>
               </div>
             </div>
