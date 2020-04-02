@@ -17,12 +17,17 @@ let Cards = loadable({
   loader: () => import('./routes/Cards/'),
   loading: LoadingComponent,
 });
+let CoreBank = loadable({
+  loader: () => import('./routes/CoreBank/'),
+  loading: LoadingComponent,
+});
 
 const Report = ({ match }) => (
   <div>
     <Route path={`${match.url}/transaction`} component={Transaction} />
     <Route path={`${match.url}/pos`} component={POS} />
     <Route path={`${match.url}/cards`} component={Cards} />
+    <Route path={`${match.url}/corebank`} component={CoreBank} />
   </div>
 );
 

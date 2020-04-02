@@ -11,6 +11,7 @@ import {
   CARD,
   REPORT,
   ACCOUNT,
+  PAYEE_SERVICES,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -41,6 +42,7 @@ class AppMenu extends React.Component {
     '/app/account',
     // '/app/cardGenerate',
     '/app/userManagement',
+    '/app/payeeService',
   ];
   rootSubmenuKeys = [
     '/app/card',
@@ -236,6 +238,22 @@ class AppMenu extends React.Component {
                 {this.getNavMenuItems(
                   ACCOUNT,
                   DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION05]
+                )}
+              </SubMenu>
+            )}
+            {DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION06].length > 0 && (
+              <SubMenu
+                key="/app/payeeService"
+                title={
+                  <span>
+                    <Icon type="credit-card" />
+                    <span className="nav-text">Payee Service</span>
+                  </span>
+                }
+              >
+                {this.getNavMenuItems(
+                  PAYEE_SERVICES,
+                  DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION06]
                 )}
               </SubMenu>
             )}
