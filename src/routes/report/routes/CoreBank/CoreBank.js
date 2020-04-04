@@ -32,9 +32,9 @@ const formItemLayout = {
 };
 const columns = [
   {
-    title: 'Transaction Type Name',
-    dataIndex: 'TransactionTypeName',
-    key: 'TransactionTypeName',
+    title: 'Transaction Type',
+    dataIndex: 'TC_TransactionType',
+    key: 'TC_TransactionType',
   },
   {
     title: 'Transaction Date',
@@ -65,7 +65,7 @@ const columns = [
 
 const csvHeader = [
   { label: 'Transaction Date', key: 'TransactionDate' },
-  { label: 'Transaction Type Name', key: 'TransactionTypeName' },
+  { label: 'Transaction Type', key: 'TC_TransactionType' },
   { label: 'Reference No', key: 'ReferenceNo' },
   { label: 'Sender Account', key: 'SenderAccount' },
   { label: 'Sender Account Name', key: 'SenderAccountName' },
@@ -79,7 +79,7 @@ const csvHeader = [
   { label: 'Running Balance', key: 'RunningBalance' },
   { label: 'Amount', key: 'Amount' },
   { label: 'Channel Type', key: 'ChannelType' },
-  { label: 'TC Transaction Type', key: 'TC_TransactionType' },
+  { label: 'Transaction Type Name', key: 'TransactionTypeName' },
 ];
 
 class Data extends React.Component {
@@ -231,10 +231,10 @@ class Data extends React.Component {
       <React.Fragment>
         <Row>
           <Col span={6}>
-            <Tag color={'geekblue'}>TC Transaction Type</Tag>
+            <Tag color={'geekblue'}>Transaction Type name</Tag>
           </Col>
           <Col span={6}>
-            <p>{record.TC_TransactionType ? record.TC_TransactionType : 'N/A'}</p>
+            <p>{record.TransactionTypeName ? record.TransactionTypeName : 'N/A'}</p>
           </Col>
           <Col span={6}>
             <Tag color={'geekblue'}>Sender Account Name</Tag>
@@ -331,9 +331,7 @@ class Data extends React.Component {
                   data={this.state.searchData.map(
                     d =>
                       d && {
-                        TransactionDate: d.TransactionDate
-                          ? moment(d.TransactionDate).format('MMMM Do YYYY, h:mm:ss a')
-                          : 'N/A',
+                        TransactionDate: d.TransactionDate ? d.TransactionDate : 'N/A',
                         TransactionTypeName: d.TransactionTypeName ? d.TransactionTypeName : 'N/A',
                         ReferenceNo: d.ReferenceNo ? d.ReferenceNo : 'N/A',
                         SenderAccount: d.SenderAccount ? d.SenderAccount : 'N/A',
