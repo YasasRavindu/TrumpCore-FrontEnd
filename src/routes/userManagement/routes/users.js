@@ -115,7 +115,8 @@ class Data extends React.Component {
 
   submit = e => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+    
+    this.props.form.validateFields(['accountName', 'email', 'password', 'role'], (err, values) => {
       if (!err) {
         axios
           .post(environment.baseUrl + 'platform-users', {
