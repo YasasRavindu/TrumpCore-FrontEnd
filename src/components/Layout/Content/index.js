@@ -83,6 +83,10 @@ let AsyncPayeeService = loadable({
   loader: () => import('routes/payeeService/'),
   loading: LoadingComponent,
 });
+let AsyncUserProfile = loadable({
+  loader: () => import('routes/userProfile/'),
+  loading: LoadingComponent,
+});
 
 class AppContent extends React.Component {
   render() {
@@ -109,6 +113,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/account`} component={AsyncAccount} />
         <Route path={`${match.url}/report`} component={AsyncReport} />
         <Route path={`${match.url}/payeeService`} component={AsyncPayeeService} />
+        <Route path={`${match.url}/userProfile`} component={AsyncUserProfile} />
       </Content>
     );
   }

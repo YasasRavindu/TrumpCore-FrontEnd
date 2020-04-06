@@ -115,7 +115,7 @@ class Data extends React.Component {
 
   submit = e => {
     e.preventDefault();
-    
+
     this.props.form.validateFields(['accountName', 'email', 'password', 'role'], (err, values) => {
       if (!err) {
         axios
@@ -259,6 +259,7 @@ class Data extends React.Component {
                                 required: true,
                                 message: 'Please enter a password.',
                               },
+                              { min: 5, message: 'Password must be minimum 5 characters.' },
                             ],
                           })(<Password placeholder="Password" />)}
                         </FormItem>
