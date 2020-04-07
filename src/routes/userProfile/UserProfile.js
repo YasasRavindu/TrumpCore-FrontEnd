@@ -20,7 +20,7 @@ class Data extends React.Component {
       if (!err) {
         if (this.currentUser && this.currentUser.id) {
           axios
-            .put(environment.baseUrl + 'platform-users/changePassword', {
+            .post(environment.baseUrl + 'platform-users/changePassword', {
               id: this.currentUser.id,
               newPass: values.password,
               confirmPass: values.confirm,
