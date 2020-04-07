@@ -10,6 +10,7 @@ import {
   Row,
   Col,
   Input,
+  Tooltip,
   AutoComplete,
   Select,
 } from 'antd';
@@ -18,6 +19,15 @@ import { CSVReader } from 'react-papaparse';
 import axios from 'axios';
 import { environment, commonUrl } from '../../../environments';
 import { REGEX } from 'constants/validation/regex';
+const { Column, ColumnGroup } = Table;
+const tableData = [
+  { key: 1, id: '1', batchName: '1234567' },
+  {
+    key: 2,
+    id: '2',
+    batchName: '2020838',
+  },
+];
 
 // ! -- Can add more columns.
 // ! --'payment' => Name is a constant value and column required
@@ -40,6 +50,7 @@ class Data extends React.Component {
       selectedAccount: undefined,
       showBtn: false,
       accountListProcessed: {},
+      BatchDetails: false,
     };
   }
   async componentDidMount() {
@@ -286,6 +297,13 @@ class Data extends React.Component {
     //   message.error("Couldn't verify your credentials. Please sign in again and try uploading.");
     // }
   };
+  viewAccount(id) {
+    console.log('======== id', id);
+    this._isMounted &&
+      this.setState({
+        BatchDetails: true,
+      });
+  }
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -298,66 +316,155 @@ class Data extends React.Component {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          <div key="1">
-            <div className="box box-default mb-4">
-              <div className="box-header">Salary Upload</div>
-              <div className="box-body">
-                <Form>
-                  <Row gutter={24}>
-                    <Col span={10} order={1}>
-                      <FormItem>
-                        {getFieldDecorator('accountNumber', {
-                          rules: [
-                            {
-                              required: true,
-                              message: 'Please enter your account number or name',
-                            },
-                          ],
-                        })(
-                          // <Input placeholder="Account Number" />
-                          <AutoComplete
-                            dataSource={optionsAccounts}
-                            style={{ width: 400 }}
-                            placeholder="Account Number"
-                            onBlur={inputValue => {
-                              this.setAccount(inputValue);
-                            }}
-                            onChange={inputValue => {
-                              this.updateAccountList(inputValue);
-                            }}
-                            onSelect={inputValue => {
-                              this.setAccount(inputValue);
-                            }}
-                          />
-                        )}
-                      </FormItem>
-                    </Col>
-                    <Col span={8} order={2}>
-                      <CSVReader
-                        onDrop={this.onDrop}
-                        onError={this.onError}
-                        style={{ maxHeight: 140 }}
-                        config={{ skipEmptyLines: true }}
-                      >
-                        <span>Drop CSV file here or click to upload.</span>
-                      </CSVReader>
-                    </Col>
-                    <Col span={6} order={3}>
-                      {this.state.showBtn && (
-                        <Button
-                          type="primary"
-                          className="float-right mt-2"
-                          onClick={() => this.dataParse()}
-                        >
-                          submit
-                        </Button>
-                      )}
-                    </Col>
-                  </Row>
-                </Form>
+          {this.state.BatchDetails !== true && (
+            <React.Fragment>
+              <div key="1">
+                <div className="box box-default mb-4">
+                  <div className="box-header">Salary Upload</div>
+                  <div className="box-body">
+                    <Form>
+                      <Row gutter={24}>
+                        <Col span={10} order={1}>
+                          <FormItem>
+                            {getFieldDecorator('accountNumber', {
+                              rules: [
+                                {
+                                  required: true,
+                                  message: 'Please enter your account number or name',
+                                },
+                              ],
+                            })(
+                              // <Input placeholder="Account Number" />
+                              <AutoComplete
+                                dataSource={optionsAccounts}
+                                style={{ width: 400 }}
+                                placeholder="Account Number"
+                                onBlur={inputValue => {
+                                  this.setAccount(inputValue);
+                                }}
+                                onChange={inputValue => {
+                                  this.updateAccountList(inputValue);
+                                }}
+                                onSelect={inputValue => {
+                                  this.setAccount(inputValue);
+                                }}
+                              />
+                            )}
+                          </FormItem>
+                        </Col>
+                        <Col span={8} order={2}>
+                          <CSVReader
+                            onDrop={this.onDrop}
+                            onError={this.onError}
+                            style={{ maxHeight: 140 }}
+                            config={{ skipEmptyLines: true }}
+                          >
+                            <span>Drop CSV file here or click to upload.</span>
+                          </CSVReader>
+                        </Col>
+                        <Col span={6} order={3}>
+                          {this.state.showBtn && (
+                            <Button
+                              type="primary"
+                              className="float-right mt-2"
+                              onClick={() => this.dataParse()}
+                            >
+                              submit
+                            </Button>
+                          )}
+                        </Col>
+                      </Row>
+                    </Form>
+                  </div>
+                </div>
+              </div>
+              <div key="2">
+                <div className="box box-default mb-4">
+                  <div className="box-header">Bulk Table</div>
+                  <div className="box-body">
+                    <article className="article mt-2">
+                      <Table dataSource={tableData}>
+                        <Column title="Batch Name" dataIndex="batchName" key="batchName" />
+                        <Column
+                          title="Action"
+                          key="action"
+                          render={(text, record) => (
+                            <span>
+                              <Tooltip title="View">
+                                <Icon
+                                  onClick={() => this.viewAccount(record.id)}
+                                  type="menu-unfold"
+                                />
+                              </Tooltip>
+                            </span>
+                          )}
+                        />
+                      </Table>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </React.Fragment>
+          )}
+          {this.state.BatchDetails !== false && (
+            <div key="3">
+              <h3>Bulk Details</h3>
+              <div className="row text-center mt-3">
+                <div className="col-xl-3 col-sm-6">
+                  <div className="number-card-v2 mb-3">
+                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-success">
+                      <Icon type="like-o" />
+                    </span>
+                    <div className="box-info">
+                      <p className="box-num">
+                        16 <span className="size-h4">%</span>
+                      </p>
+                      <p className="text-muted">Pass</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-xl-3 col-sm-6">
+                  <div className="number-card-v2 mb-3">
+                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-danger">
+                      <Icon type="dislike-o" />
+                    </span>
+                    <div className="box-info">
+                      <p className="box-num">
+                        16 <span className="size-h4">%</span>
+                      </p>
+                      <p className="text-muted">Fail</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="box box-default mb-4">
+                  <div className="box-header">Bulk Details</div>
+                  <div className="box-body">
+                    <article className="article mt-2">
+                      <Table dataSource={tableData}>
+                        <Column title="Batch Name" dataIndex="batchName" key="batchName" />
+                        <Column
+                          title="Action"
+                          key="action"
+                          render={(text, record) => (
+                            <span>
+                              <Tooltip title="View">
+                                <Icon
+                                  onClick={() => this.viewAccount(record.id)}
+                                  type="menu-unfold"
+                                />
+                              </Tooltip>
+                            </span>
+                          )}
+                        />
+                      </Table>
+                    </article>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </QueueAnim>
       </div>
     );
