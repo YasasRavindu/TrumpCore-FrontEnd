@@ -17,11 +17,16 @@ import QueueAnim from 'rc-queue-anim';
 import { CSVReader } from 'react-papaparse';
 import axios from 'axios';
 import { environment, commonUrl } from '../../../environments';
+import { REGEX } from 'constants/validation/regex';
+
+// ! -- Can add more columns.
+// ! --'payment' => Name is a constant value and column required
 const definedHeader = ['accountNo', 'payment'];
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
+
+// const formItemLayout = {
+//   labelCol: { span: 10 },
+//   wrapperCol: { span: 14 },
+// };
 const FormItem = Form.Item;
 const { Option } = Select;
 
@@ -30,12 +35,11 @@ class Data extends React.Component {
     super(props);
     this._isMounted = false;
     this.state = {
-      showBtn: false,
-      csvObject: {},
-      csvAccount: 0,
       accountList: [],
       filteredAccountList: [],
       selectedAccount: undefined,
+      showBtn: false,
+      accountListProcessed: {},
     };
   }
   async componentDidMount() {
@@ -107,59 +111,136 @@ class Data extends React.Component {
     });
   };
 
-  onDrop = data => {
-    console.log('=====data', data);
+  onDrop = recordList => {
+    console.log('===== data', recordList);
+
     this.setState({
       showBtn: false,
     });
-    const headerCheck = definedHeader.some(r => data[0].data.indexOf(r) >= 0);
 
-    if (headerCheck) {
-      const i = 0;
-      const dataList = data
-        .slice(0, i)
-        .concat(data.slice(i + 1, data.length))
-        .map(d => d.data);
-      let nullCount = 0;
-      dataList.forEach(element => {
-        const checkValue = element.includes('');
-        if (checkValue) {
-          nullCount++;
+    let errorHeaderFormat = false;
+    let errorCountNull = 0;
+    let errorCountPaymentInvalid = 0;
+    let SalaryTotal = 0;
+    let records = [];
+
+    //----- Check CSV Headers -----------------------------------------------------------------------
+    if (recordList[0] && recordList[0].data && recordList[0].data.length === definedHeader.length) {
+      recordList[0].data.map(data => {
+        if (definedHeader.indexOf(data) == -1) {
+          errorHeaderFormat = true;
         }
       });
-      if (nullCount === 0) {
-        let account = 0;
-        let obj = {};
-        let dataObject = {};
-        dataList.map((data, index) => {
-          dataObject = {
-            accountNo: data[0],
-            payment: data[1],
-          };
-          obj[index] = dataObject;
-          account++;
-        });
-        //console.log(obj, account);
+    } else {
+      errorHeaderFormat = true;
+    }
+    //-----------------------------------------------------------------------------------------------
 
-        if (obj && account > 0) {
-          this.setState({
-            showBtn: true,
-            csvObject: obj,
-            csvAccount: account,
-          });
-        } else {
-          message.error('Something Wrong');
+    //----- Check CSV Values ------------------------------------------------------------------------
+    if (errorHeaderFormat) {
+      message.error("Uploaded CSV header doesn't match!");
+    } else {
+      recordList.slice(1, recordList.length).map((record, index) => {
+        let data = record.data;
+        let salaryObj = {};
+
+        for (let i = 0; i < definedHeader.length; i++) {
+          if (!data[i]) {
+            errorCountNull++;
+          } else if (definedHeader[i] === 'payment') {
+            // if (/^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(.[0-9]{1,2})?$/.test(data[i])) {
+            if (REGEX.CURRENCY.test(data[i])) {
+              SalaryTotal += +data[i];
+            } else {
+              errorCountPaymentInvalid++;
+            }
+          }
+          salaryObj[definedHeader[i]] = data[i];
         }
-      } else {
+
+        records[index] = salaryObj;
+      });
+
+      if (errorCountNull > 0) {
         message.error(
           'We have identified ' +
-            nullCount +
+            errorCountNull +
             ' empty values in your CSV file. Please fill them out and upload again.'
         );
+      } else if (errorCountPaymentInvalid) {
+        message.error(
+          'We have identified ' +
+            errorCountPaymentInvalid +
+            ' invalid payment values in your CSV file. Please check them out and upload again.'
+        );
+      } else {
+        console.log(SalaryTotal);
+        console.log(records);
+        message.success('File Successfully Uploaded!');
+
+        this.setState({
+          showBtn: true,
+          accountListProcessed: records,
+        });
       }
-    } else {
-      message.error("Uploaded csv header doesn't match");
     }
+    //-----------------------------------------------------------------------------------------------
+
+    // this.setState({
+    //   showBtn: false,
+    // });
+
+    // const headerCheck = definedHeader.some(r => recordList[0].data.indexOf(r) >= 0);
+
+    // if (headerCheck) {
+    //   const i = 0;
+    //   const dataList = recordList
+    //     .slice(0, i)
+    //     .concat(recordList.slice(i + 1, recordList.length))
+    //     .map(d => d.data);
+
+    //   console.log('=====dataList', dataList);
+
+    //   let nullCount = 0;
+    //   dataList.forEach(element => {
+    //     const checkValue = element.includes('');
+    //     if (checkValue) {
+    //       nullCount++;
+    //     }
+    //   });
+    //   if (nullCount === 0) {
+    //     let account = 0;
+    //     let obj = {};
+    //     let dataObject = {};
+    //     dataList.map((data, index) => {
+    //       dataObject = {
+    //         accountNo: data[0],
+    //         payment: data[1],
+    //       };
+    //       obj[index] = dataObject;
+    //       account++;
+    //     });
+    //     //console.log(obj, account);
+
+    //     if (obj && account > 0) {
+    //       this.setState({
+    //         showBtn: true,
+    //         accountListProcessed: obj,
+    //         csvAccount: account,
+    //       });
+    //     } else {
+    //       message.error('Something Wrong');
+    //     }
+    //   } else {
+    //     message.error(
+    //       'We have identified ' +
+    //         nullCount +
+    //         ' empty values in your CSV file. Please fill them out and upload again.'
+    //     );
+    //   }
+    // } else {
+    //   message.error("Uploaded csv header doesn't match");
+    // }
   };
 
   onError = (err, file, inputElem, reason) => {
@@ -171,8 +252,7 @@ class Data extends React.Component {
     console.log(
       '====show',
       this.state.showBtn,
-      this.state.csvObject,
-      this.state.csvAccount,
+      this.state.accountListProcessed,
       this.state.selectedAccount
     );
     // let currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -184,13 +264,13 @@ class Data extends React.Component {
     //       user: {
     //         id: currentUser.id,
     //       },
-    //       records: [this.state.csvObject],
+    //       records: [this.state.accountListProcessed],
     //     })
     //     .then(response => {
     //       console.log('------------------- response - ', response);
     //       this.setState({
     //         showBtn: false,
-    //         csvObject: {},
+    //         accountListProcessed: {},
     //         csvAccount: 0,
     //       });
     //     })
@@ -198,7 +278,7 @@ class Data extends React.Component {
     //       console.log('------------------- error - ', error);
     //       this.setState({
     //         showBtn: false,
-    //         csvObject: {},
+    //         accountListProcessed: {},
     //         csvAccount: 0,
     //       });
     //     });
