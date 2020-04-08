@@ -50,7 +50,11 @@ class Data extends React.Component {
       selectedAccount: undefined,
       showBtn: false,
       accountListProcessed: {},
+      salaryTotal: 0,
       BatchDetails: false,
+      bulkList: [],
+      selectedBulk: null,
+      bulkRecordList: [],
     };
   }
   async componentDidMount() {
@@ -74,6 +78,22 @@ class Data extends React.Component {
         this._isMounted &&
           this.setState({
             accountList: accountList,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+    axios
+      .get(environment.baseUrl + 'bulkPay/getAll')
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const bulkList = response.data.content.map(bulk => {
+          bulk.key = bulk.id;
+          return bulk;
+        });
+        this._isMounted &&
+          this.setState({
+            bulkList: bulkList,
           });
       })
       .catch(error => {
@@ -192,6 +212,7 @@ class Data extends React.Component {
         this.setState({
           showBtn: true,
           accountListProcessed: records,
+          salaryTotal: SalaryTotal,
         });
       }
     }
@@ -260,54 +281,65 @@ class Data extends React.Component {
   };
 
   dataParse = () => {
-    console.log(
-      '====show',
-      this.state.showBtn,
-      this.state.accountListProcessed,
-      this.state.selectedAccount
-    );
-    // let currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    // if (currentUser.id) {
-    //   //console.log(currentUser.id);
-    //   axios
-    //     .post(environment.baseUrl + 'maintenance/bulkAccount', {
-    //       accounts: this.state.csvAccount,
-    //       user: {
-    //         id: currentUser.id,
-    //       },
-    //       records: [this.state.accountListProcessed],
-    //     })
-    //     .then(response => {
-    //       console.log('------------------- response - ', response);
-    //       this.setState({
-    //         showBtn: false,
-    //         accountListProcessed: {},
-    //         csvAccount: 0,
-    //       });
-    //     })
-    //     .catch(error => {
-    //       console.log('------------------- error - ', error);
-    //       this.setState({
-    //         showBtn: false,
-    //         accountListProcessed: {},
-    //         csvAccount: 0,
-    //       });
-    //     });
-    // } else {
-    //   message.error("Couldn't verify your credentials. Please sign in again and try uploading.");
-    // }
+    let { salaryTotal, selectedAccount, accountListProcessed } = this.state;
+
+    axios
+      .post(environment.baseUrl + 'bulkPay', {
+        total: salaryTotal,
+        debitAccount: {
+          id: selectedAccount.id,
+        },
+        records: accountListProcessed,
+      })
+      .then(response => {
+        console.log('------------------- response - ', response);
+        this.setState({
+          showBtn: false,
+          accountListProcessed: {},
+          salaryTotal: 0,
+          selectedAccount: undefined,
+        });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+        this.setState({
+          showBtn: false,
+          accountListProcessed: {},
+          salaryTotal: 0,
+          selectedAccount: undefined,
+        });
+      });
   };
-  viewAccount(id) {
-    console.log('======== id', id);
+
+  viewAccount(bulk) {
+    console.log('======== id', bulk);
     this._isMounted &&
       this.setState({
         BatchDetails: true,
+        selectedBulk: bulk,
+      });
+
+    axios
+      .get(environment.baseUrl + 'bulkPay/' + bulk.id + '/true/true/all')
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const bulkRecordList = response.data.content.map(bulk => {
+          bulk.key = bulk.id;
+          return bulk;
+        });
+        this._isMounted &&
+          this.setState({
+            bulkRecordList: bulkRecordList,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
       });
   }
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { filteredAccountList, filteredCardList, filteredAssignedList } = this.state;
+    const { filteredAccountList, bulkList, selectedBulk, bulkRecordList } = this.state;
     const optionsAccounts = filteredAccountList.map(account => (
       <Option key={account.id} value={account.id}>
         {`${account.accountNumber} - ${account.holder}`}
@@ -316,7 +348,7 @@ class Data extends React.Component {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          {this.state.BatchDetails !== true && (
+          {selectedBulk === null && (
             <React.Fragment>
               <div key="1">
                 <div className="box box-default mb-4">
@@ -363,15 +395,16 @@ class Data extends React.Component {
                           </CSVReader>
                         </Col>
                         <Col span={6} order={3}>
-                          {this.state.showBtn && (
-                            <Button
-                              type="primary"
-                              className="float-right mt-2"
-                              onClick={() => this.dataParse()}
-                            >
-                              submit
-                            </Button>
-                          )}
+                          {this.state.showBtn &&
+                            this.state.selectedAccount &&(
+                              <Button
+                                type="primary"
+                                className="float-right mt-2"
+                                onClick={() => this.dataParse()}
+                              >
+                                submit
+                              </Button>
+                            )}
                         </Col>
                       </Row>
                     </Form>
@@ -383,18 +416,33 @@ class Data extends React.Component {
                   <div className="box-header">Bulk Table</div>
                   <div className="box-body">
                     <article className="article mt-2">
-                      <Table dataSource={tableData}>
-                        <Column title="Batch Name" dataIndex="batchName" key="batchName" />
+                      <Table dataSource={bulkList}>
+                        <Column
+                          title="Name"
+                          dataIndex="debitAccount.holder"
+                          key="debitAccount.holder"
+                        />
+                        <Column
+                          title="Account"
+                          dataIndex="debitAccount.accountNumber"
+                          key="debitAccount.accountNumber"
+                        />
+                        <Column title="Total" dataIndex="total" key="total" align="right" />
+                        <Column title="Total Records" dataIndex="count" key="count" align="right" />
+                        <Column
+                          title="Success Records"
+                          dataIndex="successCount"
+                          key="successCount"
+                          align="right"
+                        />
+                        <Column title="Status" dataIndex="status" key="status" align="center" />
                         <Column
                           title="Action"
                           key="action"
                           render={(text, record) => (
                             <span>
                               <Tooltip title="View">
-                                <Icon
-                                  onClick={() => this.viewAccount(record.id)}
-                                  type="menu-unfold"
-                                />
+                                <Icon onClick={() => this.viewAccount(record)} type="menu-unfold" />
                               </Tooltip>
                             </span>
                           )}
@@ -406,7 +454,7 @@ class Data extends React.Component {
               </div>
             </React.Fragment>
           )}
-          {this.state.BatchDetails !== false && (
+          {selectedBulk && bulkRecordList.length > 0 && (
             <div key="3">
               <h3>Bulk Details</h3>
               <div className="row text-center mt-3">
@@ -442,8 +490,16 @@ class Data extends React.Component {
                   <div className="box-header">Bulk Details</div>
                   <div className="box-body">
                     <article className="article mt-2">
-                      <Table dataSource={tableData}>
-                        <Column title="Batch Name" dataIndex="batchName" key="batchName" />
+                      <Table dataSource={bulkRecordList}>
+                        <Column
+                          title="Account No"
+                          dataIndex="creditAccount.accountNumber"
+                          key="creditAccount.accountNumber"
+                        />
+                        <Column title="Payment" dataIndex="payment" key="payment" align="right" />
+                        <Column title="Remark" dataIndex="tcRemarks" key="tcRemarks" />
+                        <Column title="TC Fail" dataIndex="tcFail" key="tcFail" />
+                        <Column title="IB Fail" dataIndex="ibFail" key="ibFail" />
                         <Column
                           title="Action"
                           key="action"
