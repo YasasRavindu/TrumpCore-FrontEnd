@@ -356,7 +356,7 @@ class Data extends React.Component {
                   <div className="box-body">
                     <Form>
                       <Row gutter={24}>
-                        <Col span={10} order={1}>
+                        <Col span={12} order={1}>
                           <FormItem>
                             {getFieldDecorator('accountNumber', {
                               rules: [
@@ -369,7 +369,7 @@ class Data extends React.Component {
                               // <Input placeholder="Account Number" />
                               <AutoComplete
                                 dataSource={optionsAccounts}
-                                style={{ width: 400 }}
+                                //style={{ width: 400 }}
                                 placeholder="Account Number"
                                 onBlur={inputValue => {
                                   this.setAccount(inputValue);
@@ -384,7 +384,7 @@ class Data extends React.Component {
                             )}
                           </FormItem>
                         </Col>
-                        <Col span={8} order={2}>
+                        <Col span={12} order={2}>
                           <CSVReader
                             onDrop={this.onDrop}
                             onError={this.onError}
@@ -393,18 +393,15 @@ class Data extends React.Component {
                           >
                             <span>Drop CSV file here or click to upload.</span>
                           </CSVReader>
-                        </Col>
-                        <Col span={6} order={3}>
-                          {this.state.showBtn &&
-                            this.state.selectedAccount &&(
-                              <Button
-                                type="primary"
-                                className="float-right mt-2"
-                                onClick={() => this.dataParse()}
-                              >
-                                submit
-                              </Button>
-                            )}
+                          {this.state.showBtn && this.state.selectedAccount && (
+                            <Button
+                              type="primary"
+                              className="float-right mt-2"
+                              onClick={() => this.dataParse()}
+                            >
+                              submit
+                            </Button>
+                          )}
                         </Col>
                       </Row>
                     </Form>
@@ -481,6 +478,19 @@ class Data extends React.Component {
                         16 <span className="size-h4">%</span>
                       </p>
                       <p className="text-muted">Fail</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-xl-3 col-sm-6">
+                  <div className="number-card-v2 mb-3">
+                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-info">
+                      <Icon type="plus-square-o" />
+                    </span>
+                    <div className="box-info">
+                      <p className="box-num">
+                        16 <span className="size-h4">%</span>
+                      </p>
+                      <p className="text-muted">Total</p>
                     </div>
                   </div>
                 </div>
