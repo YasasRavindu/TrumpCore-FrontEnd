@@ -47,6 +47,20 @@ export const CUSTOM_MESSAGE = {
     invalidContext: 'Invalid context!',
     defaultError: 'Something went wrong please try again!',
   },
+  RESETPASSWORD_LINK_ERROR: {
+    invalidToken: 'This token is invalid!',
+    expired: 'This token is expired!',
+    defaultError: 'Something went wrong please try again!',
+  },
+  RESETPASSWORD_CHANGE_ERROR: {
+    oldPassword: 'You have entered the password you previously used!',
+    userNotExist: 'The corresponding user account does not exist!',
+    defaultError: 'Something went wrong please try again!',
+  },
+  RESETPASSWORD_RESET_ERROR: {
+    userNotExists: 'The corresponding user account does not exist!',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export function getErrorMessage(error, arrayKey) {

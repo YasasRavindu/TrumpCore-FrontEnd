@@ -876,6 +876,10 @@ export const USER = [
     name: 'Forgot Password v2',
     path: '/user/forgot-password-v2',
   },
+  {
+    name: 'Reset Password',
+    path: '/user/resetForm',
+  },
 ];
 
 export const EXCEPTION = [

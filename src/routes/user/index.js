@@ -7,6 +7,7 @@ import SignUp from './routes/SignUp';
 import SignUpV2 from './routes/SignUpV2';
 import ForgotPassword from './routes/ForgotPassword';
 import ForgotPasswordV2 from './routes/ForgotPasswordV2';
+import PasswordReset from './routes/ResetPassword';
 import './styles.scss';
 
 const Page = ({ match }) => (
@@ -17,6 +18,7 @@ const Page = ({ match }) => (
     <Route path={`${match.url}/sign-up-v2`} component={SignUpV2} />
     <Route path={`${match.url}/forgot-password`} component={ForgotPassword} />
     <Route path={`${match.url}/forgot-password-v2`} component={ForgotPasswordV2} />
+    <Route path={`${match.url}/resetForm`} component={PasswordReset} />
   </div>
 );
 

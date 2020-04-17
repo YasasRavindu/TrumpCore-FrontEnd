@@ -122,8 +122,8 @@ class NormalLoginForm extends React.Component {
           Don't have an account yet? <a>Sign up</a>
         </p>
         <p className="additional-info">
-          {/* Forgot your username or password? <a href={DEMO.forgotPassword}>Reset password</a> */}
-          Forgot your username or password? <a>Reset password</a>
+          Forgot your username or password? <a href="/user/forgot-password">Reset password</a>
+          {/* Forgot your username or password? <a>Reset password</a> */}
         </p>
       </section>
     );
