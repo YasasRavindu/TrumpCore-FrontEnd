@@ -44,16 +44,16 @@ const bulkStatus = {
 };
 const bulkRecordStatus = {
   0: { status: 'OnPremise', color: blue[4] },
-  1: { status: 'TrumpCore Fail', color: orange[4] },
-  2: { status: 'Internet Bank Fail', color: red[4] },
+  1: { status: 'Switch Failure', color: orange[4] },
+  2: { status: 'Core Bank Failure', color: red[4] },
   3: { status: 'Success', color: green[4] },
 };
-const bulkRecordCheckBox = {
+const bulkRecordFilters = {
   0: { label: 'All', tcFail: false, ibFail: false, searchType: 'all' },
-  // 0: { label: 'OnPremise', tcFail: false, ibFail: false, searchType: 'filter' },
-  // 0: { label: 'TrumpCore Fail', tcFail: true, ibFail: false, searchType: 'filter' },
-  // 0: { label: 'Internet Back Fail', tcFail: false, ibFail: true, searchType: 'filter' },
-  // 0: { label: 'Success', tcFail: false, ibFail: false, searchType: 'filter' },
+  // 1: { label: 'OnPremise', tcFail: false, ibFail: false, searchType: 'filter' },
+  // 2: { label: 'Switch Failure', tcFail: true, ibFail: false, searchType: 'filter' },
+  // 3: { label: 'Core Bank Failure', tcFail: false, ibFail: true, searchType: 'filter' },
+  // 4: { label: 'Success', tcFail: false, ibFail: false, searchType: 'filter' },
 };
 
 const formItemLayout = {
@@ -310,6 +310,19 @@ class Data extends React.Component {
     this.loadBulkData();
   };
 
+  onFilterChange = v => {
+    console.log(v);
+    
+    this.setState(
+      {
+        filterValue: v,
+      },
+      () => {
+        this.viewBulk(this.state.selectedBulk);
+      }
+    );
+  };
+
   // checkBoxChange = event => {
   //   let { cbAll, cbTCFail, cbIBFail } = this.state;
   //   let name = event.target.name;
@@ -360,12 +373,15 @@ class Data extends React.Component {
     console.log('======== id', bulk);
 
     let { filterValue } = this.state;
-    let cbValue = bulkRecordCheckBox[filterValue];
+    let cbValue = bulkRecordFilters[filterValue];
 
     this._isMounted &&
       this.setState({
         selectedBulk: bulk,
         loaderRecordTable: true,
+        bulkSuccessRecordCount: 0,
+        bulkFailRecordCount: 0,
+        bulkOnPremiseRecordCount: 0,
       });
 
     let url = `${environment.baseUrl}bulkPay/${bulk.id}/${cbValue.tcFail}/${cbValue.ibFail}/${cbValue.searchType}`;
@@ -540,6 +556,8 @@ class Data extends React.Component {
       bulkSuccessRecordCount,
       bulkFailRecordCount,
       bulkOnPremiseRecordCount,
+      filterValue,
+      bulkRecordFilters,
     } = this.state;
 
     let optionsAccounts = null;
@@ -825,6 +843,22 @@ class Data extends React.Component {
                           </Checkbox>
                         </FormItem>
                       </Col> */}
+
+                      {/* <Col span={6}>
+                        <FormItem label="Records Filter By Status">
+                          <Select
+                            onChange={this.onFilterChange}
+                            value={filterValue}
+                            style={{ width: 200 }}
+                          >
+                            <Option value={0}>All</Option>
+                            <Option value={1}>OnPremise</Option>
+                            <Option value={2}>TrumpCore Fail</Option>
+                            <Option value={3}>Internet Bank Fail</Option>
+                            <Option value={4}>Success</Option>
+                          </Select>
+                        </FormItem>
+                      </Col> */}
                     </Row>
                     <article className="article mt-2">
                       <Spin spinning={this.state.loaderRecordTable}>
@@ -843,7 +877,8 @@ class Data extends React.Component {
                             )}
                           />
                           <Column title="Payment" dataIndex="payment" key="payment" align="right" />
-                          <Column title="Remark" dataIndex="tcRemarks" key="tcRemarks" />
+                          <Column title="Switch Remark" dataIndex="tcRemarks" key="tcRemarks" />
+                          <Column title="Core Bank Remark" dataIndex="ibRemarks" key="ibRemarks" />
                           {/* <Column
                             title="TC Fail"
                             key="tcFail"
