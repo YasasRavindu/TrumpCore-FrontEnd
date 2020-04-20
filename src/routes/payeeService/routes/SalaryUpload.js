@@ -45,7 +45,7 @@ const bulkStatus = {
 const bulkRecordStatus = {
   0: { status: 'OnPremise', color: blue[4] },
   1: { status: 'TrumpCore Fail', color: orange[4] },
-  2: { status: 'Internet Back Fail', color: red[4] },
+  2: { status: 'Internet Bank Fail', color: red[4] },
   3: { status: 'Success', color: green[4] },
 };
 const bulkRecordCheckBox = {
@@ -87,6 +87,9 @@ class Data extends React.Component {
       loaderBulkTable: false,
       loaderRecordTable: false,
       loaderRecordModal: false,
+      bulkSuccessRecordCount: 0,
+      bulkFailRecordCount: 0,
+      bulkOnPremiseRecordCount: 0,
     };
   }
   async componentDidMount() {
@@ -371,25 +374,38 @@ class Data extends React.Component {
       .get(url)
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const bulkRecordList = response.data.content.map(bulk => {
-          bulk.key = bulk.id;
+
+        let bulkSuccessRecordCount = 0;
+        let bulkFailRecordCount = 0;
+        let bulkOnPremiseRecordCount = 0;
+
+        const bulkRecordList = response.data.content.map(record => {
+          record.key = record.id;
 
           let status = 0;
-          if (bulk.tcFail) {
+          if (record.tcFail) {
             status = 1;
-          } else if (bulk.ibFail) {
+            bulkFailRecordCount++;
+          } else if (record.ibFail) {
             status = 2;
-          } else if (bulk.success) {
+            bulkFailRecordCount++;
+          } else if (record.success) {
             status = 3;
+            bulkSuccessRecordCount++;
+          } else {
+            bulkOnPremiseRecordCount++;
           }
 
-          bulk.status = status;
-          return bulk;
+          record.status = status;
+          return record;
         });
         this._isMounted &&
           this.setState({
             bulkRecordList: bulkRecordList,
             loaderRecordTable: false,
+            bulkSuccessRecordCount: bulkSuccessRecordCount,
+            bulkFailRecordCount: bulkFailRecordCount,
+            bulkOnPremiseRecordCount: bulkOnPremiseRecordCount,
           });
       })
       .catch(error => {
@@ -515,7 +531,16 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { visible, filteredAccountList, bulkList, selectedBulk, bulkRecordList } = this.state;
+    const {
+      visible,
+      filteredAccountList,
+      bulkList,
+      selectedBulk,
+      bulkRecordList,
+      bulkSuccessRecordCount,
+      bulkFailRecordCount,
+      bulkOnPremiseRecordCount,
+    } = this.state;
 
     let optionsAccounts = null;
     if (!visible) {
@@ -634,12 +659,12 @@ class Data extends React.Component {
                             key="count"
                             align="right"
                           />
-                          <Column
+                          {/* <Column
                             title="Success Records"
                             dataIndex="successCount"
                             key="successCount"
                             align="right"
-                          />
+                          /> */}
                           {/* <Column title="Status" dataIndex="status" key="status" align="center" /> */}
                           <Column
                             title="Status"
@@ -662,7 +687,7 @@ class Data extends React.Component {
                                     <Icon onClick={() => this.viewBulk(record)} type="bars" />
                                   </Tooltip>
                                 </span>
-                                {record.status === 0 && record.count === record.successCount && (
+                                {/* {record.status === 0 && record.count === record.successCount && (
                                   <span className="ml-3">
                                     <Tooltip title="Proceed">
                                       <Icon
@@ -671,7 +696,7 @@ class Data extends React.Component {
                                       />
                                     </Tooltip>
                                   </span>
-                                )}
+                                )} */}
                               </>
                             )}
                           />
@@ -700,11 +725,11 @@ class Data extends React.Component {
               <div className="row text-center mt-3">
                 <div className="col-xl-3 col-sm-6">
                   <div className="number-card-v2 mb-3">
-                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-info">
+                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-warning">
                       <Icon type="plus-square-o" />
                     </span>
                     <div className="box-info">
-                      <p className="box-num">{selectedBulk.total}</p>
+                      <p className="box-num">{selectedBulk.count}</p>
                       <p className="text-muted">Total</p>
                     </div>
                   </div>
@@ -712,10 +737,12 @@ class Data extends React.Component {
                 <div className="col-xl-3 col-sm-6">
                   <div className="number-card-v2 mb-3">
                     <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-success">
-                      <Icon type="like-o" />
+                      {/* <Icon type="like-o" /> */}
+                      <Icon type="smile-o" />
                     </span>
                     <div className="box-info">
-                      <p className="box-num">{selectedBulk.successCount}</p>
+                      {/* <p className="box-num">{selectedBulk.successCount}</p> */}
+                      <p className="box-num">{bulkSuccessRecordCount}</p>
                       <p className="text-muted">Success</p>
                     </div>
                   </div>
@@ -723,11 +750,23 @@ class Data extends React.Component {
                 <div className="col-xl-3 col-sm-6">
                   <div className="number-card-v2 mb-3">
                     <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-danger">
-                      <Icon type="dislike-o" />
+                      {/* <Icon type="dislike-o" /> */}
+                      <Icon type="frown-o" />
                     </span>
                     <div className="box-info">
-                      <p className="box-num">{selectedBulk.total - selectedBulk.successCount}</p>
+                      <p className="box-num">{bulkFailRecordCount}</p>
                       <p className="text-muted">Fail</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-xl-3 col-sm-6">
+                  <div className="number-card-v2 mb-3">
+                    <span className="icon-btn icon-btn-round icon-btn-lg text-white bg-primary">
+                      <Icon type="meh-o" />
+                    </span>
+                    <div className="box-info">
+                      <p className="box-num">{bulkOnPremiseRecordCount}</p>
+                      <p className="text-muted">OnPremise</p>
                     </div>
                   </div>
                 </div>
@@ -736,13 +775,14 @@ class Data extends React.Component {
                 <div className="box box-default mb-4">
                   <div className="box-header">
                     Bulk Details
-                    {/* {record.status === 0 && record.count === record.success && } */}
                     <Button
                       type="primary"
                       shape="round"
                       icon="play-circle-o"
                       disabled={
-                        selectedBulk.status !== 0 || selectedBulk.count !== selectedBulk.successCount
+                        // selectedBulk.status !== 0 ||
+                        // selectedBulk.count !== bulkOnPremiseRecordCount
+                        selectedBulk.count === bulkSuccessRecordCount || bulkFailRecordCount !== 0
                       }
                       onClick={() => this.proceedBulk(selectedBulk)}
                       className="float-right ml-1"
@@ -849,27 +889,22 @@ class Data extends React.Component {
                             key="action"
                             render={(text, record) => (
                               <>
-                                {!record.success && (
-                                  <>
-                                    <span>
-                                      <Tooltip title="View">
-                                        <Icon
-                                          onClick={() => this.toggleModal(record)}
-                                          type="edit"
-                                        />
-                                      </Tooltip>
-                                    </span>
-                                    {record.status === 0 && (
-                                      <span className="ml-3">
-                                        <Tooltip title="Proceed">
-                                          <Icon
-                                            onClick={() => this.proceedRecord(record)}
-                                            type="play-circle-o"
-                                          />
-                                        </Tooltip>
-                                      </span>
-                                    )}
-                                  </>
+                                {record.status !== 0 && record.status !== 3 && (
+                                  <span className="ml-3">
+                                    <Tooltip title="View">
+                                      <Icon onClick={() => this.toggleModal(record)} type="edit" />
+                                    </Tooltip>
+                                  </span>
+                                )}
+                                {record.status === 0 && (
+                                  <span className="ml-3">
+                                    <Tooltip title="Proceed">
+                                      <Icon
+                                        onClick={() => this.proceedRecord(record)}
+                                        type="play-circle-o"
+                                      />
+                                    </Tooltip>
+                                  </span>
                                 )}
                               </>
                             )}
