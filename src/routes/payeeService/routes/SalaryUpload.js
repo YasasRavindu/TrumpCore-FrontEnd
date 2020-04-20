@@ -250,8 +250,6 @@ class Data extends React.Component {
             ' invalid payment values in your CSV file. Please check them out and upload again.'
         );
       } else {
-        console.log(SalaryTotal);
-        console.log(records);
         message.success('File Successfully Uploaded!');
 
         this._isMounted &&
@@ -298,21 +296,27 @@ class Data extends React.Component {
   };
 
   pageReset = () => {
-    this._isMounted &&
-      this.setState({
-        showBtn: false,
-        accountListProcessed: {},
-        salaryTotal: 0,
-        selectedAccount: undefined,
-        loaderCsvUpload: false,
-      });
-    this.updateAccountList('');
-    this.loadBulkData();
+    // this._isMounted &&
+    //   this.setState({
+    //     showBtn: false,
+    //     accountListProcessed: {},
+    //     salaryTotal: 0,
+    //     selectedAccount: undefined,
+    //     loaderCsvUpload: false,
+    //   });
+    // this.updateAccountList('');
+    // this.loadBulkData();
+    window.location.reload(false);
   };
+  
+  // resetForm(){
+  //   window.location.reload(false);
+  // }
+
 
   onFilterChange = v => {
     console.log(v);
-    
+
     this.setState(
       {
         filterValue: v,
