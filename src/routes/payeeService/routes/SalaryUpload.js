@@ -440,7 +440,7 @@ class Data extends React.Component {
       .get(environment.baseUrl + 'bulkPay/proceedBulkPay/' + bulk.id)
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        message.success('Bulk Proceed Success!');
+        message.success('Bulk Salary Process Started. The Process is running in background!');
         this.selectedBulk ? this.viewBulk() : this.loadBulkData();
       })
       .catch(error => {
