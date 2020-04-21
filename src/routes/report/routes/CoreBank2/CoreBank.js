@@ -33,11 +33,11 @@ const formItemLayout = {
   wrapperCol: { span: 14 },
 };
 const columns = [
-  {
-    title: 'Transaction Type',
-    dataIndex: 'TC_TransactionType',
-    key: 'TC_TransactionType',
-  },
+  // {
+  //   title: 'Transaction Type',
+  //   dataIndex: 'TC_TransactionType',
+  //   key: 'TC_TransactionType',
+  // },
   {
     title: 'Transaction Date',
     dataIndex: 'TransactionDate',
@@ -66,7 +66,7 @@ const columns = [
 ];
 
 const csvHeader = [
-  { label: 'Transaction Date', key: 'TransactionDate' },
+  // { label: 'Transaction Date', key: 'TransactionDate' },
   { label: 'Transaction Type', key: 'TC_TransactionType' },
   { label: 'Reference No', key: 'ReferenceNo' },
   { label: 'Sender Account', key: 'SenderAccount' },
@@ -175,7 +175,7 @@ class Data extends React.Component {
       searchData: [],
       tableLoading: false,
       loading: false,
-      searchType: '1',
+      searchType: undefined,
     };
   }
 
@@ -201,8 +201,11 @@ class Data extends React.Component {
     this._isMounted &&
       this.setState({
         tableLoading: true,
+        searchData: [],
       });
     const { searchType, fromDate, toDate } = this.state;
+    console.log(searchType);
+
     if (searchType !== undefined && fromDate !== undefined && toDate !== undefined) {
       axios
         .post(environment.baseUrl + 'report/coreBankLogByType', {
@@ -369,7 +372,10 @@ class Data extends React.Component {
                     <Col span={9} order={1}>
                       <FormItem {...formItemLayout} label="Transaction type">
                         {/* <TreeSelect {...tProps} /> */}
-                        <Select defaultValue="1" onChange={this.searchTypeHandler}>
+                        <Select
+                          placeholder="Select transaction type"
+                          onChange={this.searchTypeHandler}
+                        >
                           {Transaction_type &&
                             Transaction_type.map(type => {
                               return (

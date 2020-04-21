@@ -424,11 +424,7 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const {
-      filteredAccountList,
-      filteredCardList,
-      filteredAssignedList,
-    } = this.state;
+    const { filteredAccountList, filteredCardList, filteredAssignedList } = this.state;
 
     const optionsCards = filteredCardList.map(card => (
       <Option key={card.id} value={card.id}>
@@ -468,7 +464,7 @@ class Data extends React.Component {
                     <Col span={8} order={3}>
                       <FormItem>
                         <Input.Search
-                          placeholder="input search text"
+                          placeholder="Input search text"
                           onChange={this.searchTextHandler}
                           style={{ width: 200 }}
                         />

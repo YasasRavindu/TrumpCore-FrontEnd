@@ -189,6 +189,7 @@ class Data extends React.Component {
     this._isMounted &&
       this.setState({
         tableLoading: true,
+        searchData: [],
       });
     const { selectedAccount, fromDate, toDate } = this.state;
     if (selectedAccount !== undefined && fromDate !== undefined && toDate !== undefined) {
@@ -200,8 +201,10 @@ class Data extends React.Component {
         })
         .then(response => {
           console.log('------------------- response - ', response.data.content);
+          let i = 1;
           const transactionRecord = response.data.content.map(record => {
-            record.key = record.TransactionId;
+            record.key = i;
+            i++;
             record.TransactionDate = record.TransactionDate
               ? moment(record.TransactionDate).format('MMMM Do YYYY, h:mm:ss a')
               : 'N/A';
