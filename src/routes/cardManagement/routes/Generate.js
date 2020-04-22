@@ -245,14 +245,7 @@ class Data extends React.Component {
           {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_GENERATE_GENERATE) && (
             <div key="1">
               <div className="box box-default mb-4">
-                <div className="box-header">
-                  Generate Card Numbers
-                  <Tag color="purple" className="float-right ml-1">
-                    Minimum card count should be greater than 10 and less than 10000
-                    <br />
-                    Months that should be greater than 6 and less than 60
-                  </Tag>
-                </div>
+                <div className="box-header">Generate Card Numbers</div>
 
                 <div className="box-body mt-3">
                   <Form layout="inline">
@@ -300,6 +293,12 @@ class Data extends React.Component {
                       Generate
                     </Button>
                   </Form>
+                  <div className="mt-4">
+                    <p>
+                      * Minimum card count should be greater than 10 and less than 10000
+                      <br />* Months that should be greater than 6 and less than 60
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
