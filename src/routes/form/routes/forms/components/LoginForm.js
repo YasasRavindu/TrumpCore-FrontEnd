@@ -117,10 +117,10 @@ class NormalLoginForm extends React.Component {
             </Button>
           </FormItem>
         </Form>
-        <p className="additional-info">
-          {/* Don't have an account yet? <a href={DEMO.signUp}>Sign up</a> */}
-          Don't have an account yet? <a>Sign up</a>
-        </p>
+        {/* <p className="additional-info"> */}
+        {/* Don't have an account yet? <a href={DEMO.signUp}>Sign up</a> */}
+        {/* Don't have an account yet? <a>Sign up</a> */}
+        {/* </p> */}
         <p className="additional-info">
           Forgot your username or password? <a href="/user/forgot-password">Reset password</a>
           {/* Forgot your username or password? <a>Reset password</a> */}

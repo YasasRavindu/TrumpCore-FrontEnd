@@ -207,7 +207,7 @@ class Data extends React.Component {
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
                         <Search
-                          placeholder="input search text"
+                          placeholder="Input search text"
                           onChange={this.searchTextHandler}
                           style={{ width: 200 }}
                         />

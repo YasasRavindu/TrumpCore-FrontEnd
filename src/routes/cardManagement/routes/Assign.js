@@ -554,7 +554,7 @@ class Data extends React.Component {
                                   USER_AUTHORITY_CODE.CARD_ASSIGN_CANCEL
                                 ) && (
                                   <Popconfirm
-                                    title="Are you sure delete this assignment?"
+                                    title="Are you sure you want to remove the assignment of account?"
                                     onConfirm={() => this.handleStatus(record.card.id, 'CANCELLED')}
                                     okText="Yes"
                                     cancelText="No"

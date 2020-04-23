@@ -202,7 +202,7 @@ class Data extends React.Component {
                       <FormItem>
                         {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
                         <Search
-                          placeholder="input search text"
+                          placeholder="Input search text"
                           onChange={this.searchTextHandler}
                           style={{ width: 200 }}
                         />
@@ -239,7 +239,7 @@ class Data extends React.Component {
                             USER_AUTHORITY_CODE.POS_DEVICE_REMOVE_RE_REGISTER
                           ) && (
                             <Popconfirm
-                              title="Are you sure, you want re-register this device?"
+                              title="Are you sure you want to re-register this device?"
                               onConfirm={() => this.handleStatus(record.id, 'RE_REGISTER')}
                               // onConfirm={() => this.devicesDelete(record.id)}
                               okText="Yes"
@@ -256,7 +256,7 @@ class Data extends React.Component {
                             USER_AUTHORITY_CODE.POS_DEVICE_REMOVE_REMOVE
                           ) && (
                             <Popconfirm
-                              title="Are you sure, you want delete this device?"
+                              title="Are you sure you want to delete this device?"
                               onConfirm={() => this.handleStatus(record.id, 'REMOVE')}
                               // onConfirm={() => this.devicesDelete(record.id)}
                               okText="Yes"
