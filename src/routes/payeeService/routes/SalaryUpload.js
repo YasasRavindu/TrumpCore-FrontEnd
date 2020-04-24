@@ -24,15 +24,8 @@ import { CSVReader } from 'react-papaparse';
 import axios from 'axios';
 import { environment, commonUrl } from '../../../environments';
 import { REGEX } from 'constants/validation/regex';
+import { getErrorMsg } from 'services/responseHandler/errorHandlerService';
 const { Column, ColumnGroup } = Table;
-const tableData = [
-  { key: 1, id: '1', batchName: '1234567' },
-  {
-    key: 2,
-    id: '2',
-    batchName: '2020838',
-  },
-];
 
 // ! -- Can add more columns.
 // ! --'payment' => Name is a constant value and column required
@@ -68,6 +61,7 @@ class Data extends React.Component {
     super(props);
     this._isMounted = false;
     this.state = {
+      bulkPageVisible: true,
       accountList: [],
       filteredAccountList: [],
       selectedAccount: undefined,
@@ -166,6 +160,7 @@ class Data extends React.Component {
   loadBulkData = () => {
     this.setState({
       loaderBulkTable: true,
+      bulkPageVisible: true,
     });
     axios
       .get(environment.baseUrl + 'bulkPay/getAll')
@@ -224,7 +219,6 @@ class Data extends React.Component {
           if (!data[i]) {
             errorCountNull++;
           } else if (definedHeader[i] === 'payment') {
-            // if (/^\$?([0-9]{1,3},([0-9]{3},)*[0-9]{3}|[0-9]+)(.[0-9]{1,2})?$/.test(data[i])) {
             if (REGEX.CURRENCY.test(data[i])) {
               SalaryTotal += +data[i];
             } else {
@@ -290,29 +284,36 @@ class Data extends React.Component {
       })
       .catch(error => {
         console.log('------------------- error - ', error);
-        this.pageReset();
         message.error('Bulk Upload Failed!');
+        this.setState({
+          loaderCsvUpload: false,
+        });
       });
   };
 
   pageReset = () => {
-    // this._isMounted &&
-    //   this.setState({
-    //     showBtn: false,
-    //     accountListProcessed: {},
-    //     salaryTotal: 0,
-    //     selectedAccount: undefined,
-    //     loaderCsvUpload: false,
-    //   });
-    // this.updateAccountList('');
-    // this.loadBulkData();
-    window.location.reload(false);
+    this._isMounted &&
+      this.setState({
+        showBtn: false,
+        accountListProcessed: {},
+        salaryTotal: 0,
+        selectedAccount: undefined,
+        loaderCsvUpload: false,
+        bulkPageVisible: false,
+      });
+    this.loadBulkData();
+    this.updateAccountList('');
+    // window.location.reload(false);
   };
-  
-  // resetForm(){
-  //   window.location.reload(false);
-  // }
 
+  pageBack = () => {
+    this._isMounted &&
+      this.setState({
+        selectedBulk: null,
+        bulkRecordList: [],
+      });
+    this.pageReset();
+  };
 
   onFilterChange = v => {
     console.log(v);
@@ -326,52 +327,6 @@ class Data extends React.Component {
       }
     );
   };
-
-  // checkBoxChange = event => {
-  //   let { cbAll, cbTCFail, cbIBFail } = this.state;
-  //   let name = event.target.name;
-  //   let value = event.target.checked;
-  //   console.log(value);
-
-  //   let cbAllValue = false;
-  //   let cbTCFailValue = cbTCFail;
-  //   let cbIBFailValue = cbIBFail;
-
-  //   if (name === 'cbAll' && value) {
-  //     cbAllValue = true;
-  //     cbTCFailValue = cbIBFailValue = false;
-  //   }
-
-  //   if (name === 'cbTCFail') {
-  //     if (value) {
-  //       cbTCFailValue = true;
-  //     } else {
-  //       cbTCFailValue = false;
-  //     }
-  //   } else if (name === 'cbIBFail') {
-  //     if (value) {
-  //       cbIBFailValue = true;
-  //     } else {
-  //       cbIBFailValue = false;
-  //     }
-  //   }
-
-  //   if (this.state[event.target.name] !== event.target.checked) {
-  //     this._isMounted &&
-  //       this.setState(
-  //         {
-  //           cbAll: cbAllValue,
-  //           cbTCFail: cbTCFailValue,
-  //           cbIBFail: cbIBFailValue,
-  //         },
-  //         () => {
-  //           if (this.state.selectedBulk) {
-  //             this.viewBulk(this.state.selectedBulk);
-  //           }
-  //         }
-  //       );
-  //   }
-  // };
 
   viewBulk = bulk => {
     console.log('======== id', bulk);
@@ -445,12 +400,13 @@ class Data extends React.Component {
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         message.success('Bulk Salary Process Started. The Process is running in background!');
-        this.selectedBulk ? this.viewBulk() : this.loadBulkData();
+        this.pageBack();
       })
       .catch(error => {
         console.log('------------------- error - ', error);
         message.error('Bulk Proceed Failed!');
-        this.selectedBulk ? this.viewBulk() : this.loadBulkData();
+        this.viewBulk();
+        // this.selectedBulk ? this.viewBulk() : this.loadBulkData();
       });
   };
 
@@ -470,14 +426,6 @@ class Data extends React.Component {
         console.log('------------------- error - ', error);
         message.error('Bulk Record Proceed Failed!');
         this.viewBulk(this.state.selectedBulk);
-      });
-  };
-
-  pageBack = () => {
-    this._isMounted &&
-      this.setState({
-        selectedBulk: null,
-        bulkRecordList: [],
       });
   };
 
@@ -560,6 +508,7 @@ class Data extends React.Component {
       bulkSuccessRecordCount,
       bulkFailRecordCount,
       bulkOnPremiseRecordCount,
+      bulkPageVisible,
       filterValue,
       bulkRecordFilters,
     } = this.state;
@@ -595,7 +544,7 @@ class Data extends React.Component {
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
-          {selectedBulk === null && (
+          {bulkPageVisible && selectedBulk === null && (
             <React.Fragment>
               <div key="1">
                 <Spin spinning={this.state.loaderCsvUpload}>
@@ -882,7 +831,21 @@ class Data extends React.Component {
                           />
                           <Column title="Payment" dataIndex="payment" key="payment" align="right" />
                           <Column title="Switch Remark" dataIndex="tcRemarks" key="tcRemarks" />
-                          <Column title="Core Bank Remark" dataIndex="ibRemarks" key="ibRemarks" />
+                          {/* <Column title="Core Bank Remark" dataIndex="ibRemarks" key="ibRemarks" /> */}
+                          <Column
+                            title="Core Bank Remark"
+                            render={(text, record) => {
+
+                              let error = "--";
+
+                              if(record && record.ibRemarks){
+                                let errorMsg = getErrorMsg(record.ibRemarks);
+                                error = errorMsg === null ? record.ibRemarks : errorMsg;
+                              }
+
+                              return <span>{error}</span>;
+  }}
+                          />
                           {/* <Column
                             title="TC Fail"
                             key="tcFail"
