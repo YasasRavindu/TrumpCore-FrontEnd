@@ -296,7 +296,8 @@ class Data extends React.Component {
                   <div className="mt-4">
                     <p>
                       * Minimum card count should be greater than 10 and less than 10000
-                      <br />* Months that should be greater than 6 and less than 60
+                      <br />* Effective Period should be greater than 6 Months and less than 60
+                      Months
                     </p>
                   </div>
                 </div>

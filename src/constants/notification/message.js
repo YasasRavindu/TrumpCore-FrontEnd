@@ -2,8 +2,7 @@ export const CUSTOM_MESSAGE = {
   DEFAULT_ERROR: 'Something went wrong please try again!',
   LOGIN_ERROR: {
     userNotExist: 'Invalid Email!',
-    userNotActivated:
-      'Your account has been deactivated. Please contact a MOBILECASH support center',
+    userNotActivated: 'Your account has been deactivated. Please contact MOBILECASH support center',
     incorrectPassword: 'Invalid Password!',
     defaultError: 'Something went wrong please try again!',
   },
