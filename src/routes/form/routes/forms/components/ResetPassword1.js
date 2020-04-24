@@ -29,12 +29,14 @@ class NormalForm extends React.Component {
           .then(response => {
             console.log('------------------- response - ', response.data.content);
             message.success(
-              'A link has been sent to the email you entered. You can reset your password by clicking on the link.!'
+              'A link has been sent to the email you entered. You can reset your password by clicking on the link.!',
+              5
             );
             this.setState({
               loading: false,
             });
             this.props.form.resetFields();
+            this.props.history.push('/user/login');
           })
           .catch(error => {
             console.log('------------------- error - ', error);
