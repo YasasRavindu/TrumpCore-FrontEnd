@@ -482,11 +482,18 @@ class Data extends React.Component {
                     </Col>
                     <Col span={6}>
                       <FormItem label="Transaction type">
-                        <TreeSelect {...tProps} />
+                        <TreeSelect
+                          {...tProps}
+                          dropdownStyle={{ maxHeight: 300, overflow: 'auto' }}
+                        />
                       </FormItem>
                     </Col>
                   </Row>
                 </Form>
+                <p>
+                  * Type any of the cell value on "Search" and select the related column value on
+                  "Search column" to get respective results.
+                </p>
 
                 <article className="article mt-2">
                   {/* <ConfigProvider renderEmpty={customize && customizeRenderEmpty}> */}

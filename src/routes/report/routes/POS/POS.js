@@ -75,6 +75,11 @@ const treeData = [
     value: 'remove',
     key: 'remove',
   },
+  {
+    title: 'Re Register',
+    value: 're_register',
+    key: 're_register',
+  },
 ];
 
 const FormItem = Form.Item;

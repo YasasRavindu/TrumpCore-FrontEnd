@@ -108,6 +108,13 @@ export const REPORT = [
     path: '/app/report/corebank2',
     authorityCode: USER_AUTHORITY_CODE.REPORT_COREBANK_2,
   },
+  {
+    name: 'Report - Schedule',
+    menuName: 'Schedule',
+    desc: 'Report - Schedule - Description',
+    path: '/app/report/schedule',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_SCHEDULE,
+  },
 ];
 export const ACCOUNT = [
   {

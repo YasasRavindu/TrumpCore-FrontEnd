@@ -25,6 +25,10 @@ let CoreBank2 = loadable({
   loader: () => import('./routes/CoreBank2/'),
   loading: LoadingComponent,
 });
+let Schedule = loadable({
+  loader: () => import('./routes/Schedule/'),
+  loading: LoadingComponent,
+});
 
 const Report = ({ match }) => (
   <div>
@@ -33,6 +37,7 @@ const Report = ({ match }) => (
     <Route path={`${match.url}/cards`} component={Cards} />
     <Route path={`${match.url}/corebank`} component={CoreBank} />
     <Route path={`${match.url}/corebank2`} component={CoreBank2} />
+    <Route path={`${match.url}/schedule`} component={Schedule} />
   </div>
 );
 

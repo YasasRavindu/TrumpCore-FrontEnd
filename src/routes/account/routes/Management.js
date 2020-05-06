@@ -549,7 +549,14 @@ class Data extends React.Component {
                       <h4>Account Details</h4>
                       <div className="divider divider-solid my-4" />
 
-                      <div>
+                      <div
+                        className="mt-2 mb-4"
+                        style={{
+                          display: 'inline-flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}
+                      >
                         <Upload
                           name="avatar"
                           listType="picture-card"

@@ -62,6 +62,10 @@ class NormalLoginForm extends React.Component {
             });
             this.openNotificationWithIcon('error', getErrorMessage(error, 'LOGIN_ERROR'));
           });
+      } else {
+        this.setState({
+          loading: false,
+        });
       }
     });
   };
