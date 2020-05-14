@@ -47,6 +47,14 @@ const STATUS = {
     DOWNLOAD: { color: 'blue' },
     ACTIVE: { color: 'magenta' },
   },
+  SCHEDULE_REPORT_STATUS: {
+    ACTIVE: { color: '', label: 'Active' },
+    INACTIVE: { color: 'magenta', label: 'Inactive' },
+  },
+  SCHEDULE_REPORT_DETAIL: {
+    true: { color: 'blue', label: 'success' },
+    false: { color: 'red', label: 'Unsuccess' },
+  },
 };
 
 export default STATUS;

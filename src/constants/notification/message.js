@@ -62,6 +62,13 @@ export const CUSTOM_MESSAGE = {
     userNotExists: 'The corresponding user account does not exist!',
     defaultError: 'Something went wrong please try again!',
   },
+  SCHEDULE_REPORT_ERROR: {
+    missingEmail: 'Please enter E-mail address',
+    missingAccountId: 'Please enter Account number',
+    persistIssue: 'There is persists issue',
+    searchIssue: 'There is search issue',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export function getErrorMessage(error, arrayKey) {
