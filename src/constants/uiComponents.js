@@ -40,6 +40,13 @@ export const POS_DEVICES = [
     path: '/app/devices/remove',
     authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_REMOVE,
   },
+  {
+    name: 'POS Devices - Version Management',
+    menuName: 'Version Management',
+    desc: 'POS Devices - Version Management - Description',
+    path: '/app/devices/version-management',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_VERSION_MANAGEMENT,
+  },
 ];
 export const USER_MANAGEMENT = [
   {

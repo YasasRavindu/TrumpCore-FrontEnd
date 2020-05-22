@@ -1,4 +1,8 @@
 const STATUS = {
+  COMMON_STATUS_ACTIVE_INACTIVE: {
+    false: { color: '', label: 'INACTIVE', value: '0' },
+    true: { color: 'blue', label: 'ACTIVE', value: '1' },
+  },
   DEVICE_STATUS: {
     REGISTER: { color: 'blue', label: 'REGISTER', value: '0' },
     ACTIVE: { color: 'blue', label: 'ACTIVE', value: '1' },
