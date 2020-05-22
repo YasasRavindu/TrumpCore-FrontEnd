@@ -70,6 +70,8 @@ class Data extends React.Component {
       loadFilterSchedule: [],
       tableLoading: false,
       loading: false,
+      visible: false,
+      editEmailScheduleId: undefined,
     };
   }
 
@@ -309,6 +311,81 @@ class Data extends React.Component {
     );
   };
 
+  stateBtn(status, title, type, record) {
+    return (
+      <Tooltip title={title} className="mr-3">
+        <Icon onClick={() => this.handleStatus(record.id, status)} type={type} />
+      </Tooltip>
+    );
+  }
+
+  handleStatus = (id, value) => {
+    axios
+      .put(
+        environment.baseUrl +
+          'report/scheduleReport/updateStatus/' +
+          id +
+          '/' +
+          STATUS.SCHEDULE_REPORT_STATUS[value].value
+      )
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        this.loadData();
+      })
+      .catch(error => {
+        //message.error(getErrorMessage(error, 'DEVICES_STATUS_CHANGE_ERROR'));
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  toggleModal = record => {
+    this.setState({
+      editEmailScheduleId: record.id,
+      visible: true,
+    });
+  };
+
+  updateEmail = () => {
+    this.props.form.validateFields(['edit_email'], (err, values) => {
+      if (!err) {
+        axios
+          .put(
+            environment.baseUrl + 'report/scheduleReport/update/' + this.state.editEmailScheduleId,
+            {
+              email: values.edit_email,
+            }
+          )
+          .then(response => {
+            console.log('------------------- response - ', response.data.content);
+            message.success('Email was successfully updated');
+            this.loadData();
+            this.setState({
+              editEmailScheduleId: undefined,
+              visible: false,
+            });
+            this.props.form.resetFields();
+          })
+          .catch(error => {
+            console.log('------------------- error - ', error);
+            this.setState({
+              editEmailScheduleId: undefined,
+              visible: false,
+            });
+            this.props.form.resetFields();
+          });
+      }
+    });
+  };
+
+  handleCancel = e => {
+    // console.log(e);
+    this.setState({
+      editEmailScheduleId: undefined,
+      visible: false,
+    });
+    this.props.form.resetFields();
+  };
+
   render() {
     const { getFieldDecorator } = this.props.form;
     const { filteredAccountList, selectedSchedule } = this.state;
@@ -429,14 +506,31 @@ class Data extends React.Component {
                         title="Action"
                         key="action"
                         render={(text, record) => (
-                          <span>
-                            <Tooltip title="View">
-                              <Icon
-                                onClick={() => this.viewSchedule(record.id)}
-                                type="menu-unfold"
-                              />
-                            </Tooltip>
-                          </span>
+                          <>
+                            <span>
+                              {record.status && record.status === 'ACTIVE' && (
+                                <>
+                                  {this.stateBtn('INACTIVE', 'Inactive', 'close-circle-o', record)}
+                                </>
+                              )}
+                              {record.status && record.status === 'INACTIVE' && (
+                                <>{this.stateBtn('ACTIVE', 'Active', 'check-circle-o', record)}</>
+                              )}
+                            </span>
+                            <span>
+                              <Tooltip title="Update" className="mr-3">
+                                <Icon onClick={() => this.toggleModal(record)} type="edit" />
+                              </Tooltip>
+                            </span>
+                            <span>
+                              <Tooltip title="View">
+                                <Icon
+                                  onClick={() => this.viewSchedule(record.id)}
+                                  type="menu-unfold"
+                                />
+                              </Tooltip>
+                            </span>
+                          </>
                         )}
                       />
                     </Table>
@@ -507,6 +601,43 @@ class Data extends React.Component {
             </div>
           </>
         )}
+
+        <Modal
+          onOk={this.updateEmail}
+          //confirmLoading={this.state.confirmLoading}
+          onCancel={this.handleCancel}
+          title="Edit E-mail"
+          visible={this.state.visible}
+          width="300px"
+        >
+          <Form>
+            <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+              <Col span={24}>
+                <FormItem>
+                  {getFieldDecorator('edit_email', {
+                    rules: [
+                      { type: 'email', message: 'The input is not valid E-mail!' },
+                      { required: true, message: 'Please input your email!' },
+                    ],
+                  })(
+                    <Input
+                      size="default"
+                      //prefix={<Icon type="mail" style={{ fontSize: 13 }} />}
+                      placeholder="Enter your Email"
+                    />
+                  )}
+                </FormItem>
+              </Col>
+            </Row>
+            {/* <Row>
+              <Col span={24} order={4}>
+                <Button type="primary" className="float-right" onClick={this.submit}>
+                  Submit
+                </Button>
+              </Col>
+            </Row> */}
+          </Form>
+        </Modal>
       </div>
     );
   }

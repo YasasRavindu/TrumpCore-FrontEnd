@@ -48,8 +48,8 @@ const STATUS = {
     ACTIVE: { color: 'magenta' },
   },
   SCHEDULE_REPORT_STATUS: {
-    ACTIVE: { color: '', label: 'Active' },
-    INACTIVE: { color: 'magenta', label: 'Inactive' },
+    ACTIVE: { color: '', label: 'Active', value: '1' },
+    INACTIVE: { color: 'magenta', label: 'Inactive', value: '2' },
   },
   SCHEDULE_REPORT_DETAIL: {
     true: { color: 'blue', label: 'success' },
