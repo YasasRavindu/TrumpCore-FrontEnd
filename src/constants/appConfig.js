@@ -2,7 +2,7 @@ let date = new Date();
 let year = date.getFullYear();
 
 const APPCONFIG = {
-  brand: 'TrumpCore',
+  brand: 'TrumpCode',
   timeout: 1000 * 60 * 10,
   year: year,
   AutoCloseMobileNav: true, // Boolean: true, false. Automatically close sidenav on route change (Mobile only)

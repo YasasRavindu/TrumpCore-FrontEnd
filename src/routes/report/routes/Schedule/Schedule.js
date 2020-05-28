@@ -72,6 +72,7 @@ class Data extends React.Component {
       loading: false,
       visible: false,
       editEmailScheduleId: undefined,
+      confirmLoading: false,
     };
   }
 
@@ -207,7 +208,7 @@ class Data extends React.Component {
   dataSubmit = e => {
     e.preventDefault();
     const { selectedAccount } = this.state;
-    this.props.form.validateFieldsAndScroll((err, values) => {
+    this.props.form.validateFieldsAndScroll(['email'], (err, values) => {
       if (!err && selectedAccount !== undefined) {
         axios
           .post(environment.baseUrl + 'report/scheduleReport', {
@@ -224,7 +225,7 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-            message.error('Something wrong!');
+            //message.error('Something wrong!');
             message.error(getErrorMessage(error, 'SCHEDULE_REPORT_ERROR'));
           });
       } else {
@@ -333,7 +334,7 @@ class Data extends React.Component {
         this.loadData();
       })
       .catch(error => {
-        //message.error(getErrorMessage(error, 'DEVICES_STATUS_CHANGE_ERROR'));
+        message.error(getErrorMessage(error, 'SCHEDULE_REPORT_ERROR'));
         console.log('------------------- error - ', error);
       });
   };
@@ -347,6 +348,9 @@ class Data extends React.Component {
 
   updateEmail = () => {
     this.props.form.validateFields(['edit_email'], (err, values) => {
+      this.setState({
+        confirmLoading: true,
+      });
       if (!err) {
         axios
           .put(
@@ -362,14 +366,17 @@ class Data extends React.Component {
             this.setState({
               editEmailScheduleId: undefined,
               visible: false,
+              confirmLoading: false,
             });
             this.props.form.resetFields();
           })
           .catch(error => {
             console.log('------------------- error - ', error);
+            message.error(getErrorMessage(error, 'SCHEDULE_REPORT_ERROR'));
             this.setState({
               editEmailScheduleId: undefined,
               visible: false,
+              confirmLoading: false,
             });
             this.props.form.resetFields();
           });
@@ -604,7 +611,7 @@ class Data extends React.Component {
 
         <Modal
           onOk={this.updateEmail}
-          //confirmLoading={this.state.confirmLoading}
+          confirmLoading={this.state.confirmLoading}
           onCancel={this.handleCancel}
           title="Edit E-mail"
           visible={this.state.visible}
