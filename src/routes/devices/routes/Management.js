@@ -58,6 +58,13 @@ class Data extends React.Component {
       assignedDeviceList: [],
       filteredAssignedDeviceList: [],
       accountList: [],
+
+      // for device status type 2
+      // -----------------------------
+      selectedDevice: null,
+      selectedDeviceStatus: null,
+      modalVisible: false,
+      // -----------------------------
     };
   }
 
@@ -118,6 +125,7 @@ class Data extends React.Component {
       });
   };
 
+  // type 1 (old)
   handleStatus = (id, value) => {
     axios
       .get(
@@ -125,6 +133,7 @@ class Data extends React.Component {
       )
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
+        message.success('Device status change success');
         this.loadData();
       })
       .catch(error => {
@@ -132,6 +141,31 @@ class Data extends React.Component {
         console.log('------------------- error - ', error);
       });
   };
+
+  // type 2 (new)
+  // ------------------------------------------------------------------------------
+  // handleStatus = () => {
+  //   let { selectedDevice, selectedDeviceStatus } = this.state;
+  //   axios
+  //     .get(
+  //       environment.baseUrl +
+  //         'device/changeStatus/' +
+  //         selectedDevice.id +
+  //         '/' +
+  //         STATUS.DEVICE_STATUS[selectedDeviceStatus].value
+  //     )
+  //     .then(response => {
+  //       // console.log('------------------- response - ', response.data.content);
+  //       message.success('Device status change success');
+  //       this.toggleModal(undefined);
+  //       this.loadData();
+  //     })
+  //     .catch(error => {
+  //       message.error(getErrorMessage(error, 'DEVICES_STATUS_CHANGE_ERROR'));
+  //       console.log('------------------- error - ', error);
+  //     });
+  // };
+  // ------------------------------------------------------------------------------
 
   searchStatusHandler = v => {
     this.dataFilter('searchStatus', v);
@@ -177,7 +211,8 @@ class Data extends React.Component {
 
   submit = e => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+
+    this.props.form.validateFields(['serialNumber', 'accountNumber'], (err, values) => {
       if (!err) {
         console.log(values);
         axios
@@ -211,6 +246,63 @@ class Data extends React.Component {
     }
   }
 
+  // for device status type 2
+  // ---------------------------------------------------------
+  toggleModal = record => {
+    if (record) {
+      this._isMounted &&
+        this.setState({
+          selectedDevice: record,
+          selectedDeviceStatus: record.status,
+          modalVisible: true,
+        });
+    } else {
+      this._isMounted &&
+        this.setState({
+          selectedDevice: null,
+          selectedDeviceStatus: null,
+          modalVisible: false,
+        });
+    }
+  };
+
+  onStatusChange = status => {
+    this._isMounted &&
+      this.setState({
+        selectedDeviceStatus: status,
+      });
+  };
+
+  statusDropdown = viewAuthorities => {
+    let currentStatus = this.state.selectedDeviceStatus;
+    if (currentStatus) {
+      return (
+        <Select
+          placeholder="Device Status"
+          defaultValue={currentStatus}
+          onSelect={this.onStatusChange}
+        >
+          {(currentStatus === 'ACTIVE' ||
+            checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.POS_DEVICE_MANAGEMENT_ACTIVE)) && (
+            <Option value="ACTIVE">Active</Option>
+          )}
+          {(currentStatus === 'INACTIVE' ||
+            checkAuthority(
+              viewAuthorities,
+              USER_AUTHORITY_CODE.POS_DEVICE_MANAGEMENT_INACTIVE
+            )) && <Option value="INACTIVE">Inactive</Option>}
+          {(currentStatus === 'LOCKED' ||
+            checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.POS_DEVICE_MANAGEMENT_LOCK)) && (
+            <Option value="LOCKED">Lock</Option>
+          )}
+        </Select>
+      );
+    } else {
+      return <span>Invalid device status!</span>;
+    }
+  };
+  // ---------------------------------------------------------
+
   componentWillUnmount() {
     this._isMounted = false;
   }
@@ -227,7 +319,13 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const { accountList, registeredDeviceList, filteredAssignedDeviceList } = this.state;
+    const {
+      accountList,
+      registeredDeviceList,
+      filteredAssignedDeviceList,
+      modalVisible,
+      selectedDevice,
+    } = this.state;
 
     const optionsDevices = registeredDeviceList.map(device => (
       <Option key={device.id} value={device.serial}>
@@ -259,7 +357,6 @@ class Data extends React.Component {
                           },
                         ],
                       })(
-                        // (<Input placeholder="Serial Number" />)
                         <AutoComplete
                           dataSource={optionsDevices}
                           style={{ width: 200 }}
@@ -405,7 +502,12 @@ class Data extends React.Component {
                       key="action"
                       render={(text, record) => (
                         <span>
-                          {this.actionBtn(record)}
+                          {/* for device status type 2 */}
+                          {/* <Tooltip title="Update">
+                            <Icon onClick={() => this.toggleModal(record)} type="edit" />
+                          </Tooltip> */}
+
+                          {/* for device status type 1 */}
                           {record.status && record.status === 'ACTIVE' && (
                             <>
                               {this.actionBtn(
@@ -475,6 +577,50 @@ class Data extends React.Component {
             </div>
           </div>
         </QueueAnim>
+
+        {/* for device status type 2 */}
+        {modalVisible && (
+          <Modal
+            title="Change Device Status"
+            visible={modalVisible}
+            onOk={this.handleStatus}
+            confirmLoading={this.state.confirmLoading}
+            onCancel={() => this.toggleModal(undefined)}
+            maskClosable={false}
+            width="300px"
+          >
+            <Form>
+              <div>
+                <div className="mb-2">
+                  <span>Serial Number : </span>
+                  <span>{selectedDevice.serial}</span>
+                </div>
+                <div className="mb-2">
+                  <span>Account Holder : </span>
+                  {selectedDevice.account && selectedDevice.account.holder && (
+                    <span>{selectedDevice.account.holder}</span>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <span>Account Number : </span>
+                  {selectedDevice.account && selectedDevice.account.accountNumber && (
+                    <span>{selectedDevice.account.accountNumber}</span>
+                  )}
+                </div>
+              </div>
+              <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                <Col span={24}>
+                  <FormItem label="Device Status">
+                    {getFieldDecorator(
+                      'statusUpdate',
+                      {}
+                    )(<>{this.statusDropdown(viewAuthorities)}</>)}
+                  </FormItem>
+                </Col>
+              </Row>
+            </Form>
+          </Modal>
+        )}
       </div>
     );
   }

@@ -19,9 +19,8 @@ import {
   Tooltip,
   Spin,
 } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-
 import { Redirect } from 'react-router-dom';
+
 // -------------- IMPORT AUTHORITY -----------------------------------------
 import {
   DEFAULT_EXCEPTION_ROUTE,
@@ -41,6 +40,7 @@ import STATUS from 'constants/notification/status';
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
+const confirm = Modal.confirm;
 
 function truncate(str) {
   return str !== undefined && str !== '' && str.length > 25 ? str.substring(0, 25) + '...' : str;
@@ -57,6 +57,7 @@ class Data extends React.Component {
       selectedFile: '',
       loaderForm: false,
       fileUploadError: null,
+      isUpdate: false,
     };
   }
 
@@ -84,20 +85,6 @@ class Data extends React.Component {
       });
   };
 
-  handleStatus = id => {
-    axios
-      .put(environment.baseUrl + 'versionManagement/' + id)
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        message.success('Device Version Status Successfully Changed.');
-        this.loadTable();
-      })
-      .catch(error => {
-        this.showErrorMsg(error);
-        console.log('------------------- error - ', error);
-      });
-  };
-
   toggleModal = record => {
     if (record) {
       this._isMounted &&
@@ -116,7 +103,6 @@ class Data extends React.Component {
 
   handleFileUpload = info => {
     console.log(info);
-
     if (
       info.file.size > 0 &&
       info.file.name
@@ -140,6 +126,9 @@ class Data extends React.Component {
 
   submit = e => {
     e.preventDefault();
+    console.log(this.state.selectedFile);
+
+    let { isUpdate, selectedFile, currentRecord } = this.state;
 
     if (this.state.selectedFile !== '') {
       this._isMounted &&
@@ -164,20 +153,34 @@ class Data extends React.Component {
           let formData = new FormData();
           formData.append('versionNo', values.versionNo);
           formData.append('versionName', values.versionName);
-          formData.append('file', this.state.selectedFile);
 
-          axios
-            .post(environment.baseUrl + 'versionManagement', formData)
+          let reqHeader;
+          if (isUpdate) {
+            if (selectedFile.uid === undefined) {
+              formData.append('file', null);
+            } else {
+              formData.append('file', this.state.selectedFile);
+            }
+            reqHeader = {
+              method: 'put',
+              url: environment.baseUrl + 'versionManagement/' + currentRecord.id,
+              data: formData,
+            };
+          } else {
+            formData.append('file', this.state.selectedFile);
+            reqHeader = {
+              method: 'post',
+              url: environment.baseUrl + 'versionManagement',
+              data: formData,
+            };
+          }
+
+          axios(reqHeader)
             .then(response => {
               message.success('Device Version Successfully Created.');
               console.log('------------------- response - ', response);
               this.loadTable();
-              this._isMounted &&
-                this.setState({
-                  selectedFile: '',
-                  loaderForm: false,
-                });
-              this.props.form.resetFields();
+              this.clearFormValues();
             })
             .catch(error => {
               this.showErrorMsg(error);
@@ -190,6 +193,66 @@ class Data extends React.Component {
         }
       }
     });
+  };
+
+  setFormValues = record => {
+    this.props.form.setFieldsValue({
+      versionNo: record.versionNo,
+      versionName: record.versionName,
+    });
+    this._isMounted &&
+      this.setState({
+        fileUploadError: null,
+        isUpdate: true,
+        currentRecord: record,
+        selectedFile: { name: record.ftpPath.split('/').pop(), isDefaultValue: true },
+      });
+  };
+
+  clearFormValues = () => {
+    this.props.form.resetFields();
+    this._isMounted &&
+      this.setState({
+        isUpdate: false,
+        currentRecord: undefined,
+        selectedFile: '',
+        loaderForm: false,
+        fileUploadError: null,
+      });
+  };
+
+  checkFormStatus = record => {
+    let current = this;
+    if (
+      this.props.form.getFieldValue('versionNo') !== undefined ||
+      this.props.form.getFieldValue('versionName') !== undefined ||
+      this.state.selectedFile !== ''
+    ) {
+      confirm({
+        title: 'Do you Want to continue?',
+        content: 'Continuing this process will be lost your current form data.',
+        onOk() {
+          current.setFormValues(record);
+        },
+        onCancel() {},
+      });
+    } else {
+      this.setFormValues(record);
+    }
+  };
+
+  handleStatus = id => {
+    axios
+      .put(environment.baseUrl + 'versionManagement/status/' + id)
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        message.success('Device Version Status Successfully Changed.');
+        this.loadTable();
+      })
+      .catch(error => {
+        this.showErrorMsg(error);
+        console.log('------------------- error - ', error);
+      });
   };
 
   showErrorMsg = error => {
@@ -212,14 +275,21 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const { visible, deviceVersionList, currentRecord, selectedFile, fileUploadError } = this.state;
+    const {
+      visible,
+      deviceVersionList,
+      currentRecord,
+      selectedFile,
+      fileUploadError,
+      isUpdate,
+    } = this.state;
 
     const uploadButton = (
       <Button
         // type="primary"
         // shape="round"
         icon="upload"
-        className="float-right ml-1"
+        className="float-right ml-1 mt-1"
       >
         Upload
       </Button>
@@ -288,8 +358,17 @@ class Data extends React.Component {
                       <Row>
                         <Col span={24} order={4}>
                           <Button type="primary" className="float-right" onClick={this.submit}>
-                            Submit
+                            {isUpdate ? 'Update' : 'Create'}
                           </Button>
+                          {isUpdate && (
+                            <Button
+                              type=""
+                              className="float-right mr-1"
+                              onClick={this.clearFormValues}
+                            >
+                              Cancel
+                            </Button>
+                          )}
                         </Col>
                       </Row>
                     </Form>
@@ -319,7 +398,7 @@ class Data extends React.Component {
                       title="Release Date"
                       dataIndex="releaseDate"
                       key="releaseDate"
-                      render={releaseDate => moment(releaseDate).format('MMMM Do YYYY, h:mm:ss a')}
+                      render={releaseDate => moment(releaseDate).format('MMMM DD YYYY, h:mm:ss a')}
                     />
                     <Column
                       title="Action"
@@ -327,10 +406,6 @@ class Data extends React.Component {
                       render={(text, record) => (
                         <span>
                           {record.status !== null && (
-                            // checkAuthority(
-                            //   viewAuthorities,
-                            //   USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_INACTIVE
-                            // ) && (
                             <Tooltip
                               title={STATUS.COMMON_STATUS_ACTIVE_INACTIVE[!record.status].label}
                               className="mr-3"
@@ -340,10 +415,10 @@ class Data extends React.Component {
                                 type={record.status ? 'close-circle-o' : 'check-circle-o'}
                               />
                             </Tooltip>
-                          )
-                          // )
-                          }
-
+                          )}
+                          <Tooltip title="Edit" className="mr-3">
+                            <Icon onClick={() => this.checkFormStatus(record)} type="edit" />
+                          </Tooltip>
                           <Tooltip title="View Details" className="mr-3">
                             <Icon onClick={() => this.toggleModal(record)} type="menu-unfold" />
                           </Tooltip>
