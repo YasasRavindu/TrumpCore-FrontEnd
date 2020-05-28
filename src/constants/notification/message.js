@@ -84,6 +84,10 @@ export const CUSTOM_MESSAGE = {
     missingAccountId: 'Please enter Account number',
     persistIssue: 'There is persists issue',
     searchIssue: 'There is search issue',
+    reportNotExist: 'Could not update your email. Please try again!',
+    updateIssue: 'Could not update your email. Please try again!',
+    wrongStatusType: 'Could not update the status!',
+    invalidStatus: 'Could not update the status!',
     defaultError: 'Something went wrong please try again!',
   },
 };
