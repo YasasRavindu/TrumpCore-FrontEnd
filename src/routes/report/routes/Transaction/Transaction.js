@@ -452,13 +452,13 @@ class Data extends React.Component {
               </div>
               <div className="box-body">
                 <Form>
-                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                    <Col span={6}>
+                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 0]}>
+                    <Col span={8}>
                       <FormItem label="Search">
                         <Search placeholder="Input Search Text" onChange={this.searchTextHandler} />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                    <Col span={8}>
                       <FormItem label="Search Column">
                         <Select defaultValue="account" onChange={this.searchColumnHandler}>
                           {columnList &&
@@ -472,7 +472,7 @@ class Data extends React.Component {
                         </Select>
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                    <Col span={8}>
                       <FormItem label="Log time">
                         <DatePicker.RangePicker
                           onChange={this.searchDateHandler}
@@ -480,13 +480,22 @@ class Data extends React.Component {
                         />
                       </FormItem>
                     </Col>
-                    <Col span={6}>
+                  </Row>
+                  <Row gutter={[0, 0]}>
+                    <Col span={24}>
                       <FormItem label="Transaction type">
-                        <TreeSelect {...tProps} />
+                        <TreeSelect
+                          {...tProps}
+                          dropdownStyle={{ maxHeight: 300, overflow: 'auto' }}
+                        />
                       </FormItem>
                     </Col>
                   </Row>
                 </Form>
+                <p>
+                  * Type any of the cell value on "Search" and select the related column value on
+                  "Search column" to get respective results.
+                </p>
 
                 <article className="article mt-2">
                   {/* <ConfigProvider renderEmpty={customize && customizeRenderEmpty}> */}

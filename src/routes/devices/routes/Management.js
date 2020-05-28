@@ -188,7 +188,7 @@ class Data extends React.Component {
             },
           })
           .then(response => {
-            message.success('Device Successfully Assign to Account');
+            message.success('Device was successfully assigned to the account');
             console.log('------------------- response - ', response);
             this.loadData();
             this.props.form.resetFields();
@@ -358,7 +358,7 @@ class Data extends React.Component {
                     <Col span={8} order={1}>
                       <FormItem>
                         <Input.Search
-                          placeholder="input search text"
+                          placeholder="Input search text"
                           onChange={this.searchTextHandler}
                           style={{ width: 200 }}
                         />

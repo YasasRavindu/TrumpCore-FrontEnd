@@ -2,7 +2,7 @@ const DEMO = {
   link: 'javascript:;', // javascript:;
   home: '/app/dashboard',
   home2: '/app/dashboard',
-  productLink: 'https://themeforest.net/item/ant-design-reactjs-admin-with-bootstrap/22194157',
+  productLink: 'https://trumpcode.com',
   user: 'Lisa',
   login: '/user/login',
   signUp: '/user/sign-up',

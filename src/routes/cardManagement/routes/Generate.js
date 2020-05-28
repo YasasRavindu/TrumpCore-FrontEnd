@@ -246,7 +246,8 @@ class Data extends React.Component {
             <div key="1">
               <div className="box box-default mb-4">
                 <div className="box-header">Generate Card Numbers</div>
-                <div className="box-body">
+
+                <div className="box-body mt-3">
                   <Form layout="inline">
                     <FormItem label="Card Count">
                       {getFieldDecorator('count', {
@@ -292,6 +293,13 @@ class Data extends React.Component {
                       Generate
                     </Button>
                   </Form>
+                  <div className="mt-4">
+                    <p>
+                      * Minimum card count should be greater than 10 and less than 10000
+                      <br />* Effective Period should be greater than 6 Months and less than 60
+                      Months
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -42,8 +42,14 @@ class AppHeader extends React.Component {
           <Icon type="question-circle-o" />
           Need Help?
         </a>{' '}
-      </Menu.Item>
-      <Menu.Divider /> */}
+      </Menu.Item> */}
+        <Menu.Item key="2">
+          <a href={'/app/userProfile'}>
+            <Icon type="setting" />
+            Settings
+          </a>
+        </Menu.Item>
+        <Menu.Divider />
         <Menu.Item key="3">
           <span onClick={this.logOut}>
             <Icon type="logout" />

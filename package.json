@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "",
   "dependencies": {
+    "@ant-design/colors": "^4.0.0",
     "antd": "^3.10.3",
     "axios": "^0.19.1",
     "classnames": "^2.2.6",
@@ -53,5 +54,4 @@
     "react-app-rewired": "^1.6.2",
     "redux-immutable-state-invariant": "^2.1.0"
   }
-  
 }

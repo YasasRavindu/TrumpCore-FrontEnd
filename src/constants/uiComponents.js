@@ -40,6 +40,13 @@ export const POS_DEVICES = [
     path: '/app/devices/remove',
     authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_REMOVE,
   },
+  {
+    name: 'POS Devices - Version Management',
+    menuName: 'Version Management',
+    desc: 'POS Devices - Version Management - Description',
+    path: '/app/devices/version-management',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_VERSION_MANAGEMENT,
+  },
 ];
 export const USER_MANAGEMENT = [
   {
@@ -100,6 +107,20 @@ export const REPORT = [
     desc: 'Report - CoreBank - Description',
     path: '/app/report/corebank',
     authorityCode: USER_AUTHORITY_CODE.REPORT_COREBANK,
+  },
+  {
+    name: 'Report - CoreBank - 2',
+    menuName: 'CoreBank 2',
+    desc: 'Report - CoreBank 2 - Description',
+    path: '/app/report/corebank2',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_COREBANK_2,
+  },
+  {
+    name: 'Report - Schedule',
+    menuName: 'Schedule',
+    desc: 'Report - Schedule - Description',
+    path: '/app/report/schedule',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_SCHEDULE,
   },
 ];
 export const ACCOUNT = [
@@ -875,6 +896,10 @@ export const USER = [
   {
     name: 'Forgot Password v2',
     path: '/user/forgot-password-v2',
+  },
+  {
+    name: 'Reset Password',
+    path: '/user/resetForm',
   },
 ];
 

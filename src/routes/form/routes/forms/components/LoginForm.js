@@ -62,6 +62,10 @@ class NormalLoginForm extends React.Component {
             });
             this.openNotificationWithIcon('error', getErrorMessage(error, 'LOGIN_ERROR'));
           });
+      } else {
+        this.setState({
+          loading: false,
+        });
       }
     });
   };
@@ -117,13 +121,13 @@ class NormalLoginForm extends React.Component {
             </Button>
           </FormItem>
         </Form>
+        {/* <p className="additional-info"> */}
+        {/* Don't have an account yet? <a href={DEMO.signUp}>Sign up</a> */}
+        {/* Don't have an account yet? <a>Sign up</a> */}
+        {/* </p> */}
         <p className="additional-info">
-          {/* Don't have an account yet? <a href={DEMO.signUp}>Sign up</a> */}
-          Don't have an account yet? <a>Sign up</a>
-        </p>
-        <p className="additional-info">
-          {/* Forgot your username or password? <a href={DEMO.forgotPassword}>Reset password</a> */}
-          Forgot your username or password? <a>Reset password</a>
+          Forgot your username or password? <a href="/user/forgot-password">Reset password</a>
+          {/* Forgot your username or password? <a>Reset password</a> */}
         </p>
       </section>
     );
