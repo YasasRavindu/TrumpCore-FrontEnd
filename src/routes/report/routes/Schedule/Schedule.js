@@ -15,6 +15,7 @@ import {
   DatePicker,
   message,
   Badge,
+  Popconfirm,
   AutoComplete,
   Tooltip,
 } from 'antd';
@@ -384,6 +385,24 @@ class Data extends React.Component {
     });
   };
 
+  ScheduleDelete = id => {
+    if (id) {
+      axios
+        .delete(environment.baseUrl + 'report/scheduleReport/delete/' + id)
+        .then(response => {
+          message.success('Schedule report successfully deleted!');
+          console.log('------------------- response - ', response.data.content);
+          this.loadData();
+        })
+        .catch(error => {
+          console.log('------------------- error - ', error);
+          message.error(getErrorMessage(error, 'SCHEDULE_REPORT_ERROR'));
+        });
+    } else {
+      message.error('Something wrong!');
+    }
+  };
+
   handleCancel = e => {
     // console.log(e);
     this.setState({
@@ -528,6 +547,18 @@ class Data extends React.Component {
                               <Tooltip title="Update" className="mr-3">
                                 <Icon onClick={() => this.toggleModal(record)} type="edit" />
                               </Tooltip>
+                            </span>
+                            <span>
+                              <Popconfirm
+                                title="Are you sure you want to delete this schedule?"
+                                onConfirm={() => this.ScheduleDelete(record.id)}
+                                okText="Yes"
+                                cancelText="No"
+                              >
+                                <Tooltip title="Remove" className="mr-3">
+                                  <Icon type="delete" />
+                                </Tooltip>
+                              </Popconfirm>
                             </span>
                             <span>
                               <Tooltip title="View">
