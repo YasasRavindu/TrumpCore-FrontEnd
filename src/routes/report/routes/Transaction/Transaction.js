@@ -498,7 +498,6 @@ class Data extends React.Component {
                     headers={csvHeader}
                     filename={'Transaction-report.csv'}
                     className="ant-btn float-right ant-btn-primary ant-btn-round"
-                    loading={this.state.loadingReport}
                   >
                     <Icon type="download" />
                     <span className="mr-1"></span>
