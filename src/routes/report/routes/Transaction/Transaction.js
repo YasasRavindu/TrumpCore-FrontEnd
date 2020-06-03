@@ -148,6 +148,7 @@ class Data extends React.Component {
     this._isMounted = false;
     this.state = {
       loadLog: [],
+      loadReport: [],
       searchDate: ['', ''],
       searchColumn: 'account',
       searchText: '',
@@ -160,11 +161,14 @@ class Data extends React.Component {
       visible: false,
       customize: true,
       loading: false,
+      loadingReport: false,
+      loadingReportError: false,
     };
   }
 
   async componentDidMount() {
     this.loadTable();
+    this.loadReport();
   }
 
   loadTable = () => {
@@ -173,7 +177,7 @@ class Data extends React.Component {
       loading: true,
     });
     axios
-      .post(environment.baseUrl + 'report/log/filterSearch', this.createReqBody())
+      .post(environment.baseUrl + 'report/log/filterSearch', this.createReqBody(true))
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         let data = response.data;
@@ -202,7 +206,7 @@ class Data extends React.Component {
       });
   };
 
-  createReqBody() {
+  createReqBody(pagination) {
     console.log(this.state);
     let { searchDate, searchColumn, searchText, searchType, pageSize, pageNumber } = this.state;
 
@@ -213,9 +217,13 @@ class Data extends React.Component {
       types: [],
       startDate: null,
       endDate: null,
-      pageSize: pageSize,
-      pageNumber: pageNumber,
+      // pageSize: pageSize,
+      // pageNumber: pageNumber,
     };
+    if (pagination) {
+      reqBody['pageSize'] = pageSize;
+      reqBody['pageNumber'] = pageNumber;
+    }
     if (
       searchText !== '' ||
       searchType.length > 0 ||
@@ -240,12 +248,42 @@ class Data extends React.Component {
       },
       () => {
         this.loadTable();
+        this.loadReport();
       }
     );
   };
 
   pageSizeHandler = (pageNumber, pageSize) => {
     this.paginationHandler(1, pageSize);
+  };
+
+  loadReport = () => {
+    this.setState({
+      loadingReport: true,
+      loadingReportError: false,
+    });
+    axios
+      .post(environment.baseUrl + 'report/log/transCSVFilter', this.createReqBody(false))
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const logList = response.data.content;
+        this.setState(
+          {
+            loadReport: logList,
+            loadingReport: false,
+          },
+          () => {
+            console.log(this.state);
+          }
+        );
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+        this.setState({
+          loadingReport: false,
+          loadingReportError: true,
+        });
+      });
   };
 
   exportPDF = () => {
@@ -286,6 +324,7 @@ class Data extends React.Component {
       moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
       STATUS.TRANSACTION_TYPE[d.type].label,
     ]);
+
     let content = {
       startY: 50,
       head: headers,
@@ -334,6 +373,7 @@ class Data extends React.Component {
       },
       () => {
         this.loadTable();
+        this.loadReport();
       }
     );
   };
@@ -392,6 +432,7 @@ class Data extends React.Component {
       customize,
       loading,
       loadLog,
+      loadReport,
       visible,
       logRequest,
       logResponse,
@@ -425,30 +466,45 @@ class Data extends React.Component {
                   icon="download"
                   onClick={() => this.exportPDF()}
                   className="float-right ml-1"
+                  loading={this.state.loadingReport}
                 >
                   PDF
                 </Button>
-                <CSVLink
-                  data={loadLog.map(d => ({
-                    holder: d.holder ? d.holder : 'N/A',
-                    accountNo: d.accountNo ? d.accountNo : 'N/A',
-                    serial: d.serial ? d.serial : 'N/A',
-                    merchantAccNo: d.merchantAccNo ? d.merchantAccNo : 'N/A',
-                    merchantName: d.merchantName ? d.merchantName : 'N/A',
-                    deviceAccNo: d.deviceAccNo ? d.deviceAccNo : 'N/A',
-                    deviceAcctName: d.deviceAcctName ? d.deviceAcctName : 'N/A',
-                    amount: d.amount ? d.amount : 'N/A',
-                    logTime: moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
-                    type: STATUS.TRANSACTION_TYPE[d.type].label,
-                  }))}
-                  headers={csvHeader}
-                  filename={'Transaction-report.csv'}
-                  className="ant-btn float-right ant-btn-primary ant-btn-round"
-                >
-                  <Icon type="download" />
-                  <span className="mr-1"></span>
-                  CSV
-                </CSVLink>
+                {this.state.loadingReport && (
+                  <Button
+                    type="primary"
+                    shape="round"
+                    icon="download"
+                    className="float-right ml-1"
+                    loading={this.state.loadingReport}
+                  >
+                    CSV
+                  </Button>
+                )}
+                {!this.state.loadingReport && (
+                  <CSVLink
+                    data={loadReport.map(d => ({
+                      holder: d.holder ? d.holder : 'N/A',
+                      accountNo: d.accountNo ? d.accountNo : 'N/A',
+                      serial: d.serial ? d.serial : 'N/A',
+                      merchantAccNo: d.merchantAccNo ? d.merchantAccNo : 'N/A',
+                      merchantName: d.merchantName ? d.merchantName : 'N/A',
+                      deviceAccNo: d.deviceAccNo ? d.deviceAccNo : 'N/A',
+                      deviceAcctName: d.deviceAcctName ? d.deviceAcctName : 'N/A',
+                      amount: d.amount ? d.amount : 'N/A',
+                      logTime: moment(d.logTime).format('MMMM Do YYYY, h:mm:ss a'),
+                      type: STATUS.TRANSACTION_TYPE[d.type].label,
+                    }))}
+                    headers={csvHeader}
+                    filename={'Transaction-report.csv'}
+                    className="ant-btn float-right ant-btn-primary ant-btn-round"
+                    loading={this.state.loadingReport}
+                  >
+                    <Icon type="download" />
+                    <span className="mr-1"></span>
+                    CSV
+                  </CSVLink>
+                )}
               </div>
               <div className="box-body">
                 <Form>

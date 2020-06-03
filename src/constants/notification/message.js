@@ -63,20 +63,29 @@ export const CUSTOM_MESSAGE = {
     defaultError: 'Something went wrong please try again!',
   },
   DEVICE_VERSION_MANAGEMENT_ERROR: {
-    invalidVersionNo: 'Invalid version no!',
-    invalidVersionName: 'Invalid version name!',
-    invalidFile: 'Invalid version file!',
-    invalidFileType: 'Invalid file format, file upload allow only .apk !',
+    invalidVersionNo: 'Please enter a valid version number!',
+    invalidVersionName: 'Please enter a valid version name!',
+    invalidFile: 'Please enter a valid version file!',
+    invalidFileType:
+      'The file you uploaded is not in the due format. Please upload a file ending with .apk file name.',
     invalidKeyConstant: 'Invalid FTP key constant, Check the database!',
-    versionNoOrVersionNameAlreadyExist: 'Version no or version name already exist!',
-    versionNameAlreadyUsedAsADirectoryName: 'Version name already used as a directory name!',
-    ftpLoginFailed: 'Login failed (FTP)!',
-    storeFileError: 'File store error (FTP)!',
-    deleteCurrentFileError: 'File delete error (FTP)!',
-    makeDirectoryError: 'Directory create error (FTP)!',
-    changeDirectoryError: 'Directory change error (FTP)!',
-    renameDirectoryError: 'Directory rename error (FTP)!',
-    idNotExists: 'Record not exists in database!',
+    versionNoOrVersionNameAlreadyExist:
+      'A version with the same version number or version name already exists.',
+    versionNameAlreadyUsedAsADirectoryName:
+      'Version name you entered is already used as a directory name.',
+    makeDirectoryError: 'Create directory error!',
+    ftpLoginFailed:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
+    storeFileError:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
+    deleteCurrentFileError:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
+    makeDirectoryError:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
+    changeDirectoryError:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
+    renameDirectoryError:
+      'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
     defaultError: 'Something went wrong please try again!',
   },
   SCHEDULE_REPORT_ERROR: {
