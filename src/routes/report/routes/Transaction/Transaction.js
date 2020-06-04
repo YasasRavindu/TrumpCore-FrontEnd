@@ -148,7 +148,7 @@ class Data extends React.Component {
     this._isMounted = false;
     this.state = {
       loadLog: [],
-      loadReport: [],
+      loadReportLog: [],
       searchDate: ['', ''],
       searchColumn: 'account',
       searchText: '',
@@ -168,7 +168,7 @@ class Data extends React.Component {
 
   async componentDidMount() {
     this.loadTable();
-    this.loadReport();
+    this.loadReportLog();
   }
 
   loadTable = () => {
@@ -248,7 +248,7 @@ class Data extends React.Component {
       },
       () => {
         this.loadTable();
-        this.loadReport();
+        this.loadReportLog();
       }
     );
   };
@@ -257,7 +257,7 @@ class Data extends React.Component {
     this.paginationHandler(1, pageSize);
   };
 
-  loadReport = () => {
+  loadReportLog = () => {
     this.setState({
       loadingReport: true,
       loadingReportError: false,
@@ -269,7 +269,7 @@ class Data extends React.Component {
         const logList = response.data.content;
         this.setState(
           {
-            loadReport: logList,
+            loadReportLog: logList,
             loadingReport: false,
           },
           () => {
@@ -312,7 +312,7 @@ class Data extends React.Component {
       ],
     ];
 
-    const realData = this.state.loadLog.map(d => [
+    const realData = this.state.loadReportLog.map(d => [
       d.holder ? d.holder : 'N/A',
       d.accountNo ? d.accountNo : 'N/A',
       d.serial ? d.serial : 'N/A',
@@ -373,7 +373,7 @@ class Data extends React.Component {
       },
       () => {
         this.loadTable();
-        this.loadReport();
+        this.loadReportLog();
       }
     );
   };
@@ -432,7 +432,7 @@ class Data extends React.Component {
       customize,
       loading,
       loadLog,
-      loadReport,
+      loadReportLog,
       visible,
       logRequest,
       logResponse,
@@ -483,7 +483,7 @@ class Data extends React.Component {
                 )}
                 {!this.state.loadingReport && (
                   <CSVLink
-                    data={loadReport.map(d => ({
+                    data={loadReportLog.map(d => ({
                       holder: d.holder ? d.holder : 'N/A',
                       accountNo: d.accountNo ? d.accountNo : 'N/A',
                       serial: d.serial ? d.serial : 'N/A',
