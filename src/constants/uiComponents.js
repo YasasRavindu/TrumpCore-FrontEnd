@@ -148,6 +148,14 @@ export const PAYEE_SERVICES = [
     authorityCode: USER_AUTHORITY_CODE.SALARY_UPLOAD,
   },
 ];
+export const WELCOME = [
+  {
+    name: 'Welcome',
+    desc: 'Welcome - Welcome - Description',
+    path: '/app/welcome/welcome',
+    hideInMenu: true,
+  },
+];
 
 // ====================================================
 
