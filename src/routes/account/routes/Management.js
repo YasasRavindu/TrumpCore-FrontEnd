@@ -23,11 +23,11 @@ import {
   Alert,
 } from 'antd';
 
-import { environment, commonUrl } from '../../../environments';
+import { environment } from 'environments';
 import axios from 'axios';
 import moment from 'moment';
-import profile_avatar from '../../../assets/images/profile_avatar.png';
-import picture_attachment_avatar from '../../../assets/images/picture_attachment_avatar.jpg';
+import profile_avatar from 'assets/images/profile_avatar.png';
+import picture_attachment_avatar from 'assets/images/picture_attachment_avatar.jpg';
 
 const FormItem = Form.Item;
 const { Option } = Select;

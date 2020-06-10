@@ -22,7 +22,7 @@ import { green, red, orange, blue } from '@ant-design/colors';
 import QueueAnim from 'rc-queue-anim';
 import { CSVReader } from 'react-papaparse';
 import axios from 'axios';
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import { REGEX } from 'constants/validation/regex';
 import { getErrorMsg } from 'services/responseHandler/errorHandlerService';
 const { Column, ColumnGroup } = Table;

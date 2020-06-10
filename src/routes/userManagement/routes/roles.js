@@ -31,7 +31,7 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 import getErrorMessage from 'constants/notification/message';
 

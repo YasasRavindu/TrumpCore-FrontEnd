@@ -3,7 +3,7 @@ import { Icon, Upload, message, Button, Table, Empty } from 'antd';
 import QueueAnim from 'rc-queue-anim';
 import { CSVReader } from 'react-papaparse';
 import axios from 'axios';
-import { environment, commonUrl } from '../../../environments';
+import { environment} from 'environments';
 const definedHeader = ['purseName', 'purseUserLastName', 'mobileNumber', 'dob', 'gender'];
 
 const { Column, ColumnGroup } = Table;
@@ -92,7 +92,7 @@ class UploadAccount extends React.Component {
 
   dataParse = () => {
     console.log('====show', this.state.showBtn, this.state.csvObject, this.state.csvAccount);
-    let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     if (currentUser.id) {
       //console.log(currentUser.id);
       axios

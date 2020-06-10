@@ -17,7 +17,7 @@ import {
   message,
   Tooltip,
 } from 'antd';
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import getErrorMessage from 'constants/notification/message';
 
 import { Redirect } from 'react-router-dom';

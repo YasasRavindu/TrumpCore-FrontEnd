@@ -30,7 +30,7 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import getErrorMessage from 'constants/notification/message';

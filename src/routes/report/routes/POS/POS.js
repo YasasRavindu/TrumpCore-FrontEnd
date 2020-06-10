@@ -15,7 +15,7 @@ import {
   Icon,
   TreeSelect,
 } from 'antd';
-import { environment } from '../../../../environments';
+import { environment } from 'environments';
 import axios from 'axios';
 import moment from 'moment';
 import STATUS from 'constants/notification/status';

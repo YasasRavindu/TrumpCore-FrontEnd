@@ -4,8 +4,9 @@ import { withRouter } from 'react-router-dom';
 import APPCONFIG from 'constants/appConfig';
 import getErrorMessage from 'constants/notification/message';
 import DEMO from 'constants/demoData';
-import { environment, commonUrl } from '../../../../../environments';
+import { environment} from 'environments';
 import axios from 'axios';
+import COLLECTION from 'constants/authority/commonData';
 const FormItem = Form.Item;
 
 class NormalLoginForm extends React.Component {
@@ -16,7 +17,6 @@ class NormalLoginForm extends React.Component {
       password: '',
       loading: false,
     };
-
     // --------------------- placement ---------------------
     // ['topLeft', 'topRight', 'bottomLeft', 'bottomRight']
     notification.config({
@@ -50,10 +50,11 @@ class NormalLoginForm extends React.Component {
               loading: false,
             });
             let currentUser = response.data.content;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            currentUser['date'] = new Date();
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             this.openNotificationWithIcon('success', 'Welcome To TrumpCore!');
-            this.props.history.push('/app/cardManagement/generate');
+            this.props.history.push(COLLECTION.ROUTE.welcome);
           })
           .catch(error => {
             console.log('------------------- error - ', error);

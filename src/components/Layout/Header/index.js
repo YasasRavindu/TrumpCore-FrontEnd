@@ -8,12 +8,13 @@ import { push } from 'react-router-redux';
 import { toggleCollapsedNav, toggleOffCanvasMobileNav } from 'actions/settingsActions';
 import Notifications from 'routes/layout/routes/header/components/Notifications';
 import { Route, Redirect, Link } from 'react-router-dom';
+import { logout } from 'services/authService';
 const { Header } = Layout;
 
 class AppHeader extends React.Component {
   constructor(props) {
     super(props);
-    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    this.currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
   }
 
   avatarDropdown1 = () => {
@@ -51,7 +52,7 @@ class AppHeader extends React.Component {
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item key="3">
-          <span onClick={this.logOut}>
+          <span onClick={logout}>
             <Icon type="logout" />
             Sign out
           </span>
@@ -68,11 +69,6 @@ class AppHeader extends React.Component {
   onToggleOffCanvasMobileNav = () => {
     const { handleToggleOffCanvasMobileNav, offCanvasMobileNav } = this.props;
     handleToggleOffCanvasMobileNav(!offCanvasMobileNav);
-  };
-
-  logOut = () => {
-    localStorage.removeItem('currentUser');
-    window.location = DEMO.headerLink.signOut;
   };
 
   render() {

@@ -28,7 +28,7 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import getErrorMessage from 'constants/notification/message';
@@ -73,7 +73,7 @@ class Data extends React.Component {
       .get(environment.baseUrl + 'platform-users')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         const userList = response.data.content.filter(user => {
           if (currentUser.id !== user.id) {
             user.key = user.id;

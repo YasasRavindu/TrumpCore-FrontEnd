@@ -20,7 +20,7 @@ import {
   ConfigProvider,
   Pagination,
 } from 'antd';
-import { environment } from '../../../../environments';
+import { environment } from 'environments';
 import axios from 'axios';
 import moment from 'moment';
 import jsPDF from 'jspdf';

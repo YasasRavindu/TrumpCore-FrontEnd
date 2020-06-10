@@ -3,7 +3,7 @@ import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { withRouter } from 'react-router-dom';
 import APPCONFIG from 'constants/appConfig';
 import DEMO from 'constants/demoData';
-import { environment, commonUrl } from '../../../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 const FormItem = Form.Item;
 

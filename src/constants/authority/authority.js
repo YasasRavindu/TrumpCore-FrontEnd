@@ -143,7 +143,7 @@ const USER_AUTHORITY = {
 };
 
 export function getActiveAuthorities(viewCode) {
-  let user = JSON.parse(localStorage.getItem('currentUser'));
+  let user = JSON.parse(sessionStorage.getItem('currentUser'));
 
   if (
     user &&

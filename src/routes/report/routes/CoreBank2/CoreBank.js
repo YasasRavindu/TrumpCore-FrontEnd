@@ -22,7 +22,7 @@ import {
 import QueueAnim from 'rc-queue-anim';
 import axios from 'axios';
 import moment from 'moment';
-import { environment, commonUrl } from '../../../../environments';
+import { environment, commonUrl } from 'environments';
 import { CSVLink } from 'react-csv';
 const dateFormat = 'YYYY-MM-DD';
 const FormItem = Form.Item;

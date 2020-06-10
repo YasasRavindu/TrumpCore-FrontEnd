@@ -25,7 +25,7 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment } from '../../../environments';
+import { environment } from 'environments';
 import axios from 'axios';
 import moment from 'moment';
 import getErrorMessage from 'constants/notification/message';

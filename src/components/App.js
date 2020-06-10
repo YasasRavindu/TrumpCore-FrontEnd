@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 import loadable from 'react-loadable';
 import LoadingComponent from 'components/Loading';
+import moment from 'moment';
 
 // 3rd
 import 'styles/antd.less';
@@ -11,6 +12,7 @@ import 'styles/layout.scss';
 import 'styles/theme.scss';
 import 'styles/ui.scss';
 import 'styles/vendors.scss';
+import COLLECTION from 'constants/authority/commonData';
 
 let AsyncAppLayout = loadable({
   loader: () => import('components/Layout/AppLayout/'),
@@ -28,22 +30,20 @@ let AsyncAccount = loadable({
 class App extends React.Component {
   render() {
     const { match, location } = this.props;
+
     const isRoot = location.pathname === '/' ? true : false;
-    // const isLogin = location.pathname === '/user/login' ? true : false;
     const isApp = location.pathname.match(/\/app\//g);
     const isUser = location.pathname.match(/\/user\//g);
 
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 
-    if (isRoot) {
-      //return <Redirect to={'/app/dashboard'} />;
-      return <Redirect to={'/user/login'} />;
+    if (isRoot || (isApp && !currentUser)) {
+      //  isApp allows to let go other user routes.
+      return <Redirect to={COLLECTION.ROUTE.login} />;
     }
 
-    if (isApp && !currentUser) {
-      return <Redirect to={'/user/login'} />;
-    } else if (isUser && currentUser) {
-      return <Redirect to={'/app/cardManagement/generate'} />;
+    if (currentUser && isUser) {
+      return <Redirect to={COLLECTION.ROUTE.welcome} />;
     }
 
     return (

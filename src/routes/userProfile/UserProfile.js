@@ -1,8 +1,8 @@
 import React from 'react';
 import { Table, Icon, Input, Button, Modal, Form, Tag, Divider, Row, Col, message } from 'antd';
-import { environment, commonUrl } from '../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
-import picture_avatar from '../../assets/images/6.png';
+import picture_avatar from 'assets/images/6.png';
 const formItemLayout = {
   labelCol: { span: 10 },
   wrapperCol: { span: 14 },
@@ -12,7 +12,7 @@ class Data extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    this.currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
   }
   handleSubmit = e => {
     e.preventDefault();

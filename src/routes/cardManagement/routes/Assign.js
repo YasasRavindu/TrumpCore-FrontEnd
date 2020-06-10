@@ -31,12 +31,12 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment, commonUrl } from '../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 import getErrorMessage from 'constants/notification/message';
 import moment from 'moment';
 import STATUS from 'constants/notification/status';
-import profile_avatar from '../../../assets/images/profile_avatar.png';
+import profile_avatar from 'assets/images/profile_avatar.png';
 
 const dateFormat = 'YYYY-MM-DD';
 const formItemLayout = {

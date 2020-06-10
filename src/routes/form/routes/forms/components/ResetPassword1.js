@@ -3,7 +3,7 @@ import { Form, Icon, Input, Button, message } from 'antd';
 import { withRouter } from 'react-router-dom';
 import DEMO from 'constants/demoData';
 import getErrorMessage from 'constants/notification/message';
-import { environment, commonUrl } from '../../../../../environments';
+import { environment, commonUrl } from 'environments';
 import axios from 'axios';
 const FormItem = Form.Item;
 
