@@ -21,7 +21,7 @@ import {
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
 import {
-  DEFAULT_EXCEPTION_ROUTE,
+  UNAUTHORIZED_ACCESS_EXCEPTION_ROUTE,
   USER_AUTHORITY_CODE,
   getActiveAuthorities,
   checkAuthority,
@@ -205,7 +205,7 @@ class Data extends React.Component {
 
     // -------------- IF UNAUTHORIZED ------------------------------------------------
     if (viewAuthorities === 'UNAUTHORIZED') {
-      return <Redirect to={DEFAULT_EXCEPTION_ROUTE} />;
+      return <Redirect to={UNAUTHORIZED_ACCESS_EXCEPTION_ROUTE} />;
     }
     // -------------------------------------------------------------------------------
 

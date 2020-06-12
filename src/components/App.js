@@ -2,7 +2,6 @@ import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 import loadable from 'react-loadable';
 import LoadingComponent from 'components/Loading';
-import moment from 'moment';
 
 // 3rd
 import 'styles/antd.less';

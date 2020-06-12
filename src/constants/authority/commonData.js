@@ -1,5 +1,4 @@
-
-// * ~ CUSTOME APP CONFIG ~ 
+// * ~ CUSTOME APP CONFIG ~
 
 const COLLECTION = {};
 
@@ -7,6 +6,9 @@ const COLLECTION = {};
 COLLECTION.ROUTE = {
   login: '/user/login',
   welcome: '/app/welcome',
+  error403: '/exception/403',
+  error404: '/exception/404',
+  error500: '/exception/500',
 };
 
 // Idle

@@ -2,6 +2,7 @@ import React from 'react';
 import QueueAnim from 'rc-queue-anim';
 import { Button } from 'antd';
 import DEMO from 'constants/demoData';
+import COLLECTION from 'constants/authority/commonData';
 
 const Page = () => {
   return(
@@ -13,7 +14,7 @@ const Page = () => {
               <div className="err-code"> <h1>400</h1> </div>
             </div>
             <h2>Sorry, page not found</h2>
-            <Button href={DEMO.home}>Go Back to Home Page</Button>
+            <Button href={COLLECTION.ROUTE.welcome}>Go Back to Home Page</Button>
           </div>
         </div>
       </QueueAnim>

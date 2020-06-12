@@ -73,7 +73,6 @@ export const CUSTOM_MESSAGE = {
       'A version with the same version number or version name already exists.',
     versionNameAlreadyUsedAsADirectoryName:
       'Version name you entered is already used as a directory name.',
-    makeDirectoryError: 'Create directory error!',
     ftpLoginFailed:
       'Found an error related to FTP server. Please contact MobileCash support center to get it sorted',
     storeFileError:

@@ -1,5 +1,7 @@
-export const DEFAULT_EXCEPTION_ROUTE = '/exception/403';
-export const DEFAULT_REDIRECT_ROUTE = '/app/cardManagement/';
+import COLLECTION from "./commonData";
+
+export const UNAUTHORIZED_ACCESS_EXCEPTION_ROUTE = COLLECTION.ROUTE.error403;
+export const DEFAULT_REDIRECT_ROUTE = COLLECTION.ROUTE.welcome;
 
 export const USER_AUTHORITY_SECTION = {
   SECTION01: 'CARD',
