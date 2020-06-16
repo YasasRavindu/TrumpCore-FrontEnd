@@ -110,8 +110,8 @@ class Data extends React.Component {
       });
     axios
       .post(environment.baseUrl + 'account/filterSearch', {
-        status: '',
-        context: 'all',
+        status: '1',
+        context: 'filter',
         cardAssigned: '',
       })
       .then(response => {

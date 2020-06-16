@@ -113,7 +113,7 @@ class Data extends React.Component {
 
     axios
       .post(environment.baseUrl + 'account/filterSearch', {
-        status: '',
+        status: '1',
         context: 'all',
         cardAssigned: '',
       })
