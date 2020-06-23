@@ -6,7 +6,6 @@ import LoadingComponent from 'components/Loading';
 import { Layout } from 'antd';
 const { Content } = Layout;
 
-
 let AsyncException = loadable({
   loader: () => import('routes/exception/'),
   loading: LoadingComponent,
@@ -45,6 +44,10 @@ let AsyncPayeeService = loadable({
   loader: () => import('routes/payeeService/'),
   loading: LoadingComponent,
 });
+let AsyncIpgService = loadable({
+  loader: () => import('routes/ipgService/'),
+  loading: LoadingComponent,
+});
 
 class AppContent extends React.Component {
   render() {
@@ -60,6 +63,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/report`} component={AsyncReport} />
         <Route path={`${match.url}/payeeService`} component={AsyncPayeeService} />
         <Route path={`${match.url}/userProfile`} component={AsyncUserProfile} />
+        <Route path={`${match.url}/ipgService`} component={AsyncIpgService} />
         <Route path={`${match.url}/welcome`} component={AsyncWelcome} />
       </Content>
     );

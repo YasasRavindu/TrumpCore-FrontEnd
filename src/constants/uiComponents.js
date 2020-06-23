@@ -148,6 +148,15 @@ export const PAYEE_SERVICES = [
     authorityCode: USER_AUTHORITY_CODE.SALARY_UPLOAD,
   },
 ];
+export const IPG_SERVICES = [
+  {
+    name: 'IPG Service - Management',
+    menuName: 'Management',
+    desc: 'IPG Service - Management - Description',
+    path: '/app/ipgService/management',
+    authorityCode: USER_AUTHORITY_CODE.IPG_SERVICE_MANAGEMENT,
+  },
+];
 export const WELCOME = [
   {
     name: 'Welcome',

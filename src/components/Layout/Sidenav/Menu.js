@@ -12,6 +12,7 @@ import {
   REPORT,
   ACCOUNT,
   PAYEE_SERVICES,
+  IPG_SERVICES,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -43,6 +44,7 @@ class AppMenu extends React.Component {
     // '/app/cardGenerate',
     '/app/userManagement',
     '/app/payeeService',
+    '/app/ipgService',
   ];
   rootSubmenuKeys = [
     '/app/card',
@@ -254,6 +256,22 @@ class AppMenu extends React.Component {
                 {this.getNavMenuItems(
                   PAYEE_SERVICES,
                   DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION06]
+                )}
+              </SubMenu>
+            )}
+            {DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION07].length > 0 && (
+              <SubMenu
+                key="/app/ipgService"
+                title={
+                  <span>
+                    <Icon type="wallet" />
+                    <span className="nav-text">IPG Service</span>
+                  </span>
+                }
+              >
+                {this.getNavMenuItems(
+                  IPG_SERVICES,
+                  DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION07]
                 )}
               </SubMenu>
             )}
