@@ -22,6 +22,7 @@ import {
 } from 'antd';
 import axios from 'axios';
 import { environment, commonUrl } from 'environments';
+import getErrorMessage from 'constants/notification/message';
 const Search = Input.Search;
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -101,6 +102,7 @@ class Data extends React.Component {
       })
       .catch(error => {
         console.log('------------------- error - ', error);
+        message.error(getErrorMessage(error, 'IPG_SERVICE_ERROR'));
         this._isMounted &&
           this.setState({
             tableLoading: false,
@@ -188,8 +190,7 @@ class Data extends React.Component {
           })
           .catch(error => {
             console.log('------------------- error - ', error);
-            //message.error(getErrorMessage(error, 'SCHEDULE_REPORT_ERROR'));
-            message.error('Something wrong');
+            message.error(getErrorMessage(error, 'IPG_SERVICE_ERROR'));
             this.setState({
               editRecordId: undefined,
               visible: false,
@@ -249,7 +250,6 @@ class Data extends React.Component {
     const { selectedAccount } = this.state;
     this.props.form.validateFieldsAndScroll(['successUrl', 'failUrl'], (err, values) => {
       if (!err && selectedAccount !== undefined) {
-        console.log(values.successUrl, values.failUrl, selectedAccount);
         axios
           .post(environment.baseUrl + 'ipg/create', {
             successUrl: values.successUrl,
@@ -265,8 +265,7 @@ class Data extends React.Component {
             this.props.form.resetFields();
           })
           .catch(error => {
-            //message.error(getErrorMessage(error, 'DEVICE_ASSIGN_ERROR'));
-            message.error('IPG creation error');
+            message.error(getErrorMessage(error, 'IPG_SERVICE_ERROR'));
             console.log('------------------- error - ', error);
           });
       } else {

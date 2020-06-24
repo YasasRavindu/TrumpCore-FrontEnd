@@ -99,6 +99,14 @@ export const CUSTOM_MESSAGE = {
     deleteIssue: 'Found an error while deleting the record',
     defaultError: 'Something went wrong please try again!',
   },
+  IPG_SERVICE_ERROR: {
+    searchIssue: 'Could not find respective results',
+    saveIssue: 'Could not create the record. Please try again later',
+    recordExistsForAccount: 'A record has been already created using this account',
+    missingFailUrl: 'Please enter the URL for the failed attempts',
+    missingSuccessUrl: 'Please enter the URL for the failed attempts',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export function getErrorMessage(error, arrayKey) {
