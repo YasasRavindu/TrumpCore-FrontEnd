@@ -45,6 +45,7 @@ const STATUS = {
     LOCKED: { color: 'red', label: 'Locked' },
     CANCELLED: { color: 'volcano', label: 'Cancelled' },
     EXPIRED: { color: 'orange', label: 'Expired' },
+    PENDING: { color: 'cyan', label: 'Pending' },
   },
   BATCH_STATUS: {
     INITIATE: { color: '' },

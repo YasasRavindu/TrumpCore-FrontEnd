@@ -114,7 +114,7 @@ class Data extends React.Component {
         cardAssigned: '',
       })
       .then(response => {
-        // console.log('------------------- response - ', response.data.content);
+        console.log('------------------- response - ', response.data);
         this._isMounted &&
           this.setState({
             accountList: response.data.content,

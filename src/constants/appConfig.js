@@ -2,7 +2,7 @@ let date = new Date();
 let year = date.getFullYear();
 
 const APPCONFIG = {
-  brand: 'TrumpCode',
+  brand: 'TrumpCore',
   year: year,
   AutoCloseMobileNav: true, // Boolean: true, false. Automatically close sidenav on route change (Mobile only)
   customizer: false, // Boolean: true, false. Customizer will be removed completely when set to false

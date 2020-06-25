@@ -59,8 +59,18 @@ class Data extends React.Component {
     super(props);
     this._isMounted = false;
     this.state = {
-      cardList: [],
-      filteredCardList: [],
+      
+      // * ----------------------- Card AutoComplete with New Paging Reqest -----------------------------
+      newCardList: [],
+      // * ---------------------------------------------------------------- -----------------------------
+
+      // * ----------------------- Card AutoComplete Old ------------------ -----------------------------
+      // cardList: [],
+      // filteredCardList: [],
+      // * ---------------------------------------------------------------- -----------------------------
+
+      currentCardValue: '',
+      isCardLoding: false,
       assignList: [],
       filteredAssignedList: [],
       accountList: [],
@@ -82,23 +92,8 @@ class Data extends React.Component {
   }
 
   loadData = () => {
-    axios
-      .get(environment.baseUrl + 'card/search/debit/inactive')
-      .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        const cardList = response.data.content.map(device => {
-          device.key = device.id;
-          return device;
-        });
-        this._isMounted &&
-          this.setState({
-            cardList: cardList,
-            filteredCardList: cardList.slice(0, 100),
-          });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
+    this.loadCards('');
+
     axios
       .post(environment.baseUrl + 'account/filterSearch', {
         status: '1',
@@ -136,6 +131,166 @@ class Data extends React.Component {
       });
   };
 
+  // * ----------------------- Card AutoComplete Old ------------------ -----------------------------
+
+  // loadCards = keyword => {
+  //   axios
+  //     .get(environment.baseUrl + 'card/search/debit/inactive')
+  //     .then(response => {
+  //       // console.log('------------------- response - ', response.data.content);
+  //       const cardList = response.data.content.map(device => {
+  //         device.key = device.id;
+  //         return device;
+  //       });
+  //       this._isMounted &&
+  //         this.setState({
+  //           cardList: cardList,
+  //           filteredCardList: cardList.slice(0, 100),
+  //         });
+  //     })
+  //     .catch(error => {
+  //       console.log('------------------- error - ', error);
+  //     });
+  // };
+
+  // updateCardList = input => {
+  //   let cardList;
+  //   if (input === '' || input === undefined) {
+  //     cardList = this.state.cardList;
+  //   } else {
+  //     cardList = this.state.cardList.filter(card => {
+  //       return card.cardNo.indexOf(input) !== -1;
+  //     });
+  //   }
+
+  //   if (cardList.length < 10) {
+  //     this.loadCards(input);
+  //   } else {
+  //     this.setState({
+  //       filteredCardList: cardList,
+  //     });
+  //   }
+
+  //   this.loadCards(input);
+  // };
+
+  // setCard = inputValue => {
+  //   console.log(inputValue);
+
+  //   let selectedCard = undefined;
+  //   this.state.cardList.map(card => {
+  //     if (
+  //       inputValue !== undefined &&
+  //       (card.id.toUpperCase() === inputValue.toUpperCase() ||
+  //         card.cardNo.toUpperCase() === inputValue.toUpperCase())
+  //     ) {
+  //       selectedCard = card;
+  //     }
+  //   });
+  //   console.log(selectedCard);
+
+  //   if (selectedCard === undefined) {
+  //     this.updateCardList('');
+  //   }
+  //   this.setState({
+  //     selectedCard: selectedCard,
+  //   });
+  //   this.props.form.setFieldsValue({
+  //     cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
+  //   });
+  // };
+  // * ---------------------------------------------------------------- -----------------------------
+
+
+
+  // * ----------------------- Card AutoComplete with New Paging Reqest -----------------------------
+
+  // ------------   cardInputOnChange   ------------------------
+  loadCards = keyword => {
+    if (!this.state.isCardLoding) {
+      this._isMounted &&
+        this.setState(
+          {
+            isCardLoding: true,
+            currentCardValue: keyword,
+          },
+          () => {
+            let kw = keyword;
+            axios
+              .post(environment.baseUrl + 'card/filterSearchPage', {
+                keyword: keyword,
+                cardBatchType: 'debit',
+                cardStatus: ['inactive'],
+              })
+              .then(response => {
+                // console.log('------------------- response - ', response.data.content);
+                const cardList = response.data.content.map(device => {
+                  device.key = device.id;
+                  return device;
+                });
+                this._isMounted &&
+                  this.setState({
+                    isCardLoding: false,
+                    newCardList: cardList,
+                  });
+
+                if (kw !== this.state.currentCardValue) {
+                  console.log('------------------- Load Again!');
+                  this.loadCards(this.state.currentCardValue);
+                }
+              })
+              .catch(error => {
+                console.log('------------------- error - ', error);
+              });
+          }
+        );
+    } else {
+      console.log('------------------- Still Loading!');
+      this._isMounted &&
+        this.setState({
+          currentCardValue: keyword,
+        });
+    }
+  };
+
+  // ------------   cardInputOnSelect   ------------------------
+  cardInputValidate = inputValue => {
+    let selectedCard = undefined;
+    this.state.newCardList.map(card => {
+      if (
+        inputValue !== undefined &&
+        (card.id.toUpperCase() === inputValue.toUpperCase() ||
+          card.cardNo.toUpperCase() === inputValue.toUpperCase())
+      ) {
+        selectedCard = card;
+      }
+    });
+
+    if (selectedCard === undefined) {
+      this.loadCards('');
+    }
+    this.setState({
+      selectedCard: selectedCard,
+    });
+    this.props.form.setFieldsValue({
+      cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
+    });
+  };
+
+  // ------------   cardInputOnBlur   ------------------------
+  cardInputOnBlur = inputValue => {
+    if (
+      this.state.selectedCard === undefined ||
+      (this.state.selectedCard.id !== inputValue && this.state.selectedCard.cardNo !== inputValue)
+    ) {
+      this.cardInputValidate(inputValue);
+    }
+  };
+
+  // * ---------------------------------------------------------------- -----------------------------
+
+
+  
   searchDateHandler = (date, dateString) => {
     this.dataFilter('searchDate', dateString);
   };
@@ -199,6 +354,7 @@ class Data extends React.Component {
   };
 
   handleUpdate = (id, selectedCard, selectedAccount) => {
+    this.loadCards('');
     if (id) {
       this._isMounted &&
         this.setState(
@@ -331,42 +487,6 @@ class Data extends React.Component {
     return keyCard;
   };
 
-  updateCardList = input => {
-    let cardList;
-    if (input === '' || input === undefined) {
-      cardList = this.state.cardList;
-    } else {
-      cardList = this.state.cardList.filter(card => {
-        return card.cardNo.indexOf(input) !== -1;
-      });
-    }
-    this.setState({
-      filteredCardList: cardList.slice(0, 100),
-    });
-  };
-
-  setCard = inputValue => {
-    let selectedCard = undefined;
-    this.state.cardList.map(card => {
-      if (
-        inputValue !== undefined &&
-        (card.id.toUpperCase() === inputValue.toUpperCase() ||
-          card.cardNo.toUpperCase() === inputValue.toUpperCase())
-      ) {
-        selectedCard = card;
-      }
-    });
-    if (selectedCard === undefined) {
-      this.updateCardList('');
-    }
-    this.setState({
-      selectedCard: selectedCard,
-    });
-    this.props.form.setFieldsValue({
-      cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
-    });
-  };
-
   updateAccountList = input => {
     let accountList;
     if (input === '' || input === undefined) {
@@ -376,6 +496,7 @@ class Data extends React.Component {
         return account.accountNumber.indexOf(input) !== -1 || account.holder.indexOf(input) !== -1;
       });
     }
+    this._isMounted &&
     this.setState({
       filteredAccountList: accountList.slice(0, 100),
     });
@@ -397,6 +518,7 @@ class Data extends React.Component {
     if (selectedAccount === undefined) {
       this.updateAccountList('');
     }
+    this._isMounted &&
     this.setState({
       selectedAccount: selectedAccount,
     });
@@ -424,9 +546,9 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const { filteredAccountList, filteredCardList, filteredAssignedList } = this.state;
+    const { filteredAccountList, filteredCardList, filteredAssignedList, newCardList } = this.state;
 
-    const optionsCards = filteredCardList.map(card => (
+    const optionsCards = newCardList.map(card => (
       <Option key={card.id} value={card.id}>
         {card.cardNo}
       </Option>
@@ -546,7 +668,6 @@ class Data extends React.Component {
                                           className="mr-3"
                                         />
                                       </Tooltip>
-                                      <Divider type="vertical" />
                                     </>
                                   )}
                                 {checkAuthority(
@@ -582,6 +703,24 @@ class Data extends React.Component {
                                   type="edit"
                                 />
                               </Tooltip>
+                            )}
+
+                          {record.card.status &&
+                            record.card.status === 'PENDING' &&
+                            checkAuthority(
+                              viewAuthorities,
+                              USER_AUTHORITY_CODE.CARD_ASSIGN_ACTIVE
+                            ) && (
+                              <Popconfirm
+                                title="Are you sure you want to Active this card?"
+                                onConfirm={() => this.handleStatus(record.card.id, 'ACTIVE')}
+                                okText="Yes"
+                                cancelText="No"
+                              >
+                                <Tooltip title="Active Card">
+                                  <Icon type="check-circle-o" />
+                                </Tooltip>
+                              </Popconfirm>
                             )}
                         </span>
                       )}
@@ -698,16 +837,31 @@ class Data extends React.Component {
                               dataSource={optionsCards}
                               style={{ width: 300 }}
                               onBlur={inputValue => {
-                                this.setCard(inputValue);
+                                this.cardInputOnBlur(inputValue);
                               }}
                               onChange={inputValue => {
-                                this.updateCardList(inputValue);
+                                this.loadCards(inputValue);
                               }}
                               onSelect={inputValue => {
-                                this.setCard(inputValue);
+                                this.cardInputValidate(inputValue);
                               }}
                               placeholder="Card Number"
                             />
+                            // <AutoComplete
+                            //   allowClear
+                            //   dataSource={optionsCards}
+                            //   style={{ width: 300 }}
+                            //   onBlur={inputValue => {
+                            //     this.setCard(inputValue);
+                            //   }}
+                            //   onChange={inputValue => {
+                            //     this.updateCardList(inputValue);
+                            //   }}
+                            //   onSelect={inputValue => {
+                            //     this.setCard(inputValue);
+                            //   }}
+                            //   placeholder="Card Number"
+                            // />
                           )}
                         </FormItem>
                       </article>
