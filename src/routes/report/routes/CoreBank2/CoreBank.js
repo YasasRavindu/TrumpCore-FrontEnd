@@ -82,6 +82,8 @@ const csvHeader = [
   { label: 'Amount', key: 'Amount' },
   { label: 'Channel Type', key: 'ChannelType' },
   { label: 'Transaction Type Name', key: 'TransactionTypeName' },
+  { label: 'Meter Number', key: 'MeterNumber' },
+  { label: 'Voucher Number', key: 'VoucherNumber' },
 ];
 
 const Transaction_type = [
@@ -330,13 +332,13 @@ class Data extends React.Component {
               <Tag color={'geekblue'}>Meter Number</Tag>
             </Col>
             <Col span={6}>
-              <p>{record.UtilityPayment.MeterNumber ? record.UtilityPayment.MeterNumber : 'N/A'}</p>
+              <p>{record.UtilityPayment ? record.UtilityPayment.MeterNumber : 'N/A'}</p>
             </Col>
             <Col span={6}>
               <Tag color={'geekblue'}>Voucher Number</Tag>
             </Col>
             <Col span={6}>
-              <p>{record.UtilityPayment.Vouchers ? record.UtilityPayment.Vouchers : 'N/A'}</p>
+              <p>{record.UtilityPayment ? record.UtilityPayment.Vouchers : 'N/A'}</p>
             </Col>
           </Row>
         )}
@@ -374,6 +376,8 @@ class Data extends React.Component {
                         Amount: d.Amount ? d.Amount : 'N/A',
                         ChannelType: d.ChannelType ? d.ChannelType : 'N/A',
                         TC_TransactionType: d.TC_TransactionType ? d.TC_TransactionType : 'N/A',
+                        MeterNumber: d.UtilityPayment ? d.UtilityPayment.MeterNumber : 'N/A',
+                        VoucherNumber: d.UtilityPayment ? d.UtilityPayment.Vouchers : 'N/A',
                       }
                   )}
                   headers={csvHeader}
