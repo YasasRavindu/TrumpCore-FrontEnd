@@ -162,6 +162,9 @@ const Transaction_type = [
   },
 ];
 
+// Cash Power (10) Soloman Water (11) as specific types - added meeter num and voucher num
+const selectTransactionType = [10, 11];
+
 class Data extends React.Component {
   constructor(props) {
     super(props);
@@ -321,6 +324,22 @@ class Data extends React.Component {
             <p>{record.ChannelType ? record.ChannelType : 'N/A'}</p>
           </Col>
         </Row>
+        {selectTransactionType.includes(record.TransactionTypeIDTC) && (
+          <Row>
+            <Col span={6}>
+              <Tag color={'geekblue'}>Meter Number</Tag>
+            </Col>
+            <Col span={6}>
+              <p>{record.UtilityPayment.MeterNumber ? record.UtilityPayment.MeterNumber : 'N/A'}</p>
+            </Col>
+            <Col span={6}>
+              <Tag color={'geekblue'}>Vouchers</Tag>
+            </Col>
+            <Col span={6}>
+              <p>{record.UtilityPayment.Vouchers ? record.UtilityPayment.Vouchers : 'N/A'}</p>
+            </Col>
+          </Row>
+        )}
       </React.Fragment>
     );
   };

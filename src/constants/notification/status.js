@@ -57,7 +57,7 @@ const STATUS = {
     INACTIVE: { color: 'magenta', label: 'Inactive', value: '2' },
   },
   SCHEDULE_REPORT_DETAIL: {
-    true: { color: 'blue', label: 'success' },
+    true: { color: 'blue', label: 'Success' },
     false: { color: 'red', label: 'Unsuccess' },
   },
   IPG_SERVICE_RECORD: {
