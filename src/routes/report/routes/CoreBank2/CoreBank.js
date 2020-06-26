@@ -333,7 +333,7 @@ class Data extends React.Component {
               <p>{record.UtilityPayment.MeterNumber ? record.UtilityPayment.MeterNumber : 'N/A'}</p>
             </Col>
             <Col span={6}>
-              <Tag color={'geekblue'}>Vouchers</Tag>
+              <Tag color={'geekblue'}>Voucher Number</Tag>
             </Col>
             <Col span={6}>
               <p>{record.UtilityPayment.Vouchers ? record.UtilityPayment.Vouchers : 'N/A'}</p>
