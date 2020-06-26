@@ -22,6 +22,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
+import CSV from 'constants/common/csv';
+
 const { SHOW_PARENT } = TreeSelect;
 const Search = Input.Search;
 const dateFormat = 'YYYY-MM-DD';
@@ -50,42 +52,6 @@ const columns = [
   },
 ];
 
-const csvHeader = [
-  { label: 'Card No', key: 'cardNo' },
-  { label: 'Created date', key: 'createDate' },
-  { label: 'Expiry date', key: 'expiryDate' },
-  { label: 'Card Type', key: 'type' },
-  { label: 'Status', key: 'status' },
-];
-
-const treeData = [
-  {
-    title: 'Active',
-    value: 'active',
-    key: 'active',
-  },
-  {
-    title: 'Inactive',
-    value: 'inactive',
-    key: 'inactive',
-  },
-  {
-    title: 'Locked',
-    value: 'locked',
-    key: 'locked',
-  },
-  {
-    title: 'Cancelled',
-    value: 'cancelled',
-    key: 'cancelled',
-  },
-  {
-    title: 'Expired',
-    value: 'expired',
-    key: 'expired',
-  },
-];
-
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
@@ -93,42 +59,170 @@ const { Column, ColumnGroup } = Table;
 class Data extends React.Component {
   constructor(props) {
     super(props);
+
+    this._isMounted = false;
+    this.csvHeader = CSV.CARDS.CATALOG.CSV_HEADER;
+    this.treeData = CSV.CARDS.CATALOG.TREE_DATA;
+
+    console.log(this.test);
+
     this.state = {
-      loadCards: [],
-      loadFilterCards: [],
-      loading: false,
-      searchDate: ['', ''],
+      cardListTable: [],
+      cardListReport: [],
+      loadingTable: false,
+      loadingReport: false,
+
       searchText: '',
-      inputValue: 1,
-      searchType: 'ALL',
+      searchTextTimer: null,
+      searchDate: ['', ''],
+      searchType: 'all',
       searchState: [],
-      tableLoading: true,
+
+      pageSize: 10,
+      pageNumber: 1,
+      totalRecord: 0,
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
+    this._isMounted = true;
     this.loadTable();
   }
 
+  getReqBody = isPagination => {
+    let { searchDate, searchText, searchType, searchState, pageSize, pageNumber } = this.state;
+
+    let reqBody = {
+      keyword: searchText,
+      startDate: searchDate[0],
+      endDate: searchDate[1],
+      cardBatchType: searchType,
+      cardStatus: searchState,
+    };
+
+    if (isPagination) {
+      reqBody['pageNumber'] = pageNumber;
+      reqBody['pageSize'] = pageSize;
+    }
+
+    return reqBody;
+  };
+
   loadTable = () => {
+    this._isMounted &&
+      this.setState({
+        loadingTable: true,
+      });
+
     axios
-      .get(environment.baseUrl + 'card/search/all/all')
+      .post(environment.baseUrl + 'card/filterSearchPage', this.getReqBody(true))
       .then(response => {
         console.log('------------------- response - ', response.data.content);
-        const cardList = response.data.content.map(card => {
+        const cardListTable = response.data.content.map(card => {
           card.key = card.id;
           return card;
         });
-
-        this.setState({
-          loadCards: cardList,
-          loadFilterCards: cardList,
-          tableLoading: false,
-        });
+        this._isMounted &&
+          this.setState({
+            cardListTable: cardListTable,
+            loadingTable: false,
+            totalRecord: response.data.pagination.totalRecords,
+          });
       })
       .catch(error => {
+        this._isMounted &&
+          this.setState({
+            loadingTable: false,
+          });
         console.log('------------------- error - ', error);
       });
+  };
+
+  loadReport = () => {
+    this._isMounted &&
+      this.setState({
+        loadingReport: true,
+      });
+
+    axios
+      .post(environment.baseUrl + 'card/filterSearch', this.getReqBody(false))
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const cardListReport = response.data.content.map(card => {
+          card.key = card.id;
+          return card;
+        });
+        this._isMounted &&
+          this.setState({
+            cardListReport: cardListReport,
+            loadingReport: false,
+          });
+      })
+      .catch(error => {
+        this._isMounted &&
+          this.setState({
+            loadingReport: false,
+          });
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  paginationHandler = (pageNumber, pageSize) => {
+    clearInterval(this.state.searchTextTimer);
+    this.setState(
+      {
+        pageNumber,
+        pageSize,
+      },
+      () => {
+        this.loadTable();
+      }
+    );
+  };
+
+  pageSizeHandler = (pageNumber, pageSize) => {
+    this.paginationHandler(1, pageSize);
+  };
+
+  searchTextHandler = e => {
+    this.setFilterValue('searchText', e.target.value);
+  };
+  searchDateHandler = (date, dateString) => {
+    this.setFilterValue('searchDate', dateString);
+  };
+
+  searchTypeHandler = v => {
+    this.setFilterValue('searchType', v);
+  };
+
+  searchStateHandler = v => {
+    this.setFilterValue('searchState', v);
+  };
+
+  setFilterValue = (key, value) => {
+    this.setState(
+      () => {
+        if (key === 'searchText') {
+          clearInterval(this.state.searchTextTimer);
+          let intervalId = setInterval(() => this.paginationHandler(1, this.state.pageSize), 2000);
+          return {
+            [key]: value,
+            searchTextTimer: intervalId,
+            cardListReport: [],
+          };
+        } else {
+          return {
+            [key]: value,
+            cardListReport: [],
+          };
+        }
+      },
+      () => {
+        if (key !== 'searchText') {
+          this.paginationHandler(1, this.state.pageSize);
+        }
+      }
+    );
   };
 
   exportPDF = () => {
@@ -144,7 +238,7 @@ class Data extends React.Component {
     const title = 'Cards Report';
     const headers = [['Card No', 'Created date', 'Expiry date', 'Card type', 'Card status']];
 
-    const realData = this.state.loadFilterCards.map(d => [
+    const realData = this.state.cardListReport.map(d => [
       d.cardNo,
       d.cardBatch.createDate,
       d.cardBatch.expiryDate,
@@ -166,86 +260,22 @@ class Data extends React.Component {
     }
   };
 
-  searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
-  };
-
-  searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
-  };
-
-  searchTypeHandler = v => {
-    this.dataFilter('searchType', v);
-  };
-
-  searchStateHandler = s => {
-    this.dataFilter('searchState', s);
-  };
-
-  onChange = value => {
-    this.setState({
-      inputValue: value,
-    });
-  };
-
-  dataFilter = (key, value) => {
-    this.setState(
-      {
-        [key]: value,
-      },
-      () => {
-        let data = this.state.loadCards;
-        let searchDate = this.state.searchDate;
-        let searchText = this.state.searchText;
-        let searchType = this.state.searchType.toUpperCase();
-        let searchState = this.state.searchState;
-
-        if (
-          searchText ||
-          (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') ||
-          searchType.length > 0 ||
-          searchState.length > 0
-        ) {
-          let returnable;
-          data = data.filter(d => {
-            returnable = true;
-            if (returnable && searchText) {
-              returnable = d.cardNo.toLowerCase().includes(searchText.toLowerCase());
-            }
-            if (
-              returnable &&
-              searchDate.length > 0 &&
-              searchDate[0] !== '' &&
-              searchDate[1] !== ''
-            ) {
-              var startDate = moment(searchDate[0]);
-              var endDate = moment(searchDate[1]);
-              var date = moment(d.cardBatch.expiryDate);
-              returnable = date.isAfter(startDate) && date.isBefore(endDate);
-            }
-            if (returnable && searchType.length > 0) {
-              if (searchType == 'ALL') {
-                returnable = true;
-              } else {
-                returnable = searchType.includes(d.cardBatch.type);
-              }
-            }
-            if (returnable && searchState.length > 0) {
-              returnable = searchState.includes(d.status.toLowerCase());
-            }
-            return returnable;
-          });
-        }
-
-        this.setState({
-          loadFilterCards: data,
-        });
-      }
-    );
-  };
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   render() {
-    const { getFieldDecorator } = this.props.form;
+    const {
+      searchType,
+      cardListTable,
+      cardListReport,
+      loadingTable,
+      loadingReport,
+      totalRecord,
+      pageNumber,
+    } = this.state;
+    const { treeData, csvHeader } = this;
+
     const tProps = {
       treeData,
       value: this.state.searchState,
@@ -265,31 +295,47 @@ class Data extends React.Component {
             <div className="box box-default">
               <div className="box-header">
                 Cards Catalog
-                <Button
-                  type="primary"
-                  shape="round"
-                  icon="download"
-                  onClick={() => this.exportPDF()}
-                  className="float-right ml-1"
-                >
-                  PDF
-                </Button>
-                <CSVLink
-                  data={this.state.loadFilterCards.map(d => ({
-                    cardNo: d.cardNo,
-                    createDate: d.cardBatch.createDate,
-                    expiryDate: d.cardBatch.expiryDate,
-                    type: d.cardBatch.type.toLowerCase(),
-                    status: d.status.toLowerCase(),
-                  }))}
-                  headers={csvHeader}
-                  filename={'Card-catalog-report.csv'}
-                  className="ant-btn float-right ant-btn-primary ant-btn-round"
-                >
-                  <Icon type="download" />
-                  <span className="mr-1"></span>
-                  CSV
-                </CSVLink>
+                {cardListReport.length === 0 && (
+                  <Button
+                    loading={loadingReport}
+                    type="primary"
+                    shape="round"
+                    icon="copy"
+                    onClick={() => this.loadReport()}
+                    className="float-right ml-1"
+                  >
+                    Reports
+                  </Button>
+                )}
+                {cardListReport.length > 0 && (
+                  <>
+                    <Button
+                      type="primary"
+                      shape="round"
+                      icon="download"
+                      onClick={() => this.exportPDF()}
+                      className="float-right ml-1"
+                    >
+                      PDF
+                    </Button>
+                    <CSVLink
+                      data={this.state.cardListReport.map(d => ({
+                        cardNo: d.cardNo,
+                        createDate: d.cardBatch.createDate,
+                        expiryDate: d.cardBatch.expiryDate,
+                        type: d.cardBatch.type.toLowerCase(),
+                        status: d.status.toLowerCase(),
+                      }))}
+                      headers={csvHeader}
+                      filename={'Card-catalog-report.csv'}
+                      className="ant-btn float-right ant-btn-primary ant-btn-round"
+                    >
+                      <Icon type="download" />
+                      <span className="mr-1"></span>
+                      CSV
+                    </CSVLink>
+                  </>
+                )}
               </div>
               <div className="box-body">
                 <Form>
@@ -311,12 +357,12 @@ class Data extends React.Component {
                       <FormItem label="Card Type">
                         <Select
                           onChange={this.searchTypeHandler}
-                          value={this.state.searchType}
+                          value={searchType}
                           placeholder="Search Card Type"
                         >
-                          <Option value="ALL">All</Option>
-                          <Option value="DEBIT">Debit</Option>
-                          <Option value="CASH">Cash</Option>
+                          <Option value="all">All</Option>
+                          <Option value="debit">Debit</Option>
+                          <Option value="cash">Cash</Option>
                         </Select>
                       </FormItem>
                     </Col>
@@ -325,21 +371,24 @@ class Data extends React.Component {
                         <TreeSelect {...tProps} />
                       </FormItem>
                     </Col>
-                    {/* <Col span={6}>
-                      <FormItem>
-                        
-                      </FormItem>
-                    </Col> */}
                   </Row>
                 </Form>
 
                 <article className="article mt-2">
                   <Table
                     columns={columns}
-                    dataSource={this.state.loadFilterCards}
-                    loading={this.state.tableLoading}
+                    dataSource={cardListTable}
+                    loading={loadingTable}
                     scroll={{ x: 1500, y: 400 }}
                     className="ant-table-v1"
+                    pagination={{
+                      showSizeChanger: true,
+                      total: totalRecord,
+                      onChange: this.paginationHandler,
+                      current: pageNumber,
+                      onShowSizeChange: this.pageSizeHandler,
+                      pageSizeOptions: ['10', '20', '30', '40', '50', '100'],
+                    }}
                   />
                 </article>
               </div>
