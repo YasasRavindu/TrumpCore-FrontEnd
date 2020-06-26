@@ -23,6 +23,7 @@ import {
 import axios from 'axios';
 import { environment, commonUrl } from 'environments';
 import getErrorMessage from 'constants/notification/message';
+import STATUS from 'constants/notification/status';
 const Search = Input.Search;
 const FormItem = Form.Item;
 const { Option } = Select;
@@ -44,6 +45,8 @@ class Data extends React.Component {
       tableLoading: false,
       editRecordId: undefined,
       visible: false,
+      viewRecord: [],
+      visibleView: false,
       confirmLoading: false,
     };
   }
@@ -150,11 +153,61 @@ class Data extends React.Component {
     });
   };
 
-  toggleModal = record => {
-    this.setState({
-      editRecordId: record.id,
-      visible: true,
-    });
+  toggleModal = (record, status) => {
+    if (record) {
+      if (status && status === 'edit') {
+        this.props.form.setFieldsValue({
+          edit_successUrl: record.successUrl && record.successUrl,
+          edit_failUrl: record.failUrl && record.successUrl,
+        });
+        this._isMounted &&
+          this.setState({
+            editRecordId: record.id,
+            visible: true,
+          });
+      } else if (status && status === 'view') {
+        console.log('view');
+        record.id
+          ? axios
+              .get(environment.baseUrl + 'ipg/' + record.id)
+              .then(response => {
+                console.log('------------------- response - ', response.data.content);
+                const records = response.data.content;
+                this._isMounted &&
+                  this.setState({
+                    viewRecord: records,
+                    visibleView: true,
+                  });
+              })
+              .catch(error => {
+                console.log('------------------- error - ', error);
+                message.error(getErrorMessage(error, 'IPG_SERVICE_ERROR'));
+                this._isMounted &&
+                  this.setState({
+                    visibleView: false,
+                    viewRecord: [],
+                  });
+              })
+          : message.error('There is no IPG Records!');
+      } else {
+        message.error('Something Wrong!');
+        this._isMounted &&
+          this.setState({
+            visible: false,
+            editRecordId: undefined,
+            visibleView: false,
+            viewRecord: undefined,
+          });
+      }
+    } else {
+      this._isMounted &&
+        this.setState({
+          visible: false,
+          editRecordId: undefined,
+          visibleView: false,
+          viewRecord: undefined,
+        });
+    }
   };
 
   handleCancel = e => {
@@ -276,7 +329,7 @@ class Data extends React.Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { filteredAccountList } = this.state;
+    const { filteredAccountList, visibleView, viewRecord } = this.state;
     const optionsAccounts = filteredAccountList.map(account => (
       <Option key={account.id} value={account.id}>
         {`${account.accountNumber} - ${account.holder}`}
@@ -289,7 +342,6 @@ class Data extends React.Component {
             <div className="box box-default mb-4">
               <div className="box-header">IPG Service Management</div>
               <div className="box-body">
-                {/* <Spin spinning={this.state.loaderForm}> */}
                 <Form>
                   <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
                     <Col span={6} order={1}>
@@ -302,7 +354,6 @@ class Data extends React.Component {
                             },
                           ],
                         })(
-                          // <Input placeholder="Account Number" />
                           <AutoComplete
                             dataSource={optionsAccounts}
                             style={{ width: 250 }}
@@ -397,13 +448,11 @@ class Data extends React.Component {
                       title="Status"
                       dataIndex="active"
                       key="active"
-                      render={active =>
-                        active ? (
-                          <Tag color="blue">Active</Tag>
-                        ) : (
-                          <Tag color="magenta">Deactive</Tag>
-                        )
-                      }
+                      render={active => (
+                        <Tag color={STATUS.IPG_SERVICE_RECORD[active].color}>
+                          {STATUS.IPG_SERVICE_RECORD[active].label}
+                        </Tag>
+                      )}
                     />
                     <Column
                       title="Action"
@@ -412,7 +461,13 @@ class Data extends React.Component {
                         <>
                           <span>
                             <Tooltip title="Update" className="mr-3">
-                              <Icon onClick={() => this.toggleModal(record)} type="edit" />
+                              <Icon onClick={() => this.toggleModal(record, 'edit')} type="edit" />
+                            </Tooltip>
+                            <Tooltip title="View Record" className="mr-3">
+                              <Icon
+                                onClick={() => this.toggleModal(record, 'view')}
+                                type="menu-unfold"
+                              />
                             </Tooltip>
                           </span>
                         </>
@@ -468,6 +523,52 @@ class Data extends React.Component {
             </Row>
           </Form>
         </Modal>
+        {visibleView && viewRecord !== undefined && (
+          <Modal
+            title="IPG Record Details"
+            visible={this.state.visibleView}
+            footer={null}
+            onCancel={() => this.toggleModal(undefined)}
+            width="600px"
+          >
+            <div>
+              <div className="mb-2">
+                <span>
+                  <strong>Account Holder :</strong>{' '}
+                </span>
+                <span>{viewRecord.account && viewRecord.account.holder}</span>
+              </div>
+              <div className="mb-2">
+                <span>
+                  <strong>Auth Key :</strong>{' '}
+                </span>
+                <span>{viewRecord.authKey && viewRecord.authKey}</span>
+              </div>
+              <div className="mb-2">
+                <span>
+                  <strong>Status :</strong>{' '}
+                </span>
+                <span>
+                  <Tag color={STATUS.IPG_SERVICE_RECORD[viewRecord.active].color}>
+                    {STATUS.IPG_SERVICE_RECORD[viewRecord.active].label}
+                  </Tag>
+                </span>
+              </div>
+              <div className="mb-2">
+                <span>
+                  <strong>Success URL :</strong>{' '}
+                </span>
+                <span>{viewRecord.successUrl}</span>
+              </div>
+              <div className="mb-2">
+                <span>
+                  <strong>Fail URL :</strong>{' '}
+                </span>
+                <span>{viewRecord.failUrl}</span>
+              </div>
+            </div>
+          </Modal>
+        )}
       </div>
     );
   }

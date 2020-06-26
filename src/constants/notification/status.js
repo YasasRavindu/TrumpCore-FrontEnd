@@ -59,6 +59,10 @@ const STATUS = {
     true: { color: 'blue', label: 'success' },
     false: { color: 'red', label: 'Unsuccess' },
   },
+  IPG_SERVICE_RECORD: {
+    true: { color: 'blue', label: 'Active' },
+    false: { color: 'magenta', label: 'Inactive' },
+  },
 };
 
 export default STATUS;

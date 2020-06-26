@@ -103,6 +103,7 @@ export const CUSTOM_MESSAGE = {
     searchIssue: 'Could not find respective results',
     saveIssue: 'Could not create the record. Please try again later',
     recordExistsForAccount: 'A record has been already created using this account',
+    doesNotExists: "Couldn't find any results for the searched items",
     missingFailUrl: 'Please enter the URL for the failed attempts',
     missingSuccessUrl: 'Please enter the URL for the success attempts',
     defaultError: 'Something went wrong please try again!',
