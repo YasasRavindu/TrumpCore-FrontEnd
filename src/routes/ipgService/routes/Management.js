@@ -158,7 +158,7 @@ class Data extends React.Component {
       if (status && status === 'edit') {
         this.props.form.setFieldsValue({
           edit_successUrl: record.successUrl && record.successUrl,
-          edit_failUrl: record.failUrl && record.successUrl,
+          edit_failUrl: record.failUrl && record.failUrl,
         });
         this._isMounted &&
           this.setState({

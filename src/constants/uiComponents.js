@@ -157,6 +157,15 @@ export const IPG_SERVICES = [
     authorityCode: USER_AUTHORITY_CODE.IPG_SERVICE_MANAGEMENT,
   },
 ];
+export const COMMISSION = [
+  {
+    name: 'Commission - Create',
+    menuName: 'Create',
+    desc: 'Commission - Create - Description',
+    path: '/app/commission/create',
+    authorityCode: USER_AUTHORITY_CODE.COMMISSION_CREATE,
+  },
+];
 export const WELCOME = [
   {
     name: 'Welcome',

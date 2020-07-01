@@ -13,6 +13,7 @@ import {
   ACCOUNT,
   PAYEE_SERVICES,
   IPG_SERVICES,
+  COMMISSION,
   CARDS,
   LAYOUTS,
   UIKIT,
@@ -272,6 +273,22 @@ class AppMenu extends React.Component {
                 {this.getNavMenuItems(
                   IPG_SERVICES,
                   DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION07]
+                )}
+              </SubMenu>
+            )}
+            {DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION08].length > 0 && (
+              <SubMenu
+                key="/app/commission"
+                title={
+                  <span>
+                    <Icon type="bank" />
+                    <span className="nav-text">Commission</span>
+                  </span>
+                }
+              >
+                {this.getNavMenuItems(
+                  COMMISSION,
+                  DISPLAY_AUTHORITIES[USER_AUTHORITY_SECTION.SECTION08]
                 )}
               </SubMenu>
             )}

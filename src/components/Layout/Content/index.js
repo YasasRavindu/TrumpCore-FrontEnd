@@ -48,6 +48,10 @@ let AsyncIpgService = loadable({
   loader: () => import('routes/ipgService/'),
   loading: LoadingComponent,
 });
+let AsyncCommissionService = loadable({
+  loader: () => import('routes/commission/'),
+  loading: LoadingComponent,
+});
 
 class AppContent extends React.Component {
   render() {
@@ -64,6 +68,7 @@ class AppContent extends React.Component {
         <Route path={`${match.url}/payeeService`} component={AsyncPayeeService} />
         <Route path={`${match.url}/userProfile`} component={AsyncUserProfile} />
         <Route path={`${match.url}/ipgService`} component={AsyncIpgService} />
+        <Route path={`${match.url}/commission`} component={AsyncCommissionService} />
         <Route path={`${match.url}/welcome`} component={AsyncWelcome} />
       </Content>
     );
