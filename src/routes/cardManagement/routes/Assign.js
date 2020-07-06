@@ -59,15 +59,7 @@ class Data extends React.Component {
     super(props);
     this._isMounted = false;
     this.state = {
-      
-      // * ----------------------- Card AutoComplete with New Paging Reqest -----------------------------
       newCardList: [],
-      // * ---------------------------------------------------------------- -----------------------------
-
-      // * ----------------------- Card AutoComplete Old ------------------ -----------------------------
-      // cardList: [],
-      // filteredCardList: [],
-      // * ---------------------------------------------------------------- -----------------------------
 
       currentCardValue: '',
       isCardLoding: false,
@@ -130,80 +122,6 @@ class Data extends React.Component {
         console.log('------------------- error - ', error);
       });
   };
-
-  // * ----------------------- Card AutoComplete Old ------------------ -----------------------------
-
-  // loadCards = keyword => {
-  //   axios
-  //     .get(environment.baseUrl + 'card/search/debit/inactive')
-  //     .then(response => {
-  //       // console.log('------------------- response - ', response.data.content);
-  //       const cardList = response.data.content.map(device => {
-  //         device.key = device.id;
-  //         return device;
-  //       });
-  //       this._isMounted &&
-  //         this.setState({
-  //           cardList: cardList,
-  //           filteredCardList: cardList.slice(0, 100),
-  //         });
-  //     })
-  //     .catch(error => {
-  //       console.log('------------------- error - ', error);
-  //     });
-  // };
-
-  // updateCardList = input => {
-  //   let cardList;
-  //   if (input === '' || input === undefined) {
-  //     cardList = this.state.cardList;
-  //   } else {
-  //     cardList = this.state.cardList.filter(card => {
-  //       return card.cardNo.indexOf(input) !== -1;
-  //     });
-  //   }
-
-  //   if (cardList.length < 10) {
-  //     this.loadCards(input);
-  //   } else {
-  //     this.setState({
-  //       filteredCardList: cardList,
-  //     });
-  //   }
-
-  //   this.loadCards(input);
-  // };
-
-  // setCard = inputValue => {
-  //   console.log(inputValue);
-
-  //   let selectedCard = undefined;
-  //   this.state.cardList.map(card => {
-  //     if (
-  //       inputValue !== undefined &&
-  //       (card.id.toUpperCase() === inputValue.toUpperCase() ||
-  //         card.cardNo.toUpperCase() === inputValue.toUpperCase())
-  //     ) {
-  //       selectedCard = card;
-  //     }
-  //   });
-  //   console.log(selectedCard);
-
-  //   if (selectedCard === undefined) {
-  //     this.updateCardList('');
-  //   }
-  //   this.setState({
-  //     selectedCard: selectedCard,
-  //   });
-  //   this.props.form.setFieldsValue({
-  //     cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
-  //   });
-  // };
-  // * ---------------------------------------------------------------- -----------------------------
-
-
-
-  // * ----------------------- Card AutoComplete with New Paging Reqest -----------------------------
 
   // ------------   cardInputOnChange   ------------------------
   loadCards = keyword => {
@@ -287,10 +205,6 @@ class Data extends React.Component {
     }
   };
 
-  // * ---------------------------------------------------------------- -----------------------------
-
-
-  
   searchDateHandler = (date, dateString) => {
     this.dataFilter('searchDate', dateString);
   };
@@ -497,9 +411,9 @@ class Data extends React.Component {
       });
     }
     this._isMounted &&
-    this.setState({
-      filteredAccountList: accountList.slice(0, 100),
-    });
+      this.setState({
+        filteredAccountList: accountList.slice(0, 100),
+      });
   };
 
   setAccount = inputValue => {
@@ -519,9 +433,9 @@ class Data extends React.Component {
       this.updateAccountList('');
     }
     this._isMounted &&
-    this.setState({
-      selectedAccount: selectedAccount,
-    });
+      this.setState({
+        selectedAccount: selectedAccount,
+      });
     this.props.form.setFieldsValue({
       accountNumber:
         selectedAccount === undefined

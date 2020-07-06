@@ -16,9 +16,11 @@ import {
   DatePicker,
   message,
   Tooltip,
+  Popover,
+  Statistic,
 } from 'antd';
-import { environment, commonUrl } from 'environments';
-import getErrorMessage from 'constants/notification/message';
+import axios from 'axios';
+import moment from 'moment';
 
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
@@ -30,64 +32,88 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import axios from 'axios';
-import moment from 'moment';
+// -------------- OTHER CUSTOM IMPORTS -------------------------------------
+import { environment } from 'environments';
 import STATUS from 'constants/notification/status';
+import getErrorMessage from 'constants/notification/message';
+// -------------------------------------------------------------------------
+
+// -------------- ANT DESIGN -----------------------------------------------
 const confirm = Modal.confirm;
-
-const batchStatus = {
-  INITIATE: { color: '' },
-  DOWNLOAD: { color: 'blue' },
-  ACTIVE: { color: 'magenta' },
-};
-
-const dateFormat = 'YYYY-MM-DD';
-
-const Search = Input.Search;
 const FormItem = Form.Item;
 const { Option } = Select;
-const { Column, ColumnGroup } = Table;
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
+const { Column } = Table;
+// -------------------------------------------------------------------------
+
+// -------------- CUSTOM ---------------------------------------------------
+const dateFormat = 'YYYY-MM-DD';
+// -------------------------------------------------------------------------
 
 class Data extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
+
     this.state = {
+      // Card Batch Generate From Inputs
+      // --------------------------------
       count: '',
       type: '',
       effectivePeriod: '',
-      batchList: [],
-      batchFilteredList: [],
-      searchDate: ['', ''],
-      searchType: 'all',
-      searchStatus: 'all',
-      loading: false,
+      // --------------------------------
+
+      // Card Batch Search From Inputs
+      // --------------------------------
+      searchCreateDate: ['', ''],
+      searchExpiryDate: ['', ''],
+      searchCardBatchType: 'all',
+      searchCardBatchStatus: 'all',
+      // --------------------------------
+
+      // Pagination
+      // --------------------------------
+      pageSize: 10,
+      pageNumber: 1,
+      totalRecord: 0,
+      // --------------------------------
+
+      // Custom
+      // --------------------------------
+      loadingGenerate: false,
+      loadingTable: false,
+      cardBatchList: [],
+      // --------------------------------
+
+      totalGeneratableCardCount: 0,
+      minBatchCardCount: 0,
+      maxBatchCardCount: 0,
+      minEffectivePeriod: 0,
+      maxEffectivePeriod: 0,
+      cashCardCount: 0,
+      debitCardCount: 0,
     };
   }
 
   componentDidMount() {
     this._isMounted = true;
-    const { searchType, searchStatus } = this.state;
-    this.loadTable(searchType, searchStatus);
+    this.loadTable();
   }
 
-  loadTable = (type, status) => {
+  loadCardBatchStatus = () => {
     axios
-      .get(environment.baseUrl + 'card/batch/search/' + type + '/' + status)
+      .get(environment.baseUrl + 'card/batch/status')
       .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        const cardBatchList = response.data.content.map(cardBatch => {
-          cardBatch.key = cardBatch.id;
-          return cardBatch;
-        });
+        let data = response.data.content;
+        console.log('------------------- response - ', data);
         this._isMounted &&
           this.setState({
-            batchList: cardBatchList,
-            batchFilteredList: cardBatchList,
+            totalGeneratableCardCount: data.totalGeneratableCardCount,
+            minBatchCardCount: data.minBatchCardCount,
+            maxBatchCardCount: data.maxBatchCardCount,
+            minEffectivePeriod: data.minEffectivePeriod,
+            maxEffectivePeriod: data.maxEffectivePeriod,
+            cashCardCount: data.cashCardsCount,
+            debitCardCount: data.debitCardsCount,
           });
       })
       .catch(error => {
@@ -95,16 +121,95 @@ class Data extends React.Component {
       });
   };
 
-  searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
+  loadTable = () => {
+    this.loadCardBatchStatus();
+
+    this._isMounted &&
+      this.setState({
+        loadingTable: true,
+      });
+    axios
+      .post(environment.baseUrl + 'card/batch/filterSearchPage', this.getReqBody(true))
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+
+        const cardBatchList = response.data.content.map(cardBatch => {
+          cardBatch.key = cardBatch.id;
+          return cardBatch;
+        });
+        this._isMounted &&
+          this.setState({
+            cardBatchList: cardBatchList,
+            loadingTable: false,
+          });
+        this.loadCardBatchStatus();
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+        this._isMounted &&
+          this.setState({
+            loadingTable: false,
+          });
+      });
   };
 
-  searchTypeHandler = v => {
-    this.dataFilter('searchType', v);
+  getReqBody = isPagination => {
+    let {
+      searchCreateDate,
+      searchExpiryDate,
+      searchCardBatchType,
+      searchCardBatchStatus,
+      pageSize,
+      pageNumber,
+    } = this.state;
+
+    let reqBody = {
+      createStartDate: searchCreateDate[0],
+      createEndDate: searchCreateDate[1],
+      expiryStartDate: searchExpiryDate[0],
+      expiryEndDate: searchExpiryDate[1],
+      cardBatchType: searchCardBatchType,
+      cardBatchStatus: searchCardBatchStatus === 'all' ? [] : [searchCardBatchStatus],
+    };
+
+    if (isPagination) {
+      reqBody['pageNumber'] = pageNumber;
+      reqBody['pageSize'] = pageSize;
+    }
+
+    return reqBody;
   };
 
-  searchStatusHandler = v => {
-    this.dataFilter('searchStatus', v);
+  paginationHandler = (pageNumber, pageSize) => {
+    this.setState(
+      {
+        pageNumber,
+        pageSize,
+      },
+      () => {
+        this.loadTable();
+      }
+    );
+  };
+
+  pageSizeHandler = (pageNumber, pageSize) => {
+    this.paginationHandler(1, pageSize);
+  };
+
+  searchCreateDateHandler = (date, dateString) => {
+    this.dataFilter('searchCreateDate', dateString);
+  };
+
+  searchExpiryDateHandler = (date, dateString) => {
+    this.dataFilter('searchExpiryDate', dateString);
+  };
+
+  searchCardBatchTypeHandler = v => {
+    this.dataFilter('searchCardBatchType', v);
+  };
+
+  searchCardBatchStatusHandler = v => {
+    this.dataFilter('searchCardBatchStatus', v);
   };
 
   dataFilter = (key, value) => {
@@ -114,30 +219,7 @@ class Data extends React.Component {
           [key]: value,
         },
         () => {
-          let data = this.state.batchList;
-          let searchType = this.state.searchType.toUpperCase();
-          let searchStatus = this.state.searchStatus.toUpperCase();
-          let searchDate = this.state.searchDate;
-
-          if (searchType !== 'ALL') {
-            data = data.filter(d => d.type === searchType);
-          }
-          if (searchStatus !== 'ALL') {
-            data = data.filter(d => d.status === searchStatus);
-          }
-          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-            var startDate = moment(searchDate[0]);
-            var endDate = moment(searchDate[1]);
-            data = data.filter(d => {
-              var date = moment(d.createDate);
-              return date.isAfter(startDate) && date.isBefore(endDate);
-            });
-          }
-
-          this._isMounted &&
-            this.setState({
-              batchFilteredList: data,
-            });
+          this.paginationHandler(1, this.state.pageSize);
         }
       );
   };
@@ -153,7 +235,7 @@ class Data extends React.Component {
           .then(response => {
             console.log('------------------- response - ', response);
             message.success('Successfully Deleted');
-            current.refresh();
+            this.paginationHandler(1, this.state.pageSize);
           })
           .catch(error => {
             console.log('------------------- error - ', error);
@@ -164,26 +246,20 @@ class Data extends React.Component {
     });
   }
 
-  refresh = () => {
-    const { searchType, searchStatus } = this.state;
-    this.loadTable(searchType, searchStatus);
-  };
-
   downloadCsv(id) {
     axios
       .get(environment.baseUrl + 'file/download/batch/' + id)
       .then(response => {
         console.log('------------------- response - ', response);
         message.success('Successfully Downloaded');
+
         const type = response.headers['content-type'];
         const blob = new Blob([response.data], { type: type, encoding: 'UTF-8' });
         const link = document.createElement('a');
         link.href = window.URL.createObjectURL(blob);
         link.download = 'CardNumbers_' + id + '.csv';
         link.click();
-
-        const { searchType, searchStatus } = this.state;
-        this.loadTable(searchType, searchStatus);
+        this.paginationHandler(1, this.state.pageSize);
       })
       .catch(error => {
         console.log('------------------- error - ', error);
@@ -192,8 +268,7 @@ class Data extends React.Component {
   }
 
   submit = e => {
-    console.log(this.state);
-    this._isMounted && this.setState({ loading: true });
+    this._isMounted && this.setState({ loadingGenerate: true });
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
@@ -204,20 +279,20 @@ class Data extends React.Component {
             effectivePeriod: values.effectivePeriod,
           })
           .then(response => {
-            message.success('Congratulations! You have successfully generated a card batch.');
-            const { searchType, searchStatus } = this.state;
-            this.loadTable(searchType, searchStatus);
-            this.props.form.resetFields();
-            this._isMounted && this.setState({ loading: false });
             console.log('------------------- response - ', response);
+            const { searchType, searchStatus } = this.state;
+            this.paginationHandler(1, this.state.pageSize);
+            this.props.form.resetFields();
+            this._isMounted && this.setState({ loadingGenerate: false });
+            message.success('Congratulations! You have successfully generated a card batch.');
           })
           .catch(error => {
             console.log('------------------- error - ', error);
             message.error(getErrorMessage(error, 'CARD_GENERATE_ERROR'));
-            this._isMounted && this.setState({ loading: false });
+            this._isMounted && this.setState({ loadingGenerate: false });
           });
       } else {
-        this.setState({ loading: false });
+        this.setState({ loadingGenerate: false });
       }
     });
   };
@@ -237,7 +312,36 @@ class Data extends React.Component {
     }
     // -------------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------------
+    const {
+      searchCardBatchType,
+      searchCardBatchStatus,
+      cardBatchList,
+      loadingGenerate,
+      totalRecord,
+      pageNumber,
+      totalGeneratableCardCount,
+      minBatchCardCount,
+      maxBatchCardCount,
+      minEffectivePeriod,
+      maxEffectivePeriod,
+      cashCardCount,
+      debitCardCount,
+    } = this.state;
     const { getFieldDecorator } = this.props.form;
+    const content = (
+      <>
+        <Statistic title="Debit Cards Count" value={debitCardCount} />
+        <Statistic title="Cash Cards Count" value={cashCardCount} />
+        <Statistic title="Total Cards Count" value={debitCardCount + cashCardCount} />
+        <Statistic
+          title="Remaining Cards Count"
+          value={totalGeneratableCardCount - (debitCardCount + cashCardCount)}
+        />
+        <Statistic title="Total Generatable Cards Count" value={totalGeneratableCardCount} />
+      </>
+    );
+    // -------------------------------------------------------------------------------
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -245,61 +349,96 @@ class Data extends React.Component {
           {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_GENERATE_GENERATE) && (
             <div key="1">
               <div className="box box-default mb-4">
-                <div className="box-header">Generate Card Numbers</div>
-
-                <div className="box-body mt-3">
-                  <Form layout="inline">
-                    <FormItem label="Card Count">
-                      {getFieldDecorator('count', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please add your card count.',
-                          },
-                        ],
-                      })(<InputNumber min={1} />)}
-                    </FormItem>
-                    <FormItem label="Card Type">
-                      {getFieldDecorator('type', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please select your card type.',
-                          },
-                        ],
-                      })(
-                        <Select style={{ width: 120 }}>
-                          <Option value="DEBIT">Debit</Option>
-                          <Option value="CASH">Cash</Option>
-                        </Select>
-                      )}
-                    </FormItem>
-                    <FormItem label="Effective Period (Months)">
-                      {getFieldDecorator('effectivePeriod', {
-                        rules: [
-                          {
-                            required: true,
-                            message: 'Please enter a valid effective period.',
-                          },
-                        ],
-                      })(<InputNumber min={1} />)}
-                    </FormItem>
-                    <Button
-                      type="primary"
-                      loading={this.state.loading}
-                      className="float-right"
-                      onClick={this.submit}
+                <div className="box-header" style={{ fontSize: 20 }}>
+                  Generate Card Numbers
+                  <Tooltip title="Card Statistical Report" className="float-right mt-2">
+                    <Popover
+                      placement="leftTop"
+                      title="Card Statistical Report"
+                      content={content}
+                      trigger="click"
                     >
-                      Generate
-                    </Button>
+                      <Icon type="info-circle" className="mr-3" />
+                    </Popover>
+                  </Tooltip>
+                  <Divider type="horizontal" />
+                </div>
+
+                <div className="box-body">
+                  <Form>
+                    <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                      <Col xs={24} sm={12} md={12} lg={6}>
+                        <FormItem label="Card Count">
+                          {getFieldDecorator('count', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please add your card count.',
+                              },
+                            ],
+                          })(<InputNumber min={1} style={{ width: '100%' }} />)}
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} sm={12} md={12} lg={6}>
+                        <FormItem label="Card Type">
+                          {getFieldDecorator('type', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please select your card type.',
+                              },
+                            ],
+                          })(
+                            <Select>
+                              <Option value="DEBIT">Debit</Option>
+                              <Option value="CASH">Cash</Option>
+                            </Select>
+                          )}
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} sm={12} md={12} lg={6}>
+                        <FormItem label="Effective Period (Months)">
+                          {getFieldDecorator('effectivePeriod', {
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please enter a valid effective period.',
+                              },
+                            ],
+                          })(<InputNumber min={1} style={{ width: '100%' }} />)}
+                        </FormItem>
+                      </Col>
+                      <Col xs={24} sm={12} md={12} lg={6}>
+                        <Button
+                          type="primary"
+                          loading={loadingGenerate}
+                          className="float-right"
+                          onClick={this.submit}
+                          style={{ marginTop: 43 }}
+                        >
+                          Generate
+                        </Button>
+                      </Col>
+                    </Row>
                   </Form>
-                  <div className="mt-4">
-                    <p>
-                      * Minimum card count should be greater than 10 and less than 10000
-                      <br />* Effective Period should be greater than 6 Months and less than 60
-                      Months
-                    </p>
-                  </div>
+                  {minBatchCardCount > 0 &&
+                    maxBatchCardCount > 0 &&
+                    minEffectivePeriod > 0 &&
+                    maxEffectivePeriod > 0 && (
+                      <div className="mt-4">
+                        <div className="callout callout-info">
+                          <div className="col-md-8 pl-0">
+                            <p>
+                              <span className="text-red">*</span>
+                              {` Card count should be between ${minBatchCardCount} - ${maxBatchCardCount}`}
+                              <br />
+                              <span className="text-red">*</span>
+                              {` Effective Period should be between ${minEffectivePeriod} - ${maxEffectivePeriod}`}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -307,40 +446,71 @@ class Data extends React.Component {
           <div key="2">
             <div className="box box-default">
               <div className="box-body">
-                <Form layout="inline">
-                  <FormItem {...formItemLayout} label="Date Range">
-                    <DatePicker.RangePicker onChange={this.searchDateHandler} format={dateFormat} />
-                  </FormItem>
-
-                  <FormItem {...formItemLayout} label="Card Type">
-                    <Select
-                      style={{ width: 120 }}
-                      onChange={this.searchTypeHandler}
-                      value={this.state.searchType}
-                    >
-                      <Option value="all">All</Option>
-                      <Option value="cash">Cash</Option>
-                      <Option value="debit">Debit</Option>
-                    </Select>
-                  </FormItem>
-
-                  <FormItem {...formItemLayout} label="Status">
-                    <Select
-                      style={{ width: 120 }}
-                      onChange={this.searchStatusHandler}
-                      value={this.state.searchStatus}
-                    >
-                      <Option value="all">All</Option>
-                      <Option value="initiate">Initiate</Option>
-                      <Option value="download">Download</Option>
-                      <Option value="active">Active</Option>
-                    </Select>
-                  </FormItem>
+                <Form>
+                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Create Date Range">
+                        <DatePicker.RangePicker
+                          style={{ width: '100%' }}
+                          onChange={this.searchCreateDateHandler}
+                          format={dateFormat}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Expiry Date Range">
+                        <DatePicker.RangePicker
+                          style={{ width: '100%' }}
+                          onChange={this.searchExpiryDateHandler}
+                          format={dateFormat}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col xs={12} sm={8} md={8} lg={4}>
+                      <FormItem label="Card Type">
+                        <Select
+                          onChange={this.searchCardBatchTypeHandler}
+                          value={searchCardBatchType}
+                        >
+                          <Option value="all">All</Option>
+                          <Option value="cash">Cash</Option>
+                          <Option value="debit">Debit</Option>
+                        </Select>
+                      </FormItem>
+                    </Col>
+                    <Col xs={12} sm={8} md={8} lg={4}>
+                      <FormItem label="Status">
+                        <Select
+                          onChange={this.searchCardBatchStatusHandler}
+                          value={searchCardBatchStatus}
+                        >
+                          <Option value="all">All</Option>
+                          <Option value="initiate">Initiate</Option>
+                          <Option value="download">Download</Option>
+                          <Option value="active">Active</Option>
+                        </Select>
+                      </FormItem>
+                    </Col>
+                  </Row>
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={this.state.batchFilteredList}>
+                  {/* ------------------------- Card Batch Table ----------------------------------------- */}
+                  <Table
+                    dataSource={cardBatchList}
+                    scroll={{ x: 1100, y: 600 }}
+                    className="ant-table-v1"
+                    pagination={{
+                      showSizeChanger: true,
+                      total: totalRecord,
+                      onChange: this.paginationHandler,
+                      current: pageNumber,
+                      onShowSizeChange: this.pageSizeHandler,
+                      pageSizeOptions: ['10', '20', '30', '40', '50', '100'],
+                    }}
+                  >
                     <Column title="Created Date" dataIndex="createDate" key="createDate" />
+                    <Column title="Expiry Date" dataIndex="expiryDate" key="expiryDate" />
                     <Column title="Card Count" dataIndex="count" key="count" />
                     <Column title="Card Type" dataIndex="type" key="type" />
                     <Column
@@ -386,6 +556,7 @@ class Data extends React.Component {
                       )}
                     />
                   </Table>
+                  {/* ------------------------- ---------------------------------------------------------- */}
                 </article>
               </div>
             </div>
