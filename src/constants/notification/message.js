@@ -1,3 +1,5 @@
+import MessageList from './responseMessage';
+
 export const CUSTOM_MESSAGE = {
   DEFAULT_ERROR: 'Something went wrong please try again!',
   LOGIN_ERROR: {
@@ -108,6 +110,17 @@ export const CUSTOM_MESSAGE = {
     missingSuccessUrl: 'Please enter the URL for the success attempts',
     defaultError: 'Something went wrong please try again!',
   },
+  COMMISSION_ERROR: {
+    invalidContextParam: 'Invalid Context Param',
+    distributionTypeCodeNull: 'Invalid Distribution Type Code',
+    distributionNull: 'Invalid Distribution',
+    agentTypeCodeNull: 'Invalid Agent Type Code',
+    agentTypeNameNull: 'Invalid Agent Type Name',
+    channelTypeNull: 'Invalid Channel Type',
+    tcTransactionTypeCodeNull: 'Invalid Transaction Type Code',
+    tcTransactionTypeNull: 'Invalid Transaction Type',
+    defaultError: 'Something went wrong please try again!',
+  },
 };
 
 export function getErrorMessage(error, arrayKey) {
@@ -118,18 +131,50 @@ export function getErrorMessage(error, arrayKey) {
     console.log('Message : getErrorMessage : Invalid Array Key!');
     msg = CUSTOM_MESSAGE.DEFAULT_ERROR;
   } else {
-    if (
-      error &&
-      error.response &&
-      error.response.data &&
-      error.response.data.validationFailures &&
-      error.response.data.validationFailures[0] &&
-      error.response.data.validationFailures[0].code
-    ) {
-      let errorCode = error.response.data.validationFailures[0].code;
-      msg = errorJSON[errorCode];
-      if (msg === undefined) {
-        console.log('Message : getErrorMessage : Invalid Error Code!');
+    // if (
+    //   error &&
+    //   error.response &&
+    //   error.response.data &&
+    // error.response.data.validationFailures &&
+    // error.response.data.validationFailures[0] &&
+    // error.response.data.validationFailures[0].code
+    // ) {
+    //   let errorCode = error.response.data.validationFailures[0].code;
+    //   msg = errorJSON[errorCode];
+    //   if (msg === undefined) {
+    //     console.log('Message : getErrorMessage : Invalid Error Code!');
+    //     msg = errorJSON['defaultError'];
+    //   }
+    // } else {
+    //   msg = errorJSON['defaultError'];
+    // }
+
+    if (error && error.response && error.response.data) {
+      let data = error.response.data;
+      if (
+        data.validationFailures &&
+        data.validationFailures[0] &&
+        data.validationFailures[0].code
+      ) {
+        let errorCode = data.validationFailures[0].code;
+        msg = errorJSON[errorCode];
+        if (msg === undefined) {
+          console.log('Message : getErrorMessage : Invalid Error Code!');
+          msg = errorJSON['defaultError'];
+        }
+      } else if (
+        data.deviceValidationFailures &&
+        data.deviceValidationFailures[0] &&
+        data.deviceValidationFailures[0].code
+      ) {
+        let MessageList = MessageList;
+        let errorCode = data.validationFailures[0].code;
+        msg = MessageList[errorCode];
+        if (msg === undefined) {
+          console.log('Message : getErrorMessage : Invalid Error Code!');
+          msg = errorJSON['defaultError'];
+        }
+      } else {
         msg = errorJSON['defaultError'];
       }
     } else {

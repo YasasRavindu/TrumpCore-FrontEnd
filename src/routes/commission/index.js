@@ -1,11 +1,11 @@
 import React from 'react';
 import { Route } from 'react-router-dom';
 
-import Create from './routes/Create';
+import SetupElements from './routes/SetupElements';
 
 const Commission = ({ match }) => (
   <div>
-    <Route path={`${match.url}/create`} component={Create} />
+    <Route path={`${match.url}/setupElements`} component={SetupElements} />
   </div>
 );
 
