@@ -165,6 +165,13 @@ export const COMMISSION = [
     path: '/app/commission/setupElements',
     authorityCode: USER_AUTHORITY_CODE.COMMISSION_SETUP_ELEMENTS,
   },
+  {
+    name: 'Commission - Set-up Commission',
+    menuName: 'Set-up Commission',
+    desc: 'Commission - Set-up Commission - Description',
+    path: '/app/commission/setupCommission',
+    authorityCode: USER_AUTHORITY_CODE.COMMISSION_SETUP_COMMISSION,
+  },
 ];
 export const WELCOME = [
   {
