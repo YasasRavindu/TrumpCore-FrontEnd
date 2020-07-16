@@ -3,7 +3,6 @@ import QueueAnim from 'rc-queue-anim';
 import {
   Table,
   Icon,
-  Input,
   Button,
   Modal,
   Form,
@@ -20,7 +19,6 @@ import {
   Statistic,
 } from 'antd';
 import axios from 'axios';
-import moment from 'moment';
 
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
@@ -77,13 +75,8 @@ class Data extends React.Component {
       totalRecord: 0,
       // --------------------------------
 
-      // Custom
+      // Card Statistical Report
       // --------------------------------
-      loadingGenerate: false,
-      loadingTable: false,
-      cardBatchList: [],
-      // --------------------------------
-
       totalGeneratableCardCount: 0,
       minBatchCardCount: 0,
       maxBatchCardCount: 0,
@@ -91,6 +84,15 @@ class Data extends React.Component {
       maxEffectivePeriod: 0,
       cashCardCount: 0,
       debitCardCount: 0,
+      // --------------------------------
+
+      // Custom
+      // --------------------------------
+      loadingGenerate: false,
+      loadingTable: false,
+      cardBatchList: [],
+      // --------------------------------
+
     };
   }
 
@@ -99,31 +101,7 @@ class Data extends React.Component {
     this.loadTable();
   }
 
-  loadCardBatchStatus = () => {
-    axios
-      .get(environment.baseUrl + 'card/batch/status')
-      .then(response => {
-        let data = response.data.content;
-        console.log('------------------- response - ', data);
-        this._isMounted &&
-          this.setState({
-            totalGeneratableCardCount: data.totalGeneratableCardCount,
-            minBatchCardCount: data.minBatchCardCount,
-            maxBatchCardCount: data.maxBatchCardCount,
-            minEffectivePeriod: data.minEffectivePeriod,
-            maxEffectivePeriod: data.maxEffectivePeriod,
-            cashCardCount: data.cashCardsCount,
-            debitCardCount: data.debitCardsCount,
-          });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
-      });
-  };
-
   loadTable = () => {
-    this.loadCardBatchStatus();
-
     this._isMounted &&
       this.setState({
         loadingTable: true,
@@ -141,6 +119,7 @@ class Data extends React.Component {
           this.setState({
             cardBatchList: cardBatchList,
             loadingTable: false,
+            totalRecord: response.data.pagination.totalRecords,
           });
         this.loadCardBatchStatus();
       })
@@ -179,6 +158,29 @@ class Data extends React.Component {
 
     return reqBody;
   };
+  
+  loadCardBatchStatus = () => {
+    axios
+      .get(environment.baseUrl + 'card/batch/status')
+      .then(response => {
+        let data = response.data.content;
+        console.log('------------------- response - ', data);
+        this._isMounted &&
+          this.setState({
+            totalGeneratableCardCount: data.totalGeneratableCardCount,
+            minBatchCardCount: data.minBatchCardCount,
+            maxBatchCardCount: data.maxBatchCardCount,
+            minEffectivePeriod: data.minEffectivePeriod,
+            maxEffectivePeriod: data.maxEffectivePeriod,
+            cashCardCount: data.cashCardsCount,
+            debitCardCount: data.debitCardsCount,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+
 
   paginationHandler = (pageNumber, pageSize) => {
     this.setState(
@@ -280,7 +282,6 @@ class Data extends React.Component {
           })
           .then(response => {
             console.log('------------------- response - ', response);
-            const { searchType, searchStatus } = this.state;
             this.paginationHandler(1, this.state.pageSize);
             this.props.form.resetFields();
             this._isMounted && this.setState({ loadingGenerate: false });
@@ -319,6 +320,7 @@ class Data extends React.Component {
       cardBatchList,
       loadingGenerate,
       totalRecord,
+      loadingTable,
       pageNumber,
       totalGeneratableCardCount,
       minBatchCardCount,
@@ -349,7 +351,7 @@ class Data extends React.Component {
           {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_GENERATE_GENERATE) && (
             <div key="1">
               <div className="box box-default mb-4">
-                <div className="box-header" style={{ fontSize: 20 }}>
+                <div className="box-header custom_header">
                   Generate Card Numbers
                   <Tooltip title="Card Statistical Report" className="float-right mt-2">
                     <Popover
@@ -361,7 +363,7 @@ class Data extends React.Component {
                       <Icon type="info-circle" className="mr-3" />
                     </Popover>
                   </Tooltip>
-                  <Divider type="horizontal" />
+                  <Divider type="horizontal" className="custom_divider"/>
                 </div>
 
                 <div className="box-body">
@@ -429,10 +431,10 @@ class Data extends React.Component {
                         <div className="callout callout-info">
                           <div className="col-md-8 pl-0">
                             <p>
-                              <span className="text-red">*</span>
+                              <span className="text_red">*</span>
                               {` Card count should be between ${minBatchCardCount} - ${maxBatchCardCount}`}
                               <br />
-                              <span className="text-red">*</span>
+                              <span className="text_red">*</span>
                               {` Effective Period should be between ${minEffectivePeriod} - ${maxEffectivePeriod}`}
                             </p>
                           </div>
@@ -498,7 +500,8 @@ class Data extends React.Component {
                   {/* ------------------------- Card Batch Table ----------------------------------------- */}
                   <Table
                     dataSource={cardBatchList}
-                    scroll={{ x: 1100, y: 600 }}
+                    loading={loadingTable}
+                    scroll={{ x: 1100, y: 400 }}
                     className="ant-table-v1"
                     pagination={{
                       showSizeChanger: true,
@@ -556,7 +559,7 @@ class Data extends React.Component {
                       )}
                     />
                   </Table>
-                  {/* ------------------------- ---------------------------------------------------------- */}
+                  {/* ------------------------------------------------------------------------------------ */}
                 </article>
               </div>
             </div>

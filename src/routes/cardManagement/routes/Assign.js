@@ -12,16 +12,17 @@ import {
   Row,
   Col,
   Select,
-  InputNumber,
   DatePicker,
   message,
-  Badge,
   AutoComplete,
   Tooltip,
   Popconfirm,
+  TreeSelect,
 } from 'antd';
 
 import { Redirect } from 'react-router-dom';
+import axios from 'axios';
+
 // -------------- IMPORT AUTHORITY -----------------------------------------
 import {
   UNAUTHORIZED_ACCESS_EXCEPTION_ROUTE,
@@ -31,226 +32,310 @@ import {
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
 
-import { environment, commonUrl } from 'environments';
-import axios from 'axios';
+// -------------- OTHER CUSTOM IMPORTS -------------------------------------
+import { environment } from 'environments';
 import getErrorMessage from 'constants/notification/message';
-import moment from 'moment';
 import STATUS from 'constants/notification/status';
+import TREE_DATA from 'constants/common/treeData';
 import profile_avatar from 'assets/images/profile_avatar.png';
+import { REGEX } from 'constants/validation/regex';
+// -------------------------------------------------------------------------
 
-const dateFormat = 'YYYY-MM-DD';
-const formItemLayout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
-const FormItem = Form.Item;
+// -------------- ANT DESIGN -----------------------------------------------
 const { Option } = Select;
-const { Column, ColumnGroup } = Table;
-const footer = {
-  position: 'fixed',
-  left: '0',
-  right: '0',
-  bottom: '0',
-  float: 'right',
+const { Column } = Table;
+const FormItem = Form.Item;
+const Search = Input.Search;
+// -------------------------------------------------------------------------
+
+// -------------- CUSTOM ---------------------------------------------------
+const dateFormat = 'YYYY-MM-DD';
+const DATA = {
+  Account: {
+    URL: 'account/filterSearchPage',
+    KEY_VALUE: 'accountNumber',
+  },
+  Card: {
+    URL: 'card/filterSearchPage',
+    KEY_VALUE: 'cardNo',
+  },
 };
+// -------------------------------------------------------------------------
 
 class Data extends React.Component {
   constructor(props) {
     super(props);
-    this._isMounted = false;
-    this.state = {
-      newCardList: [],
 
-      currentCardValue: '',
-      isCardLoding: false,
-      assignList: [],
-      filteredAssignedList: [],
-      accountList: [],
-      filteredAccountList: [],
-      searchDate: ['', ''],
+    this._isMounted = false;
+    this.treeData = TREE_DATA.CARD_STATUS;
+
+    this.state = {
+      // Card Registry Search From Inputs
+      // --------------------------------
       searchText: '',
-      checkedID: '',
+      searchColumn: 'accountNumber',
+      searchAssignDate: ['', ''],
+      searchCardStatus: [],
+      // --------------------------------
+
+      // Pagination
+      // --------------------------------
+      pageSize: 10,
+      pageNumber: 1,
+      totalRecord: 0,
+      // --------------------------------
+
+      // AutoComplete
+      // --------------------------------
+      isAutoCompleteLoading: false,
+      autoCompleteAccountTimer: null,
+      autoCompleteCardTimer: null,
+      keywordAccount: '',
+      keywordCard: '',
+      listAccount: [],
+      listCard: [],
+      // --------------------------------
+
+      // Model
+      // --------------------------------
       modelVisible: false,
       modelType: undefined,
       selectedAccount: undefined,
       selectedCard: undefined,
-      displayDetail: false,
+      // --------------------------------
+
+      // Custom
+      // --------------------------------
+      cardRegistryListTable: [],
+      loadingTable: false,
+      cardRegistryId: undefined,
+      // --------------------------------
     };
   }
 
   async componentDidMount() {
     this._isMounted = true;
-    this.loadData();
+    this.loadTable();
   }
 
-  loadData = () => {
-    this.loadCards('');
-
-    axios
-      .post(environment.baseUrl + 'account/filterSearch', {
-        status: '1',
-        context: '',
-        cardAssigned: '0',
-      })
-      .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        this._isMounted &&
-          this.setState({
-            accountList: response.data.content,
-            filteredAccountList: response.data.content.slice(0, 100),
-          });
-      })
-      .catch(error => {
-        console.log('------------------- error - ', error);
+  loadTable = () => {
+    this._isMounted &&
+      this.setState({
+        loadingTable: true,
       });
-
     axios
-      .get(environment.baseUrl + 'cardRegistry')
+      .post(environment.baseUrl + 'cardRegistry/filterSearchPage', this.getReqBody(true))
       .then(response => {
-        // console.log('------------------- response - ', response.data.content);
-        const assignList = response.data.content.map(device => {
-          device.key = device.id;
-          return device;
+        console.log('------------------- response - ', response.data.content);
+        const cardRegistryList = response.data.content.map(record => {
+          record.key = record.id;
+          return record;
         });
         this._isMounted &&
           this.setState({
-            assignList: assignList,
-            filteredAssignedList: assignList,
+            cardRegistryListTable: cardRegistryList,
+            loadingTable: false,
+            totalRecord: response.data.pagination.totalRecords,
           });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
+        this._isMounted &&
+          this.setState({
+            loadingTable: false,
+          });
       });
   };
 
-  // ------------   cardInputOnChange   ------------------------
-  loadCards = keyword => {
-    if (!this.state.isCardLoding) {
-      this._isMounted &&
-        this.setState(
-          {
-            isCardLoding: true,
-            currentCardValue: keyword,
-          },
-          () => {
-            let kw = keyword;
-            axios
-              .post(environment.baseUrl + 'card/filterSearchPage', {
-                keyword: keyword,
-                cardBatchType: 'debit',
-                cardStatus: ['inactive'],
-              })
-              .then(response => {
-                // console.log('------------------- response - ', response.data.content);
-                const cardList = response.data.content.map(device => {
-                  device.key = device.id;
-                  return device;
-                });
-                this._isMounted &&
-                  this.setState({
-                    isCardLoding: false,
-                    newCardList: cardList,
-                  });
+  // ------------   For loadTable   -----------------------------------
+  getReqBody = isPagination => {
+    let {
+      searchText,
+      searchColumn,
+      searchAssignDate,
+      searchCardStatus,
+      pageSize,
+      pageNumber,
+    } = this.state;
 
-                if (kw !== this.state.currentCardValue) {
-                  console.log('------------------- Load Again!');
-                  this.loadCards(this.state.currentCardValue);
-                }
-              })
-              .catch(error => {
-                console.log('------------------- error - ', error);
-              });
-          }
-        );
-    } else {
-      console.log('------------------- Still Loading!');
-      this._isMounted &&
-        this.setState({
-          currentCardValue: keyword,
-        });
+    let reqBody = {
+      columnName: searchColumn,
+      keyword: searchText,
+      startDate: searchAssignDate[0],
+      endDate: searchAssignDate[1],
+      cardStatus: searchCardStatus,
+    };
+
+    if (isPagination) {
+      reqBody['pageNumber'] = pageNumber;
+      reqBody['pageSize'] = pageSize;
     }
+
+    return reqBody;
   };
 
-  // ------------   cardInputOnSelect   ------------------------
-  cardInputValidate = inputValue => {
-    let selectedCard = undefined;
-    this.state.newCardList.map(card => {
-      if (
-        inputValue !== undefined &&
-        (card.id.toUpperCase() === inputValue.toUpperCase() ||
-          card.cardNo.toUpperCase() === inputValue.toUpperCase())
-      ) {
-        selectedCard = card;
+  // ------------   Pagination   --------------------------------------
+  paginationHandler = (pageNumber, pageSize) => {
+    clearInterval(this.state.searchTextTimer);
+    this.setState(
+      {
+        pageNumber,
+        pageSize,
+      },
+      () => {
+        this.loadTable();
       }
-    });
-
-    if (selectedCard === undefined) {
-      this.loadCards('');
-    }
-    this.setState({
-      selectedCard: selectedCard,
-    });
-    this.props.form.setFieldsValue({
-      cardNumber: selectedCard === undefined ? '' : selectedCard.cardNo,
-    });
+    );
   };
 
-  // ------------   cardInputOnBlur   ------------------------
-  cardInputOnBlur = inputValue => {
-    if (
-      this.state.selectedCard === undefined ||
-      (this.state.selectedCard.id !== inputValue && this.state.selectedCard.cardNo !== inputValue)
-    ) {
-      this.cardInputValidate(inputValue);
+  pageSizeHandler = (pageNumber, pageSize) => {
+    this.paginationHandler(1, pageSize);
+  };
+  // ------------------------------------------------------------------
+
+  // ------------   Search Handlers  ----------------------------------
+  searchTextHandler = e => {
+    this.setFilterValue('searchText', e.target.value);
+  };
+
+  searchTextColumnHandler = v => {
+    if (this.state.searchText === '') {
+      this.setState({
+        searchColumn: v,
+      });
+    } else {
+      this.setFilterValue('searchColumn', v);
     }
   };
 
   searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
+    this.setFilterValue('searchAssignDate', dateString);
   };
 
-  searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
+  searchCardStatusHandler = v => {
+    this.setFilterValue('searchCardStatus', v.length === this.treeData.length ? [] : v);
   };
 
-  dataFilter = (key, value) => {
-    this._isMounted &&
-      this.setState(
-        {
-          [key]: value,
-        },
-        () => {
-          let data = this.state.assignList;
-          let searchDate = this.state.searchDate;
-          let searchText = this.state.searchText;
-
-          if (searchText) {
-            data = data.filter(d => {
-              return (
-                (d.account &&
-                  (d.account.holder.toLowerCase().includes(searchText.toLowerCase()) ||
-                    d.account.accountNumber.toLowerCase().includes(searchText.toLowerCase()))) ||
-                (d.card && d.card.cardNo.toLowerCase().includes(searchText.toLowerCase()))
-              );
-            });
-          }
-
-          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-            var startDate = moment(searchDate[0]);
-            var endDate = moment(searchDate[1]);
-            data = data.filter(d => {
-              var date = moment(d.assignedDate);
-              return date.isAfter(startDate) && date.isBefore(endDate);
-            });
-          }
-
-          this._isMounted &&
-            this.setState({
-              filteredAssignedList: data,
-            });
+  setFilterValue = (key, value) => {
+    this.setState(
+      () => {
+        if (key === 'searchText') {
+          clearInterval(this.state.searchTextTimer);
+          let intervalId = setInterval(() => this.paginationHandler(1, this.state.pageSize), 2000);
+          return {
+            searchText: value,
+            searchTextTimer: intervalId,
+            cardListReport: [],
+          };
+        } else {
+          return {
+            [key]: value,
+            cardListReport: [],
+          };
         }
-      );
+      },
+      () => {
+        if (key !== 'searchText') {
+          this.paginationHandler(1, this.state.pageSize);
+        }
+      }
+    );
   };
+  // ------------------------------------------------------------------
+
+  // ------------   AutoCompleteOnChange   ----------------------------
+  loadAutoComplete = (inputName, inputValue) => {
+    clearInterval(this.state[`searchAutoComplete${inputName}Timer`]);
+    let intervalId = setInterval(() => this.loadAutoCompleteData(inputName, inputValue), 2000);
+    this._isMounted &&
+      this.setState({
+        [`searchAutoComplete${inputName}Timer`]: intervalId,
+      });
+  };
+
+  loadAutoCompleteData = (inputName, inputValue) => {
+    clearInterval(this.state[`searchAutoComplete${inputName}Timer`]);
+    axios
+      .post(environment.baseUrl + DATA[inputName].URL, this.getSearchReqBody(inputName, inputValue))
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const recordList = response.data.content.map(record => {
+          record.key = record.id;
+          return record;
+        });
+        this._isMounted &&
+          this.setState({
+            [`list${inputName}`]: recordList,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+
+  // ------------   For loadAutoCompleteData   ------------------------
+  getSearchReqBody = (inputName, inputValue) => {
+    if (inputName === 'Account') {
+      let columnName = 'holder';
+      if (REGEX.NUMBERS_ONLY.test(inputValue)) {
+        columnName = 'accountNumber';
+      }
+      return {
+        columnName: columnName,
+        keyword: inputValue,
+        cardAssigned: '0',
+        accountStatus: ['active'],
+        pageNumber: 1,
+        pageSize: 20,
+      };
+    } else {
+      return {
+        keyword: inputValue,
+        cardBatchType: 'debit',
+        cardStatus: ['inactive'],
+        pageSize: 30,
+      };
+    }
+  };
+
+  // ------------   autoCompleteInputOnSelect   ----------------
+  autoCompleteInputValidate = (inputName, inputValue) => {
+    let selectedRecord = undefined;
+    let key = DATA[inputName].KEY_VALUE;
+    this.state[`list${inputName}`].map(record => {
+      if (
+        inputValue !== undefined &&
+        (record.id.toUpperCase() === inputValue.toUpperCase() ||
+          record[key].toUpperCase() === inputValue.toUpperCase())
+      ) {
+        selectedRecord = record;
+      }
+    });
+
+    if (selectedRecord === undefined) {
+      this.loadAutoCompleteData(inputName, '');
+    }
+    this._isMounted &&
+      this.setState({
+        [`selected${inputName}`]: selectedRecord,
+      });
+    this.props.form.setFieldsValue({
+      [key]: selectedRecord === undefined ? '' : selectedRecord[key],
+    });
+  };
+
+  // ------------   accountInputOnBlur   -----------------------
+  autoCompleteInputOnBlur = (inputName, inputValue) => {
+    if (
+      this.state[`selected${inputName}`] === undefined ||
+      (this.state[`selected${inputName}`].id !== inputValue &&
+        this.state[`selected${inputName}`][DATA[inputName].KEY_VALUE] !== inputValue)
+    ) {
+      this.autoCompleteInputValidate(inputName, inputValue);
+    }
+  };
+
+  // -----------------------------------------------------------
 
   handleStatus = (id, value) => {
     axios
@@ -260,31 +345,34 @@ class Data extends React.Component {
       })
       .then(response => {
         // console.log('------------------- response - ', response.data.content);
-        this.loadData();
+        this.loadTable();
       })
       .catch(error => {
         console.log('------------------- error - ', error);
       });
   };
 
-  handleUpdate = (id, selectedCard, selectedAccount) => {
-    this.loadCards('');
+  // ------------   Card Re-Assign Handler   --------------------------
+  handleUpdate = (id, selectedAccount) => {
     if (id) {
       this._isMounted &&
         this.setState(
           {
-            checkedID: id,
+            cardRegistryId: id,
             selectedAccount: selectedAccount,
-            selectedCard: selectedCard,
           },
           () => {
-            this.showModel('edit');
+            this.showModel('RE_ASSIGN');
           }
         );
     }
   };
 
   showModel = type => {
+    if (type === 'ASSIGN') {
+      this.loadAutoCompleteData('Account', '');
+    }
+    this.loadAutoCompleteData('Card', '');
     this._isMounted &&
       this.setState({
         modelVisible: true,
@@ -302,146 +390,50 @@ class Data extends React.Component {
       });
   };
 
-  handleSubmit = type => {
-    if (type == 'assign') {
-      const { selectedAccount, selectedCard } = this.state;
-      this.props.form.validateFields(['cardNumber', 'accountNumber'], (err, values) => {
-        if (!err) {
-          console.log(values);
-          axios
-            .post(environment.baseUrl + 'cardRegistry', {
-              account: {
-                id: selectedAccount.id,
-              },
-              card: {
-                id: selectedCard.id,
-              },
-            })
-            .then(response => {
-              message.success('Card Successfully Assign to Account');
-              console.log('------------------- response - ', response);
-              this.loadData();
-              this.props.form.resetFields();
-              this._isMounted &&
-                this.setState({
-                  selectedAccount: undefined,
-                  selectedCard: undefined,
-                  modelVisible: false,
-                });
-            })
-            .catch(error => {
-              message.error(getErrorMessage(error, 'CARD_ASSIGN_ERROR'));
-              console.log('------------------- error - ', error);
-            });
-        }
-      });
-    } else if (type == 'edit') {
-      const { checkedID, selectedAccount, selectedCard } = this.state;
-      this.props.form.validateFields(['cardNumber'], (err, values) => {
-        if (!err) {
-          axios
-            .put(environment.baseUrl + 'cardRegistry/' + checkedID + '/card', {
-              account: {
-                id: selectedAccount.id,
-              },
-              card: {
-                id: selectedCard.id,
-              },
-            })
-            .then(response => {
-              message.success('Card Successfully Assign to Account');
-              console.log('------------------- response - ', response);
-              this.loadData();
-              this.props.form.resetFields();
-              this._isMounted &&
-                this.setState({
-                  checkedID: '',
-                  selectedAccount: undefined,
-                  selectedCard: undefined,
-                  modelVisible: false,
-                });
-            })
-            .catch(error => {
-              message.error(getErrorMessage(error, 'CARD_ASSIGN_ERROR'));
-              console.log('------------------- error - ', error);
-            });
-        }
-      });
-    }
-  };
+  // ------------   Assign or Re-Assign   -----------------------------
+  handleSubmit = () => {
+    const { selectedAccount, selectedCard, modelType, cardRegistryId } = this.state;
 
-  showAccountDetail = account => {
     if (
-      this.state.selectedAccount === null ||
-      this.state.selectedAccount === undefined ||
-      this.state.selectedAccount.id !== account.id ||
-      !this.state.displayDetail
+      modelType !== undefined &&
+      selectedAccount !== undefined &&
+      selectedCard !== undefined &&
+      (modelType === 'ASSIGN' || (modelType === 'RE_ASSIGN' && cardRegistryId !== undefined))
     ) {
-      this._isMounted &&
-        this.setState({
-          account: account,
-          // displayDetail: true,
+      axios({
+        method: modelType === 'ASSIGN' ? 'post' : 'put',
+        url:
+          environment.baseUrl +
+          (modelType === 'ASSIGN' ? 'cardRegistry' : 'cardRegistry/' + cardRegistryId + '/card'),
+        data: {
+          account: {
+            id: selectedAccount.id,
+          },
+          card: {
+            id: selectedCard.id,
+          },
+        },
+      })
+        .then(response => {
+          message.success('Card successfully assigned to the account');
+          console.log('------------------- response - ', response);
+          this.loadTable();
+          this.props.form.resetFields();
+          this._isMounted &&
+            this.setState({
+              selectedAccount: undefined,
+              selectedCard: undefined,
+              modelType: undefined,
+              modelVisible: false,
+            });
+        })
+        .catch(error => {
+          message.error(getErrorMessage(error, 'CARD_ASSIGN_ERROR'));
+          console.log('------------------- error - ', error);
         });
-    }
-  };
-
-  getAccount = (accountList, inputValue) => {
-    let keyCard = true;
-    accountList.map(account => {
-      if (
-        inputValue !== undefined &&
-        (account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-          account.id.toUpperCase() === inputValue.toUpperCase())
-      ) {
-        this.showAccountDetail(account);
-        keyCard = false;
-      }
-    });
-
-    return keyCard;
-  };
-
-  updateAccountList = input => {
-    let accountList;
-    if (input === '' || input === undefined) {
-      accountList = this.state.accountList;
     } else {
-      accountList = this.state.accountList.filter(account => {
-        return account.accountNumber.indexOf(input) !== -1 || account.holder.indexOf(input) !== -1;
-      });
+      message.error('Something wrong with card assign!');
     }
-    this._isMounted &&
-      this.setState({
-        filteredAccountList: accountList.slice(0, 100),
-      });
-  };
-
-  setAccount = inputValue => {
-    let selectedAccount = undefined;
-    this.state.accountList.map(account => {
-      if (
-        inputValue !== undefined &&
-        (account.id.toUpperCase() === inputValue.toUpperCase() ||
-          account.accountNumber.toUpperCase() === inputValue.toUpperCase() ||
-          inputValue.toUpperCase().includes(account.accountNumber.toUpperCase()))
-      ) {
-        selectedAccount = account;
-        // this.showAccountDetail(account);
-      }
-    });
-    if (selectedAccount === undefined) {
-      this.updateAccountList('');
-    }
-    this._isMounted &&
-      this.setState({
-        selectedAccount: selectedAccount,
-      });
-    this.props.form.setFieldsValue({
-      accountNumber:
-        selectedAccount === undefined
-          ? ''
-          : `${selectedAccount.accountNumber} - ${selectedAccount.holder}`,
-    });
   };
 
   componentWillUnmount() {
@@ -459,58 +451,96 @@ class Data extends React.Component {
     }
     // -------------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------------
     const { getFieldDecorator } = this.props.form;
-    const { filteredAccountList, filteredCardList, filteredAssignedList, newCardList } = this.state;
+    const { treeData } = this;
+    const {
+      cardRegistryListTable,
+      loadingTable,
+      totalRecord,
+      pageNumber,
+      searchCardStatus,
+      listCard,
+      listAccount,
+    } = this.state;
 
-    const optionsCards = newCardList.map(card => (
+    const optionsCards = listCard.map(card => (
       <Option key={card.id} value={card.id}>
         {card.cardNo}
       </Option>
     ));
 
-    const optionsAccounts = filteredAccountList.map(account => (
+    const optionsAccounts = listAccount.map(account => (
       <Option key={account.id} value={account.id}>
         {`${account.accountNumber} - ${account.holder}`}
       </Option>
     ));
+
+    const selectAfter = (
+      <Select
+        defaultValue="accountNumber"
+        className="select-after"
+        onChange={this.searchTextColumnHandler}
+      >
+        <Option value="accountNumber">Acc No</Option>
+        <Option value="holder">Holder</Option>
+        <Option value="cardNo">Card No</Option>
+      </Select>
+    );
+    // -------------------------------------------------------------------------------
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
             <div className="box box-default">
-              {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
-                <div className="box-header">
-                  Card Management
+              <div className="box-header custom_header">
+                Card Management
+                {checkAuthority(viewAuthorities, USER_AUTHORITY_CODE.CARD_ASSIGN_ASSIGN) && (
                   <Button
                     type="primary"
                     shape="round"
                     icon="plus"
-                    onClick={() => this.showModel('assign')}
-                    className="float-right ml-1"
+                    onClick={() => this.showModel('ASSIGN')}
+                    className="float-right ml-1 mt-2"
                   >
                     Assign
                   </Button>
-                </div>
-              )}
-
+                )}
+                <Divider type="horizontal" className="custom_divider" />
+              </div>
               <div className="box-body">
                 <Form>
-                  <Row gutter={24}>
-                    <Col span={8} order={3}>
-                      <FormItem>
-                        <Input.Search
-                          placeholder="Input search text"
+                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Search">
+                        <Search
+                          placeholder="Search Here..."
                           onChange={this.searchTextHandler}
-                          style={{ width: 200 }}
+                          addonAfter={selectAfter}
                         />
                       </FormItem>
                     </Col>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Assigned Date">
                         <DatePicker.RangePicker
+                          style={{ width: '100%' }}
                           onChange={this.searchDateHandler}
                           format={dateFormat}
+                        />
+                      </FormItem>
+                    </Col>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Card Status">
+                        <TreeSelect
+                          treeData={treeData}
+                          value={searchCardStatus}
+                          onChange={this.searchCardStatusHandler}
+                          treeCheckable={true}
+                          searchPlaceholder={'Please select'}
+                          style={{ width: '100%' }}
+                          dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                          allowClear
                         />
                       </FormItem>
                     </Col>
@@ -518,7 +548,21 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={filteredAssignedList}>
+                  {/* ------------------------- Card Registry Table -------------------------------------- */}
+                  <Table
+                    dataSource={cardRegistryListTable}
+                    loading={loadingTable}
+                    scroll={{ x: 1100, y: 350 }}
+                    className="ant-table-v1"
+                    pagination={{
+                      showSizeChanger: true,
+                      total: totalRecord,
+                      onChange: this.paginationHandler,
+                      current: pageNumber,
+                      onShowSizeChange: this.pageSizeHandler,
+                      pageSizeOptions: ['10', '20', '30', '40', '50', '100'],
+                    }}
+                  >
                     <Column
                       title="Account Number"
                       dataIndex="account.accountNumber"
@@ -611,9 +655,7 @@ class Data extends React.Component {
                             ) && (
                               <Tooltip title="Assign New Card">
                                 <Icon
-                                  onClick={() =>
-                                    this.handleUpdate(record.id, record.card, record.account)
-                                  }
+                                  onClick={() => this.handleUpdate(record.id, record.account)}
                                   type="edit"
                                 />
                               </Tooltip>
@@ -640,152 +682,117 @@ class Data extends React.Component {
                       )}
                     />
                   </Table>
+                  {/* ------------------------------------------------------------------------------------ */}
                 </article>
               </div>
             </div>
           </div>
         </QueueAnim>
-        <Modal
-          visible={this.state.modelVisible}
-          onCancel={this.handleModelCancel}
-          //onOk={this.handleSubmit(this.state.modelType)}
-          footer={[
-            (this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-            this.state.selectedAccount != undefined ? (
+
+        <div>
+          <Modal
+            title="Card Assign"
+            width="350px"
+            visible={this.state.modelVisible}
+            onOk={this.handleSubmit}
+            onCancel={this.handleModelCancel}
+            footer={[
+              <Button key="cancel" onClick={this.handleModelCancel}>
+                Cancel
+              </Button>,
               <Button
                 key="submit"
                 type="primary"
-                onClick={() => this.handleSubmit(this.state.modelType)}
+                disabled={this.state.selectedCard === undefined}
+                onClick={this.handleSubmit}
               >
                 Assign
-              </Button>
-            ) : null,
-          ]}
-          width={800}
-        >
-          <Form layout="inline">
-            {this.state.modelType == 'assign' && (
-              <FormItem>
+              </Button>,
+            ]}
+          >
+            {this.state.modelType == 'ASSIGN' && (
+              <FormItem label="Search Account">
                 {getFieldDecorator('accountNumber', {
                   rules: [
                     {
-                      required: true,
-                      message: 'Please enter your Account number',
+                      message: 'Please select an Account',
                     },
                   ],
                 })(
                   <AutoComplete
+                    allowClear
                     dataSource={optionsAccounts}
-                    style={{ width: 600 }}
-                    placeholder="Account Number"
+                    style={{ width: '100%' }}
                     onBlur={inputValue => {
-                      this.setAccount(inputValue);
+                      this.autoCompleteInputOnBlur('Account', inputValue);
                     }}
                     onChange={inputValue => {
-                      this.updateAccountList(inputValue);
+                      this.loadAutoComplete('Account', inputValue);
                     }}
                     onSelect={inputValue => {
-                      this.setAccount(inputValue);
+                      this.autoCompleteInputValidate('Account', inputValue);
                     }}
+                    placeholder="Search Account Number or Holder Name"
                   />
                 )}
               </FormItem>
             )}
-            <React.Fragment>
-              {this.state.modelType == 'assign' && this.state.selectedAccount != undefined ? (
-                <Divider type="horizontal" />
-              ) : null}
-              <article className="article">
-                <div className="row mt-3">
-                  {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-                  this.state.selectedAccount != undefined ? (
-                    <div className="col-lg-6 mb-2">
-                      <article className="profile-card-v1 h-100">
-                        <img
-                          src={
-                            this.state.selectedAccount &&
-                            environment.baseUrl +
-                              'file/downloadImg/account/' +
-                              this.state.selectedAccount.id
-                          }
-                          onError={e => {
-                            e.target.onerror = null;
-                            e.target.src = profile_avatar;
-                          }}
-                          alt="Profile image"
-                          width="150"
-                        />
 
-                        <h4>{this.state.selectedAccount && this.state.selectedAccount.holder}</h4>
-                        <span>
-                          {this.state.selectedAccount && this.state.selectedAccount.accountNumber}
-                        </span>
-                      </article>
-                    </div>
-                  ) : null}
-                  {(this.state.modelType == 'assign' || this.state.modelType == 'edit') &&
-                  this.state.selectedAccount != undefined ? (
-                    <div className="col-lg-6 mb-2">
-                      <article className="profile-card-v1 h-100">
-                        {this.state.modelType ? (
-                          <Tag color="green" className="float-right">
-                            Not Assign
-                          </Tag>
-                        ) : (
-                          <Tag color="purple" className="float-right">
-                            Assign
-                          </Tag>
-                        )}
-
-                        <FormItem className="mt-4">
-                          {getFieldDecorator('cardNumber', {
-                            rules: [
-                              {
-                                required: true,
-                                message: 'Please enter your card number',
-                              },
-                            ],
-                          })(
-                            <AutoComplete
-                              allowClear
-                              dataSource={optionsCards}
-                              style={{ width: 300 }}
-                              onBlur={inputValue => {
-                                this.cardInputOnBlur(inputValue);
-                              }}
-                              onChange={inputValue => {
-                                this.loadCards(inputValue);
-                              }}
-                              onSelect={inputValue => {
-                                this.cardInputValidate(inputValue);
-                              }}
-                              placeholder="Card Number"
-                            />
-                            // <AutoComplete
-                            //   allowClear
-                            //   dataSource={optionsCards}
-                            //   style={{ width: 300 }}
-                            //   onBlur={inputValue => {
-                            //     this.setCard(inputValue);
-                            //   }}
-                            //   onChange={inputValue => {
-                            //     this.updateCardList(inputValue);
-                            //   }}
-                            //   onSelect={inputValue => {
-                            //     this.setCard(inputValue);
-                            //   }}
-                            //   placeholder="Card Number"
-                            // />
-                          )}
-                        </FormItem>
-                      </article>
-                    </div>
-                  ) : null}
-                </div>
-              </article>
-            </React.Fragment>
-          </Form>
-        </Modal>
+            {this.state.selectedAccount != undefined && (
+              <>
+                <article className="article">
+                  <FormItem label="Account">
+                    <article className="profile-card-v1">
+                      <img
+                        src={
+                          this.state.selectedAccount &&
+                          environment.baseUrl +
+                            'file/downloadImg/account/' +
+                            this.state.selectedAccount.id
+                        }
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = profile_avatar;
+                        }}
+                        alt="Profile image"
+                        width="150"
+                      />
+                      <h4>{this.state.selectedAccount && this.state.selectedAccount.holder}</h4>
+                      <span>
+                        {this.state.selectedAccount && this.state.selectedAccount.accountNumber}
+                      </span>
+                    </article>
+                  </FormItem>
+                </article>
+                <FormItem label="Card">
+                  {getFieldDecorator('cardNo', {
+                    rules: [
+                      {
+                        message: 'Please select a Card',
+                      },
+                    ],
+                  })(
+                    <AutoComplete
+                      allowClear
+                      dataSource={optionsCards}
+                      style={{ width: '100%' }}
+                      onBlur={inputValue => {
+                        this.autoCompleteInputOnBlur('Card', inputValue);
+                      }}
+                      onChange={inputValue => {
+                        this.loadAutoComplete('Card', inputValue);
+                      }}
+                      onSelect={inputValue => {
+                        this.autoCompleteInputValidate('Card', inputValue);
+                      }}
+                      placeholder="Card Number"
+                    />
+                  )}
+                </FormItem>
+              </>
+            )}
+          </Modal>
+        </div>
       </div>
     );
   }

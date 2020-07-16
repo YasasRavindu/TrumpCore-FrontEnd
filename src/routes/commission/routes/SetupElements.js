@@ -51,12 +51,6 @@ const confirm = Modal.confirm;
 
 // -------------- CUSTOM ---------------------------------------------------
 const DATA = {
-  TAB_NAME: {
-    1: 'Agent Type',
-    2: 'Channel Type',
-    3: 'Distribution Type',
-    4: 'Transaction Type',
-  },
   TABLE_KEY: {
     1: 'agentTypeID',
     2: 'channelTypeID',
@@ -212,7 +206,6 @@ class Data extends React.Component {
           .then(response => {
             console.log('------------------- response - ', response.data.content);
             message.success(
-              // `${DATA.TAB_NAME[activeKey]}  Successfully ${selectedRecord === null ? 'Created' : 'Updated'}.`
               `Record Successfully ${selectedRecord === null ? 'Created' : 'Updated'}.`
             );
             this.props.form.resetFields();

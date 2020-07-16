@@ -23,6 +23,7 @@ import 'jspdf-autotable';
 import { CSVLink } from 'react-csv';
 import STATUS from 'constants/notification/status';
 import CSV from 'constants/common/csv';
+import TREE_DATA from 'constants/common/treeData';
 
 const { SHOW_PARENT } = TreeSelect;
 const Search = Input.Search;
@@ -61,10 +62,8 @@ class Data extends React.Component {
     super(props);
 
     this._isMounted = false;
-    this.csvHeader = CSV.CARDS.CATALOG.CSV_HEADER;
-    this.treeData = CSV.CARDS.CATALOG.TREE_DATA;
-
-    console.log(this.test);
+    this.csvHeader = CSV.CARDS.CATALOG;
+    this.treeData = TREE_DATA.CARD_STATUS;
 
     this.state = {
       cardListTable: [],
@@ -145,7 +144,7 @@ class Data extends React.Component {
       });
 
     axios
-      .post(environment.baseUrl + 'card/filterSearch', this.getReqBody(false))
+      .post(environment.baseUrl + 'card/filterSearchAll', this.getReqBody(false))
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const cardListReport = response.data.content.map(card => {
@@ -196,7 +195,7 @@ class Data extends React.Component {
   };
 
   searchStateHandler = v => {
-    this.setFilterValue('searchState', v);
+    this.setFilterValue('searchState', v.length === this.treeData.length ? [] : v);
   };
 
   setFilterValue = (key, value) => {
@@ -206,7 +205,7 @@ class Data extends React.Component {
           clearInterval(this.state.searchTextTimer);
           let intervalId = setInterval(() => this.paginationHandler(1, this.state.pageSize), 2000);
           return {
-            [key]: value,
+            searchText: value,
             searchTextTimer: intervalId,
             cardListReport: [],
           };
