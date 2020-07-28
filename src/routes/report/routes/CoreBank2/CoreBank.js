@@ -162,6 +162,16 @@ const Transaction_type = [
     value: '15',
     key: '15',
   },
+  // {
+  //   title: 'Bulk Salary Pay',
+  //   value: '16',
+  //   key: '16',
+  // },
+  {
+    title: 'Manual Entry',
+    value: '20',
+    key: '20',
+  },
 ];
 
 // Cash Power (10) Soloman Water (11) as specific types - added meeter num and voucher num

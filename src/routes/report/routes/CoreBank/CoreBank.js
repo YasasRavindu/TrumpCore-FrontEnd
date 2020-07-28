@@ -115,8 +115,8 @@ class Data extends React.Component {
       });
     axios
       .post(environment.baseUrl + 'account/filterSearch', {
-        status: '1',
-        context: 'filter',
+        status: '',
+        context: 'all',
         cardAssigned: '',
       })
       .then(response => {
@@ -248,7 +248,8 @@ class Data extends React.Component {
             <Tag color={'geekblue'}>Sender Account Name</Tag>
           </Col>
           <Col span={6}>
-            <p>{record.SenderAccountName ? record.SenderAccountName : 'N/A'}</p>
+            {/* <p>{record.SenderAccountName ? record.SenderAccountName : 'N/A'}</p> */}
+            <p>{record.SenderPurseAccount ? record.SenderPurseAccount : 'N/A'}</p>
           </Col>
         </Row>
         <Row>
@@ -256,7 +257,8 @@ class Data extends React.Component {
             <Tag color={'geekblue'}>Receiver Account Name</Tag>
           </Col>
           <Col span={6}>
-            <p>{record.ReceiverAccountName ? record.ReceiverAccountName : 'N/A'}</p>
+            {/* <p>{record.ReceiverAccountName ? record.ReceiverAccountName : 'N/A'}</p> */}
+            <p>{record.ReciverPurseAccount ? record.ReciverPurseAccount : 'N/A'}</p>
           </Col>
           <Col span={6}>
             <Tag color={'geekblue'}>Currency Code</Tag>
@@ -359,9 +361,9 @@ class Data extends React.Component {
                         TransactionTypeName: d.TransactionTypeName ? d.TransactionTypeName : 'N/A',
                         ReferenceNo: d.ReferenceNo ? d.ReferenceNo : 'N/A',
                         SenderAccount: d.SenderAccount ? d.SenderAccount : 'N/A',
-                        SenderAccountName: d.SenderAccountName ? d.SenderAccountName : 'N/A',
+                        SenderAccountName: d.SenderPurseAccount ? d.SenderPurseAccount : 'N/A',
                         ReceiverAccount: d.ReceiverAccount ? d.ReceiverAccount : 'N/A',
-                        ReceiverAccountName: d.ReceiverAccountName ? d.ReceiverAccountName : 'N/A',
+                        ReceiverAccountName: d.ReciverPurseAccount ? d.ReciverPurseAccount : 'N/A',
                         TransactionAmount: d.TransactionAmount ? d.TransactionAmount : 'N/A',
                         CurrencyCode: d.CurrencyCode ? d.CurrencyCode : 'N/A',
                         TransactionStatusName: d.TransactionStatusName
