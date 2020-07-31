@@ -122,6 +122,13 @@ export const REPORT = [
     path: '/app/report/schedule',
     authorityCode: USER_AUTHORITY_CODE.REPORT_SCHEDULE,
   },
+  {
+    name: 'Report - Agent Current Balance',
+    menuName: 'Agent Current Balance',
+    desc: 'Report - Agent Current Balance - Description',
+    path: '/app/report/agent',
+    authorityCode: USER_AUTHORITY_CODE.REPORT_AGENT_CURRENT_BALANCE,
+  },
 ];
 export const ACCOUNT = [
   {
