@@ -66,13 +66,13 @@ const columns = [
 ];
 
 const csvHeader = [
-  // { label: 'Transaction Date', key: 'TransactionDate' },
+  { label: 'Transaction Date', key: 'TransactionDate' },
   { label: 'Transaction Type', key: 'TC_TransactionType' },
   { label: 'Reference No', key: 'ReferenceNo' },
   { label: 'Sender Account', key: 'SenderAccount' },
-  { label: 'Sender Account Name', key: 'SenderAccountName' },
+  // { label: 'Sender Account Name', key: 'SenderAccountName' },
   { label: 'Receiver Account', key: 'ReceiverAccount' },
-  { label: 'Receiver Account Name', key: 'ReceiverAccountName' },
+  // { label: 'Receiver Account Name', key: 'ReceiverAccountName' },
   { label: 'Transaction Amount', key: 'TransactionAmount' },
   { label: 'Currency Code', key: 'CurrencyCode' },
   { label: 'Transaction Status Name', key: 'TransactionStatusName' },
@@ -266,26 +266,12 @@ class Data extends React.Component {
   expandedRowRender = record => {
     return (
       <React.Fragment>
-        <Row>
+       <Row>
           <Col span={6}>
             <Tag color={'geekblue'}>Transaction Type name</Tag>
           </Col>
           <Col span={6}>
             <p>{record.TransactionTypeName ? record.TransactionTypeName : 'N/A'}</p>
-          </Col>
-          <Col span={6}>
-            <Tag color={'geekblue'}>Sender Account Name</Tag>
-          </Col>
-          <Col span={6}>
-            <p>{record.SenderAccountName ? record.SenderAccountName : 'N/A'}</p>
-          </Col>
-        </Row>
-        <Row>
-          <Col span={6}>
-            <Tag color={'geekblue'}>Receiver Account Name</Tag>
-          </Col>
-          <Col span={6}>
-            <p>{record.ReceiverAccountName ? record.ReceiverAccountName : 'N/A'}</p>
           </Col>
           <Col span={6}>
             <Tag color={'geekblue'}>Currency Code</Tag>
@@ -294,6 +280,20 @@ class Data extends React.Component {
             <p>{record.CurrencyCode ? record.CurrencyCode : 'N/A'}</p>
           </Col>
         </Row>
+        {/* <Row>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Sender Account Name</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{record.SenderPurseAccount ? record.SenderPurseAccount : 'N/A'}</p>
+          </Col>
+          <Col span={6}>
+            <Tag color={'geekblue'}>Receiver Account Name</Tag>
+          </Col>
+          <Col span={6}>
+            <p>{record.ReciverPurseAccount ? record.ReciverPurseAccount : 'N/A'}</p>
+          </Col>
+        </Row> */}
         <Row>
           <Col span={6}>
             <Tag color={'geekblue'}>Transaction Status Name</Tag>
@@ -371,10 +371,10 @@ class Data extends React.Component {
                         TransactionDate: d.TransactionDate ? d.TransactionDate : 'N/A',
                         TransactionTypeName: d.TransactionTypeName ? d.TransactionTypeName : 'N/A',
                         ReferenceNo: d.ReferenceNo ? d.ReferenceNo : 'N/A',
-                        SenderAccount: d.SenderAccount ? d.SenderAccount : 'N/A',
-                        SenderAccountName: d.SenderAccountName ? d.SenderAccountName : 'N/A',
-                        ReceiverAccount: d.ReceiverAccount ? d.ReceiverAccount : 'N/A',
-                        ReceiverAccountName: d.ReceiverAccountName ? d.ReceiverAccountName : 'N/A',
+                        SenderAccount: d.SenderPurseAccount ? d.SenderPurseAccount : 'N/A',
+                        // SenderAccountName: d.SenderPurseAccount ? d.SenderPurseAccount : 'N/A',
+                        ReceiverAccount: d.ReciverPurseAccount ? d.ReciverPurseAccount : 'N/A',
+                        // ReceiverAccountName: d.ReciverPurseAccount ? d.ReciverPurseAccount : 'N/A',
                         TransactionAmount: d.TransactionAmount ? d.TransactionAmount : 'N/A',
                         CurrencyCode: d.CurrencyCode ? d.CurrencyCode : 'N/A',
                         TransactionStatusName: d.TransactionStatusName
