@@ -24,48 +24,121 @@ import {
 import { environment } from 'environments';
 import axios from 'axios';
 import { CSVLink } from 'react-csv';
-const deadline = new Date().toLocaleString();
+const FormItem = Form.Item;
+const Search = Input.Search;
+const datenow = new Date();
 const csvHeader = [
   { label: 'Full Name', key: 'fullName' },
   { label: 'User Name', key: 'userName' },
   { label: 'Account Balance', key: 'accountBalance' },
 ];
+const columns = [
+  {
+    title: 'Full Name',
+    dataIndex: 'fullName',
+    key: 'fullName',
+  },
+  {
+    title: 'User Name',
+    dataIndex: 'userName',
+    key: 'userName',
+  },
+  {
+    title: 'Account Balance',
+    dataIndex: 'accountBalance',
+    key: 'accountBalance',
+  },
+];
 
 class Agent extends React.Component {
   constructor(props) {
     super(props);
+    this._isMounted = false;
     this.state = {
       balanceData: [],
       loadingReport: false,
+      tableLoading: false,
+      searchText: '',
+      loadFilterBalance: [],
     };
   }
   async componentDidMount() {
+    this._isMounted = true;
     this.loadData();
   }
 
   loadData() {
     this.setState({
       loadingReport: true,
+      tableLoading: true,
     });
     axios
       .get(environment.baseUrl + 'report/agentCurrentBalance')
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const agentCurrentBalance = response.data.content;
-        const newdata = { fullName: deadline, userName: '----------', accountBalance: '---------' };
-        agentCurrentBalance.push(newdata);
-        this.setState({
-          balanceData: agentCurrentBalance,
-          loadingReport: false,
-        });
+        const firstLine = {
+          fullName: '-------------',
+          userName: '-------------',
+          accountBalance: '----------------',
+        };
+        const secondLine = {
+          fullName: 'Account Balance on ' + datenow,
+          userName: '--------',
+          accountBalance: '-------',
+        };
+
+        agentCurrentBalance.push(firstLine, secondLine);
+        this._isMounted &&
+          this.setState({
+            balanceData: agentCurrentBalance,
+            loadFilterBalance: agentCurrentBalance,
+            loadingReport: false,
+            tableLoading: false,
+          });
       })
       .catch(error => {
         console.log('------------------- error - ', error);
-        this.setState({
-          loadingReport: false,
-        });
+        this._isMounted &&
+          this.setState({
+            loadingReport: false,
+            tableLoading: false,
+          });
       });
   }
+
+  searchTextHandler = e => {
+    this.scheduleDataFilter('searchText', e.target.value);
+  };
+
+  scheduleDataFilter = (key, value) => {
+    this.setState(
+      {
+        [key]: value,
+      },
+      () => {
+        let data = this.state.balanceData;
+        let searchText = this.state.searchText;
+        if (searchText) {
+          let returnable;
+          data = data.filter(d => {
+            returnable = true;
+            if (returnable && searchText) {
+              returnable =
+                d.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.accountBalance.toLowerCase().includes(searchText.toLowerCase()) ||
+                d.userName.toLowerCase().includes(searchText.toLowerCase());
+            }
+            return returnable;
+          });
+        }
+
+        this.setState({
+          loadFilterBalance: data,
+        });
+      }
+    );
+  };
 
   render() {
     const { balanceData } = this.state;
@@ -73,12 +146,12 @@ class Agent extends React.Component {
       <div className="container-fluid no-breadcrumb container-mw chapter">
         <QueueAnim type="bottom" className="ui-animate">
           <div key="1">
-            <div className="box box-default">
+            <div className="box box-default mb-4">
               <div className="box-header">Agent Current Balance</div>
               <div className="box-body">
                 <Row>
                   <Col span={8} className="ml-5">
-                    <Statistic title="Date Today" value={deadline} />
+                    <Statistic title="Date Today" value={datenow} />
                   </Col>
                   <Col span={8} className="float-right">
                     {this.state.loadingReport && (
@@ -110,6 +183,31 @@ class Agent extends React.Component {
                     )}
                   </Col>
                 </Row>
+              </div>
+            </div>
+          </div>
+          <div key="2">
+            <div className="box box-default">
+              <div className="box-body">
+                <Row gutter={24}>
+                  <Col span={8} order={3}>
+                    <FormItem>
+                      <Search
+                        placeholder="Search agent current balance details"
+                        onChange={this.searchTextHandler}
+                      />
+                    </FormItem>
+                  </Col>
+                </Row>
+                <article className="article mt-2">
+                  <Table
+                    columns={columns}
+                    dataSource={this.state.loadFilterBalance}
+                    loading={this.state.tableLoading}
+                    scroll={{ y: 300 }}
+                    className="components-table-demo-nested"
+                  />
+                </article>
               </div>
             </div>
           </div>
