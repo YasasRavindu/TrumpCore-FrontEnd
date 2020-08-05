@@ -1,6 +1,22 @@
 import React from 'react';
 import QueueAnim from 'rc-queue-anim';
-import { Table, Input, Button, Form, Tag, Row, Col, Select, DatePicker, message } from 'antd';
+import {
+  Table,
+  Input,
+  Button,
+  Form,
+  Tag,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+  message,
+  Divider,
+  TreeSelect,
+} from 'antd';
+import axios from 'axios';
+import moment from 'moment';
+
 import { Redirect } from 'react-router-dom';
 // -------------- IMPORT AUTHORITY -----------------------------------------
 import {
@@ -10,45 +26,73 @@ import {
   checkAuthority,
 } from 'constants/authority/authority';
 // -------------------------------------------------------------------------
+
+// -------------- OTHER CUSTOM IMPORTS -------------------------------------
 import { environment } from 'environments';
-import axios from 'axios';
-import moment from 'moment';
-import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
+import getErrorMessage from 'constants/notification/message';
+import TREE_DATA from 'constants/common/treeData';
+// -------------------------------------------------------------------------
 
+// -------------- ANT DESIGN -----------------------------------------------
 const Search = Input.Search;
-const dateFormat = 'YYYY-MM-DD';
+const FormItem = Form.Item;
+const { Option } = Select;
+const { Column, ColumnGroup } = Table;
+// -------------------------------------------------------------------------
 
+// -------------- CUSTOM ---------------------------------------------------
+const dateFormat = 'YYYY-MM-DD';
 const formItemLayout = {
   labelCol: { span: 10 },
   wrapperCol: { span: 14 },
 };
-
-const FormItem = Form.Item;
-const { Option } = Select;
-const { Column, ColumnGroup } = Table;
+const searchDeviceStatusDefault = ['register', 're-register'];
+// -------------------------------------------------------------------------
 
 class Data extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
+    this.treeData = TREE_DATA.DEVICE_STATUS.REGISTRATION;
+
     this.state = {
-      loadDevices: [],
-      loadFilterDevices: [],
-      loading: false,
-      searchDate: ['', ''],
+      // Card Batch Search From Inputs
+      // --------------------------------
       searchText: '',
+      searchRegisterDate: ['', ''],
+      searchDeviceStatus: [],
+      // --------------------------------
+
+      // Pagination
+      // --------------------------------
+      pageSize: 10,
+      pageNumber: 1,
+      totalRecord: 0,
+      // --------------------------------
+
+      // Custom
+      // --------------------------------
+      deviceListTable: [],
+      loadingTable: false,
+      loadingRegistration: false,
+      // --------------------------------
+
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     this._isMounted = true;
     this.loadTable();
   }
 
   loadTable = () => {
+    this._isMounted &&
+      this.setState({
+        loadingTable: true,
+      });
     axios
-      .get(environment.baseUrl + 'device/search/register')
+      .post(environment.baseUrl + 'device/filterSearchPage', this.getReqBody(true))
       .then(response => {
         console.log('------------------- response - ', response.data.content);
         const devicesList = response.data.content.map(regDevices => {
@@ -60,6 +104,10 @@ class Data extends React.Component {
           this.setState({
             loadDevices: devicesList,
             loadFilterDevices: devicesList,
+
+            deviceListTable: devicesList,
+            loadingTable: false,
+            totalRecord: response.data.pagination.totalRecords,
           });
       })
       .catch(error => {
@@ -67,8 +115,86 @@ class Data extends React.Component {
       });
   };
 
+  // ------------   For loadTable   -----------------------------------
+  getReqBody = isPagination => {
+    let { searchText, searchRegisterDate, searchDeviceStatus, pageSize, pageNumber } = this.state;
+
+    let reqBody = {
+      columnName: 'serial',
+      keyword: searchText,
+      startDate: searchRegisterDate[0],
+      endDate: searchRegisterDate[1],
+      deviceStatus:
+        searchDeviceStatus.length === 0 ? searchDeviceStatusDefault : searchDeviceStatus,
+    };
+
+    if (isPagination) {
+      reqBody['pageNumber'] = pageNumber;
+      reqBody['pageSize'] = pageSize;
+    }
+
+    return reqBody;
+  };
+
+  // ------------   Pagination   --------------------------------------
+  paginationHandler = (pageNumber, pageSize) => {
+    clearInterval(this.state.searchTextTimer);
+    this.setState(
+      {
+        pageNumber,
+        pageSize,
+      },
+      () => {
+        this.loadTable();
+      }
+    );
+  };
+
+  pageSizeHandler = (pageNumber, pageSize) => {
+    this.paginationHandler(1, pageSize);
+  };
+  // ------------------------------------------------------------------
+
+  // ------------   Search Handlers  ----------------------------------
+  searchTextHandler = e => {
+    this.setFilterValue('searchText', e.target.value);
+  };
+
+  searchDateHandler = (date, dateString) => {
+    this.setFilterValue('searchRegisterDate', dateString);
+  };
+
+  searchDeviceStatusHandler = v => {
+    this.setFilterValue('searchDeviceStatus', v.length === this.treeData.length ? [] : v);
+  };
+
+  setFilterValue = (key, value) => {
+    this.setState(
+      () => {
+        if (key === 'searchText') {
+          clearInterval(this.state.searchTextTimer);
+          let intervalId = setInterval(() => this.paginationHandler(1, this.state.pageSize), 2000);
+          return {
+            searchText: value,
+            searchTextTimer: intervalId,
+          };
+        } else {
+          return {
+            [key]: value,
+          };
+        }
+      },
+      () => {
+        if (key !== 'searchText') {
+          this.paginationHandler(1, this.state.pageSize);
+        }
+      }
+    );
+  };
+  // ------------------------------------------------------------------
+
   submit = e => {
-    this._isMounted && this.setState({ loading: true });
+    this._isMounted && this.setState({ loadingRegistration: true });
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
@@ -80,63 +206,18 @@ class Data extends React.Component {
             message.success('Congratulations! Your device successfully registered.');
             this.loadTable();
             this.props.form.resetFields();
-            this._isMounted && this.setState({ loading: false });
+            this._isMounted && this.setState({ loadingRegistration: false });
             console.log('------------------- response - ', response);
           })
           .catch(error => {
             console.log('------------------- error - ', error);
             message.error(getErrorMessage(error, 'DEVICES_REGISTRATION_ERROR'));
-            this._isMounted && this.setState({ loading: false });
+            this._isMounted && this.setState({ loadingRegistration: false });
           });
       } else {
-        this.setState({ loading: false });
+        this.setState({ loadingRegistration: false });
       }
     });
-  };
-
-  searchDateHandler = (date, dateString) => {
-    this.dataFilter('searchDate', dateString);
-  };
-
-  searchTextHandler = e => {
-    this.dataFilter('searchText', e.target.value);
-  };
-
-  dataFilter = (key, value) => {
-    this._isMounted &&
-      this.setState(
-        {
-          [key]: value,
-        },
-        () => {
-          let data = this.state.loadDevices;
-          let searchDate = this.state.searchDate;
-          let searchText = this.state.searchText;
-
-          if (searchText) {
-            data = data.filter(d => {
-              return (
-                d.serial.toLowerCase().includes(searchText.toLowerCase()) ||
-                d.status.toLowerCase().includes(searchText.toLowerCase())
-              );
-            });
-          }
-
-          if (searchDate.length > 0 && searchDate[0] !== '' && searchDate[1] !== '') {
-            var startDate = moment(searchDate[0]);
-            var endDate = moment(searchDate[1]);
-            data = data.filter(d => {
-              var date = moment(d.createDate);
-              return date.isAfter(startDate) && date.isBefore(endDate);
-            });
-          }
-
-          this._isMounted &&
-            this.setState({
-              loadFilterDevices: data,
-            });
-        }
-      );
   };
 
   componentWillUnmount() {
@@ -154,7 +235,18 @@ class Data extends React.Component {
     }
     // -------------------------------------------------------------------------------
 
+    // -------------------------------------------------------------------------------
+    const { treeData } = this;
+    const {
+      searchDeviceStatus,
+      deviceListTable,
+      loadingTable,
+      totalRecord,
+      pageNumber,
+      loadingRegistration,
+    } = this.state;
     const { getFieldDecorator } = this.props.form;
+    // -------------------------------------------------------------------------------
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -165,30 +257,34 @@ class Data extends React.Component {
           ) && (
             <div key="1">
               <div className="box box-default mb-4">
-                <div className="box-header">Device Registration</div>
+                <div className="box-header custom_header">
+                  Device Registration
+                  <Divider type="horizontal" className="custom_divider" />
+                </div>
                 <div className="box-body">
                   <Form>
                     <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
-                      <Col span={6} order={2}>
-                        <FormItem>
+                      <Col xs={24} sm={18} md={18} lg={12}>
+                        <FormItem label="Device Serial Number">
                           {getFieldDecorator('SerialNumber', {
                             rules: [
                               {
                                 required: true,
-                                message: 'Please enter your Serial number',
+                                message: 'Please enter device serial number',
                               },
                             ],
-                          })(<Input placeholder="Serial number" />)}
+                          })(<Input placeholder="Serial number" style={{ width: '100%' }} />)}
                         </FormItem>
                       </Col>
-                      <Col span={6} order={1}>
+                      <Col xs={24} sm={6} md={6} lg={6}>
                         <Button
                           type="primary"
-                          loading={this.state.loading}
+                          loading={loadingRegistration}
                           className="float-right"
                           onClick={this.submit}
+                          style={{ marginTop: 43 }}
                         >
-                          Register
+                          Generate
                         </Button>
                       </Col>
                     </Row>
@@ -199,25 +295,34 @@ class Data extends React.Component {
           )}
           <div key="2">
             <div className="box box-default">
-              <div className="box-header">Search Devices</div>
               <div className="box-body">
                 <Form>
-                  <Row gutter={24}>
-                    <Col span={8} order={3}>
-                      <FormItem>
-                        {/* <Input placeholder="Serial number" onChange={this.onChange} /> */}
-                        <Search
-                          placeholder="Input search text"
-                          onChange={this.searchTextHandler}
-                          style={{ width: 200 }}
+                  <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Search">
+                        <Search placeholder="Search  Here..." onChange={this.searchTextHandler} />
+                      </FormItem>
+                    </Col>
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Assigned Date">
+                        <DatePicker.RangePicker
+                          style={{ width: '100%' }}
+                          onChange={this.searchDateHandler}
+                          format={dateFormat}
                         />
                       </FormItem>
                     </Col>
-                    <Col span={8} order={3}>
-                      <FormItem {...formItemLayout} label="Date Range">
-                        <DatePicker.RangePicker
-                          onChange={this.searchDateHandler}
-                          format={dateFormat}
+                    <Col xs={24} sm={12} md={12} lg={8}>
+                      <FormItem label="Card Status">
+                        <TreeSelect
+                          treeData={treeData}
+                          value={searchDeviceStatus}
+                          onChange={this.searchDeviceStatusHandler}
+                          treeCheckable={true}
+                          searchPlaceholder={'Please select'}
+                          style={{ width: '100%' }}
+                          dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                          allowClear
                         />
                       </FormItem>
                     </Col>
@@ -225,7 +330,20 @@ class Data extends React.Component {
                 </Form>
 
                 <article className="article mt-2">
-                  <Table dataSource={this.state.loadFilterDevices}>
+                  <Table
+                    dataSource={deviceListTable}
+                    loading={loadingTable}
+                    scroll={{ x: 1100, y: 400 }}
+                    className="ant-table-v1"
+                    pagination={{
+                      showSizeChanger: true,
+                      total: totalRecord,
+                      onChange: this.paginationHandler,
+                      current: pageNumber,
+                      onShowSizeChange: this.pageSizeHandler,
+                      pageSizeOptions: ['10', '20', '30', '40', '50', '100'],
+                    }}
+                  >
                     <Column title="Serial Number" dataIndex="serial" key="serial" />
                     <Column title="Created Date" dataIndex="createDate" key="createDate" />
                     <Column

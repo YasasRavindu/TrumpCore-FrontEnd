@@ -31,6 +31,20 @@ const TREE_DATA = {
       key: 'expired',
     },
   ],
+  DEVICE_STATUS: {
+    REGISTRATION: [
+      {
+        title: 'Register',
+        value: 'register',
+        key: 'register',
+      },
+      {
+        title: 'Re-Register',
+        value: 're-register',
+        key: 're-register',
+      },
+    ],
+  },
 };
 
 export default TREE_DATA;
