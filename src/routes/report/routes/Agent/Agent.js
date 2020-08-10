@@ -204,7 +204,6 @@ class Agent extends React.Component {
                     columns={columns}
                     dataSource={this.state.loadFilterBalance}
                     loading={this.state.tableLoading}
-                    scroll={{ y: 300 }}
                     className="components-table-demo-nested"
                   />
                 </article>

@@ -33,10 +33,12 @@ import axios from 'axios';
 import Password from 'antd/lib/input/Password';
 import getErrorMessage from 'constants/notification/message';
 import STATUS from 'constants/notification/status';
+import moment from 'moment';
 
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
+let now = moment().utc();
 
 class Data extends React.Component {
   constructor(props) {
@@ -48,6 +50,8 @@ class Data extends React.Component {
       currentUser: undefined,
       currentRole: undefined,
       visible: false,
+      subscriptionData: undefined,
+      visibleSubscription: false,
     };
   }
 
@@ -194,6 +198,35 @@ class Data extends React.Component {
     }
   };
 
+  editSubscription = id => {
+    console.log('---------user id', id);
+    if (id) {
+      axios
+        .get(environment.baseUrl + 'platform-users/subscription/' + id)
+        .then(response => {
+          console.log('------------------- response - ', response.data.content);
+
+          let subscriptionData = response.data.content;
+          subscriptionData.isExpire = now.isAfter(subscriptionData.expireDate);
+
+          this._isMounted &&
+            this.setState({
+              subscriptionData: subscriptionData,
+              visibleSubscription: true,
+            });
+        })
+        .catch(error => {
+          console.log('------------------- error - ', error);
+        });
+    } else {
+      this._isMounted &&
+        this.setState({
+          subscriptionData: undefined,
+          visibleSubscription: false,
+        });
+    }
+  };
+
   componentWillUnmount() {
     this._isMounted = false;
   }
@@ -210,7 +243,7 @@ class Data extends React.Component {
     // -------------------------------------------------------------------------------
 
     const { getFieldDecorator } = this.props.form;
-    const { userRole, userList } = this.state;
+    const { userRole, userList, subscriptionData } = this.state;
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -361,13 +394,20 @@ class Data extends React.Component {
                             viewAuthorities,
                             USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_UPDATE
                           ) && (
-                            <Tooltip title="Update">
+                            <Tooltip title="Update" className="mr-3">
                               <Icon
                                 onClick={() => this.toggleModal(record.id, record.role.id)}
                                 type="edit"
                               />
                             </Tooltip>
                           )}
+
+                          <Tooltip title="Subscription">
+                            <Icon
+                              onClick={() => this.editSubscription(record.id)}
+                              type="reconciliation"
+                            />
+                          </Tooltip>
                         </span>
                       )}
                     />
@@ -420,6 +460,34 @@ class Data extends React.Component {
                 </Button>
               </Col>
             </Row> */}
+          </Form>
+        </Modal>
+        <Modal
+          title="Subscription"
+          visible={this.state.visibleSubscription}
+          //onOk={this.updateUser}
+          //confirmLoading={this.state.confirmLoading}
+          footer={null}
+          onCancel={() => this.editSubscription(undefined)}
+          width="400px"
+        >
+          <Form>
+            <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
+              <Col span={24}>
+                {subscriptionData && subscriptionData.isExpire ? (
+                  <Icon type="reconciliation" style={{ fontSize: '32px' }} />
+                ) : (
+                  <Icon type="reconciliation" style={{ fontSize: '32px' }} />
+                )}
+              </Col>
+            </Row>
+            <Row>
+              <Col span={24} order={4}>
+                <Button type="primary" className="float-right" onClick={this.submit}>
+                  Submit
+                </Button>
+              </Col>
+            </Row>
           </Form>
         </Modal>
       </div>

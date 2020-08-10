@@ -4,10 +4,12 @@ import { withRouter } from 'react-router-dom';
 import APPCONFIG from 'constants/appConfig';
 import getErrorMessage from 'constants/notification/message';
 import DEMO from 'constants/demoData';
-import { environment} from 'environments';
+import { environment } from 'environments';
 import axios from 'axios';
 import COLLECTION from 'constants/authority/commonData';
+import moment from 'moment';
 const FormItem = Form.Item;
+let now = moment().utc();
 
 class NormalLoginForm extends React.Component {
   constructor(props) {
@@ -50,6 +52,12 @@ class NormalLoginForm extends React.Component {
               loading: false,
             });
             let currentUser = response.data.content;
+
+            console.log('-------------log', currentUser);
+            this.checkExpire(currentUser.id);
+
+            console.log(this.checkExpire(currentUser.id));
+
             currentUser['date'] = new Date();
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
@@ -69,6 +77,32 @@ class NormalLoginForm extends React.Component {
         });
       }
     });
+  };
+
+  checkExpire = id => {
+    if (id) {
+      axios
+        .get(environment.baseUrl + 'platform-users/subscription/' + id)
+        .then(response => {
+          console.log('------------------- response - ', response.data.content);
+
+          const subscriptionData = response.data.content;
+
+          const isExpire = now.isAfter(subscriptionData.expireDate);
+          if (isExpire) {
+            // isExpire = true;
+            // sessionStorage.setItem('isExpire', JSON.stringify(isExpire));
+            return true;
+          } else {
+            // currentUser['isExpire'] = false;
+            // sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            return false;
+          }
+        })
+        .catch(error => {
+          console.log('------------------- error - ', error);
+        });
+    }
   };
 
   render() {
