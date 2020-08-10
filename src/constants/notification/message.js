@@ -6,6 +6,7 @@ export const CUSTOM_MESSAGE = {
     userNotExist: 'Invalid Email!',
     userNotActivated: 'Your account has been deactivated. Please contact MOBILECASH support center',
     incorrectPassword: 'Invalid Password!',
+    expired: 'Subscription Expired!',
     defaultError: 'Something went wrong please try again!',
   },
   CARD_GENERATE_ERROR: {

@@ -53,11 +53,6 @@ class NormalLoginForm extends React.Component {
             });
             let currentUser = response.data.content;
 
-            console.log('-------------log', currentUser);
-            this.checkExpire(currentUser.id);
-
-            console.log(this.checkExpire(currentUser.id));
-
             currentUser['date'] = new Date();
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
@@ -77,32 +72,6 @@ class NormalLoginForm extends React.Component {
         });
       }
     });
-  };
-
-  checkExpire = id => {
-    if (id) {
-      axios
-        .get(environment.baseUrl + 'platform-users/subscription/' + id)
-        .then(response => {
-          console.log('------------------- response - ', response.data.content);
-
-          const subscriptionData = response.data.content;
-
-          const isExpire = now.isAfter(subscriptionData.expireDate);
-          if (isExpire) {
-            // isExpire = true;
-            // sessionStorage.setItem('isExpire', JSON.stringify(isExpire));
-            return true;
-          } else {
-            // currentUser['isExpire'] = false;
-            // sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-            return false;
-          }
-        })
-        .catch(error => {
-          console.log('------------------- error - ', error);
-        });
-    }
   };
 
   render() {
