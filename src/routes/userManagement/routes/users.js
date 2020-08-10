@@ -508,7 +508,6 @@ class Data extends React.Component {
         <Modal
           title="Subscription"
           visible={this.state.visibleSubscription}
-          //onOk={this.updateUser}
           confirmLoading={this.state.subscriptionLoading}
           footer={null}
           onCancel={() => this.editSubscription(undefined)}
