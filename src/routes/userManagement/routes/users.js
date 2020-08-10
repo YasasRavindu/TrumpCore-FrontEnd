@@ -16,6 +16,7 @@ import {
   DatePicker,
   message,
   Tooltip,
+  Typography,
 } from 'antd';
 
 import { Redirect } from 'react-router-dom';
@@ -38,6 +39,7 @@ import moment from 'moment';
 const FormItem = Form.Item;
 const { Option } = Select;
 const { Column, ColumnGroup } = Table;
+const { Text, Link } = Typography;
 let now = moment().utc();
 
 class Data extends React.Component {
@@ -52,6 +54,7 @@ class Data extends React.Component {
       visible: false,
       subscriptionData: undefined,
       visibleSubscription: false,
+      subscriptionLoading: false,
     };
   }
 
@@ -201,6 +204,12 @@ class Data extends React.Component {
   editSubscription = id => {
     console.log('---------user id', id);
     if (id) {
+      this._isMounted &&
+        this.setState({
+          visibleSubscription: true,
+          subscriptionData: undefined,
+          subscriptionLoading: true,
+        });
       axios
         .get(environment.baseUrl + 'platform-users/subscription/' + id)
         .then(response => {
@@ -213,18 +222,47 @@ class Data extends React.Component {
             this.setState({
               subscriptionData: subscriptionData,
               visibleSubscription: true,
+              subscriptionLoading: false,
             });
         })
         .catch(error => {
           console.log('------------------- error - ', error);
+          this._isMounted &&
+            this.setState({
+              subscriptionLoading: false,
+            });
         });
     } else {
       this._isMounted &&
         this.setState({
-          subscriptionData: undefined,
           visibleSubscription: false,
+          subscriptionData: undefined,
         });
     }
+  };
+
+  extendSub = id => {
+    this.props.form.validateFields(['expDuration'], (err, values) => {
+      if (!err) {
+        axios
+          .put(environment.baseUrl + 'platform-users/extendSubscription/' + id, {
+            duration: values.expDuration,
+          })
+          .then(response => {
+            message.success('Successfully extended subscription.');
+            console.log('------------------- response - ', response);
+            this._isMounted &&
+              this.setState({
+                visibleSubscription: false,
+                subscriptionData: undefined,
+              });
+          })
+          .catch(error => {
+            this.showErrorMsg(error);
+            console.log('------------------- error - ', error);
+          });
+      }
+    });
   };
 
   componentWillUnmount() {
@@ -402,12 +440,17 @@ class Data extends React.Component {
                             </Tooltip>
                           )}
 
-                          <Tooltip title="Subscription">
-                            <Icon
-                              onClick={() => this.editSubscription(record.id)}
-                              type="reconciliation"
-                            />
-                          </Tooltip>
+                          {checkAuthority(
+                            viewAuthorities,
+                            USER_AUTHORITY_CODE.USER_MANAGEMENT_USERS_UPDATE
+                          ) && (
+                            <Tooltip title="Subscription">
+                              <Icon
+                                onClick={() => this.editSubscription(record.id)}
+                                type="reconciliation"
+                              />
+                            </Tooltip>
+                          )}
                         </span>
                       )}
                     />
@@ -466,7 +509,7 @@ class Data extends React.Component {
           title="Subscription"
           visible={this.state.visibleSubscription}
           //onOk={this.updateUser}
-          //confirmLoading={this.state.confirmLoading}
+          confirmLoading={this.state.subscriptionLoading}
           footer={null}
           onCancel={() => this.editSubscription(undefined)}
           width="400px"
@@ -475,17 +518,69 @@ class Data extends React.Component {
             <Row gutter={[{ xs: 8, sm: 16, md: 24, lg: 32 }, 20]}>
               <Col span={24}>
                 {subscriptionData && subscriptionData.isExpire ? (
-                  <Icon type="reconciliation" style={{ fontSize: '32px' }} />
+                  <>
+                    <Row>
+                      <Col align="middle">
+                        <Icon
+                          type="frown"
+                          style={{ fontSize: '64px', color: 'red' }}
+                          className="mb-4"
+                        />
+
+                        <h3 className="mb-4">Subscription expired!</h3>
+                        {subscriptionData && (
+                          <Text>Expire date: {subscriptionData.expireDate}</Text>
+                        )}
+                      </Col>
+                    </Row>
+                    <Divider orientation="left" className="mt-5">
+                      Extend Subscription
+                    </Divider>
+                    <Row>
+                      <Col span={24}>
+                        <FormItem>
+                          {getFieldDecorator('expDuration', {
+                            initialValue: '1',
+                            rules: [
+                              {
+                                required: true,
+                                message: 'Please select extend duration.',
+                              },
+                            ],
+                          })(
+                            <Select style={{ width: 150 }}>
+                              <Option value="1">1 Month</Option>
+                              <Option value="3">3 Months</Option>
+                              <Option value="6">6 Months</Option>
+                              <Option value="12">12 Months</Option>
+                            </Select>
+                          )}
+                          <Button
+                            type="primary"
+                            className="float-right mt-1"
+                            onClick={() => this.extendSub(subscriptionData.id)}
+                          >
+                            Submit
+                          </Button>
+                        </FormItem>
+                      </Col>
+                    </Row>
+                  </>
                 ) : (
-                  <Icon type="reconciliation" style={{ fontSize: '32px' }} />
+                  <Row>
+                    <Col align="middle">
+                      <Icon
+                        type="smile"
+                        style={{ fontSize: '64px', color: 'green' }}
+                        className="mb-4"
+                      />
+
+                      <h3 className="mb-4">Not expired yet</h3>
+
+                      {subscriptionData && <Text>Expire date: {subscriptionData.expireDate}</Text>}
+                    </Col>
+                  </Row>
                 )}
-              </Col>
-            </Row>
-            <Row>
-              <Col span={24} order={4}>
-                <Button type="primary" className="float-right" onClick={this.submit}>
-                  Submit
-                </Button>
               </Col>
             </Row>
           </Form>
