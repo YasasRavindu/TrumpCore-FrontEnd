@@ -5,6 +5,7 @@ import Registation from './routes/Registration';
 import Management from './routes/Management';
 import Remove from './routes/Remove';
 import VersionManagement from './routes/VersionManagement';
+import PackageManagement from './routes/PackageManagement';
 
 //import devices from './routes/devices';
 
@@ -14,6 +15,7 @@ const Devices = ({ match }) => (
     <Route path={`${match.url}/management`} component={Management} />
     <Route path={`${match.url}/remove`} component={Remove} />
     <Route path={`${match.url}/version-management`} component={VersionManagement} />
+    <Route path={`${match.url}/package-management`} component={PackageManagement} />
     {/* <Route path={`${match.url}/roles`} component={Roles} /> */}
   </div>
 );

@@ -47,6 +47,13 @@ export const POS_DEVICES = [
     path: '/app/devices/version-management',
     authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_VERSION_MANAGEMENT,
   },
+  {
+    name: 'POS Devices - Package Management',
+    menuName: 'Package Management',
+    desc: 'POS Devices - Package Management - Description',
+    path: '/app/devices/package-management',
+    authorityCode: USER_AUTHORITY_CODE.POS_DEVICE_PACKAGE_MANAGEMENT,
+  },
 ];
 export const USER_MANAGEMENT = [
   {
