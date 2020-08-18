@@ -18,6 +18,7 @@ import {
   Upload,
   Tooltip,
   Spin,
+  Switch,
 } from 'antd';
 import { Redirect } from 'react-router-dom';
 
@@ -45,13 +46,22 @@ const confirm = Modal.confirm;
 function truncate(str) {
   return str !== undefined && str !== '' && str.length > 25 ? str.substring(0, 25) + '...' : str;
 }
+const timeList = [
+  { label: 'Minute', value: 'MIN' },
+  { label: 'Hour', value: 'H' },
+  { label: 'Day', value: 'D' },
+];
+const sizeList = [
+  { label: 'MB', value: 'MB' },
+  { label: 'GB', value: 'GB' },
+];
 
 class Data extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = false;
     this.state = {
-      deviceVersionList: [],
+      mockPackList: [],
       visible: false,
       currentRecord: undefined,
       selectedFile: '',
@@ -65,201 +75,180 @@ class Data extends React.Component {
 
   async componentDidMount() {
     this._isMounted = true;
-    // this.loadTable();
+    this.loadTable();
   }
 
-  //   loadTable = () => {
-  //     axios
-  //       .get(environment.baseUrl + 'versionManagement/all')
-  //       .then(response => {
-  //         console.log('------------------- response - ', response.data.content);
-  //         const deviceVersionList = response.data.content.filter(version => {
-  //           version.key = version.id;
-  //           return version;
-  //         });
-  //         this._isMounted &&
-  //           this.setState({
-  //             deviceVersionList: deviceVersionList,
-  //           });
-  //       })
-  //       .catch(error => {
-  //         console.log('------------------- error - ', error);
+  loadTable = () => {
+    axios
+      .get(environment.baseUrl + 'moaPack')
+      .then(response => {
+        console.log('------------------- response - ', response.data.content);
+        const mockPackList = response.data.content.filter(pack => {
+          pack.key = pack.id;
+          return pack;
+        });
+        this._isMounted &&
+          this.setState({
+            mockPackList: mockPackList,
+          });
+      })
+      .catch(error => {
+        console.log('------------------- error - ', error);
+      });
+  };
+  selectHandle = e => {
+    console.log('--------done');
+    this._isMounted &&
+      this.setState({
+        myValidateHelp: '',
+        myValidateStatus: '',
+      });
+  };
+
+  // toggleModal = record => {
+  //   if (record) {
+  //     this._isMounted &&
+  //       this.setState({
+  //         currentRecord: record,
+  //         visible: true,
   //       });
-  //   };
+  //   } else {
+  //     this._isMounted &&
+  //       this.setState({
+  //         visible: false,
+  //         currentRecord: undefined,
+  //       });
+  //   }
+  // };
 
-  toggleModal = record => {
-    if (record) {
-      this._isMounted &&
-        this.setState({
-          currentRecord: record,
-          visible: true,
-        });
-    } else {
-      this._isMounted &&
-        this.setState({
-          visible: false,
-          currentRecord: undefined,
-        });
-    }
-  };
+  // handleFileUpload = info => {
+  //   console.log(info);
+  //   if (
+  //     info.file.size > 0 &&
+  //     info.file.name
+  //       .split('.')
+  //       .pop()
+  //       .toLowerCase() === 'apk'
+  //   ) {
+  //     this._isMounted &&
+  //       this.setState({
+  //         selectedFile: info.file,
+  //         fileUploadError: null,
+  //       });
+  //   } else {
+  //     message.error('Invalid file format, file upload allow only .apk !');
+  //   }
+  // };
 
-  handleFileUpload = info => {
-    console.log(info);
-    if (
-      info.file.size > 0 &&
-      info.file.name
-        .split('.')
-        .pop()
-        .toLowerCase() === 'apk'
-    ) {
-      this._isMounted &&
-        this.setState({
-          selectedFile: info.file,
-          fileUploadError: null,
-        });
-    } else {
-      message.error('Invalid file format, file upload allow only .apk !');
-    }
-  };
-
-  handleFileRemove = () => {
-    this.setState({ selectedFile: '' });
-  };
+  // handleFileRemove = () => {
+  //   this.setState({ selectedFile: '' });
+  // };
 
   submit = e => {
     e.preventDefault();
-    console.log(this.state.selectedFile);
 
-    let { isUpdate, selectedFile, currentRecord } = this.state;
-
-    if (this.state.selectedFile !== '') {
-      this._isMounted &&
-        this.setState({
-          fileUploadError: null,
-        });
-    } else {
-      this._isMounted &&
-        this.setState({
-          fileUploadError: 'Please upload version file.',
-        });
-    }
-
-    this.props.form.validateFields(['versionNo', 'versionName'], (err, values) => {
+    this.props.form.validateFields((err, values) => {
       if (!err) {
-        if (this.state.selectedFile !== '') {
+        axios
+          .post(environment.baseUrl + 'moaPack', {
+            name: values.name,
+            code: values.code,
+            description: values.description,
+            onNet: values.onNet,
+            onNetType: values.onNetType,
+            offNet: values.offNet,
+            offNetType: values.offNetType,
+            sms: values.sms,
+            data: values.data,
+            dataType: values.dataType,
+            price: values.price,
+            validPeriod: values.validPeriod,
+            validPeriodType: values.validPeriodType,
+            active: values.active,
+          })
+          .then(response => {
+            console.log('------------------- response - ', response.data.content);
+            message.success('Successfully submitted!');
+            this.loadTable();
+            this.clearFormValues();
+            this._isMounted &&
+              this.setState({
+                myValidateHelp: '',
+                myValidateStatus: '',
+              });
+          })
+          .catch(error => {
+            console.log('------------------- error - ', error);
+            message.error('Something wrong!');
+          });
+      } else {
+        console.log(err);
+        if (err.onNet || err.offNet || err.validPeriod) {
           this._isMounted &&
             this.setState({
-              loaderForm: true,
-            });
-
-          let formData = new FormData();
-          formData.append('versionNo', values.versionNo);
-          formData.append('versionName', values.versionName);
-
-          let reqHeader;
-          if (isUpdate) {
-            if (selectedFile.uid === undefined) {
-              formData.append('file', null);
-            } else {
-              formData.append('file', this.state.selectedFile);
-            }
-            reqHeader = {
-              method: 'put',
-              url: environment.baseUrl + 'versionManagement/' + currentRecord.id,
-              data: formData,
-            };
-          } else {
-            formData.append('file', this.state.selectedFile);
-            reqHeader = {
-              method: 'post',
-              url: environment.baseUrl + 'versionManagement',
-              data: formData,
-            };
-          }
-
-          axios(reqHeader)
-            .then(response => {
-              message.success('Device Version Successfully Created.');
-              console.log('------------------- response - ', response);
-              this.loadTable();
-              this.clearFormValues();
-            })
-            .catch(error => {
-              this.showErrorMsg(error);
-              this._isMounted &&
-                this.setState({
-                  loaderForm: false,
-                });
-              console.log('------------------- error - ', error);
+              myValidateHelp: 'Please enter values',
+              myValidateStatus: 'error',
             });
         }
       }
     });
   };
 
-  setFormValues = record => {
-    this.props.form.setFieldsValue({
-      versionNo: record.versionNo,
-      versionName: record.versionName,
-    });
-    this._isMounted &&
-      this.setState({
-        fileUploadError: null,
-        isUpdate: true,
-        currentRecord: record,
-        selectedFile: { name: record.ftpPath.split('/').pop(), isDefaultValue: true },
-      });
-  };
+  // setFormValues = record => {
+  //   this.props.form.setFieldsValue({
+  //     versionNo: record.versionNo,
+  //     versionName: record.versionName,
+  //   });
+  //   this._isMounted &&
+  //     this.setState({
+  //       fileUploadError: null,
+  //       isUpdate: true,
+  //       currentRecord: record,
+  //       selectedFile: { name: record.ftpPath.split('/').pop(), isDefaultValue: true },
+  //     });
+  // };
 
   clearFormValues = () => {
     this.props.form.resetFields();
-    this._isMounted &&
-      this.setState({
-        isUpdate: false,
-        currentRecord: undefined,
-        selectedFile: '',
-        loaderForm: false,
-        fileUploadError: null,
-      });
   };
 
-  checkFormStatus = record => {
-    let current = this;
-    if (
-      this.props.form.getFieldValue('versionNo') !== undefined ||
-      this.props.form.getFieldValue('versionName') !== undefined ||
-      this.state.selectedFile !== ''
-    ) {
-      confirm({
-        title: 'Do you Want to continue?',
-        content: 'Continuing this process will be lost your current form data.',
-        onOk() {
-          current.setFormValues(record);
-        },
-        onCancel() {},
-      });
-    } else {
-      this.setFormValues(record);
-    }
-  };
+  // checkFormStatus = record => {
+  //   let current = this;
+  //   if (
+  //     this.props.form.getFieldValue('versionNo') !== undefined ||
+  //     this.props.form.getFieldValue('versionName') !== undefined ||
+  //     this.state.selectedFile !== ''
+  //   ) {
+  //     confirm({
+  //       title: 'Do you Want to continue?',
+  //       content: 'Continuing this process will be lost your current form data.',
+  //       onOk() {
+  //         current.setFormValues(record);
+  //       },
+  //       onCancel() {},
+  //     });
+  //   } else {
+  //     this.setFormValues(record);
+  //   }
+  // };
 
-  handleStatus = id => {
-    axios
-      .put(environment.baseUrl + 'versionManagement/status/' + id)
-      .then(response => {
-        console.log('------------------- response - ', response.data.content);
-        message.success('Device Version Status Successfully Changed.');
-        this.loadTable();
-      })
-      .catch(error => {
-        this.showErrorMsg(error);
-        console.log('------------------- error - ', error);
-      });
-  };
+  // handleStatus = id => {
+  //   axios
+  //     .put(environment.baseUrl + 'versionManagement/status/' + id)
+  //     .then(response => {
+  //       console.log('------------------- response - ', response.data.content);
+  //       message.success('Device Version Status Successfully Changed.');
+  //       this.loadTable();
+  //     })
+  //     .catch(error => {
+  //       this.showErrorMsg(error);
+  //       console.log('------------------- error - ', error);
+  //     });
+  // };
 
-  showErrorMsg = error => {
-    message.error(getErrorMessage(error, 'DEVICE_VERSION_MANAGEMENT_ERROR'));
-  };
+  // showErrorMsg = error => {
+  //   message.error(getErrorMessage(error, 'DEVICE_VERSION_MANAGEMENT_ERROR'));
+  // };
 
   componentWillUnmount() {
     this._isMounted = false;
@@ -279,29 +268,29 @@ class Data extends React.Component {
     const { getFieldDecorator } = this.props.form;
     const {
       visible,
-      deviceVersionList,
+      mockPackList,
       currentRecord,
       selectedFile,
       myValidateHelp,
       myValidateStatus,
     } = this.state;
 
-    const uploadButton = (
-      <Button
-        // type="primary"
-        // shape="round"
-        icon="upload"
-        className="float-right ml-1 mt-1"
-      >
-        Upload
-      </Button>
-    );
+    // const uploadButton = (
+    //   <Button
+    //     // type="primary"
+    //     // shape="round"
+    //     icon="upload"
+    //     className="float-right ml-1 mt-1"
+    //   >
+    //     Upload
+    //   </Button>
+    // );
 
-    const fileNameTag = (
-      <Tag closable onClose={() => this.handleFileRemove()} className="p-1">
-        {truncate(selectedFile.name)}
-      </Tag>
-    );
+    // const fileNameTag = (
+    //   <Tag closable onClose={() => this.handleFileRemove()} className="p-1">
+    //     {truncate(selectedFile.name)}
+    //   </Tag>
+    // );
 
     return (
       <div className="container-fluid no-breadcrumb container-mw chapter">
@@ -357,16 +346,22 @@ class Data extends React.Component {
                         <FormItem help={myValidateHelp} validateStatus={myValidateStatus}>
                           <Input.Group compact>
                             {getFieldDecorator('onNet', {
-                              defaultValue: 'day',
                               rules: [
                                 {
                                   required: true,
                                   message: 'Please enter on network amount.',
                                 },
                               ],
-                            })(<Input style={{ width: '60%' }} placeholder="On network amount" />)}
+                            })(
+                              <InputNumber
+                                min={1}
+                                max={100000}
+                                style={{ width: '60%' }}
+                                placeholder="On network amount"
+                              />
+                            )}
                             {getFieldDecorator('onNetType', {
-                              defaultValue: 'day',
+                              initialValue: 'H',
                               rules: [
                                 {
                                   required: true,
@@ -375,8 +370,14 @@ class Data extends React.Component {
                               ],
                             })(
                               <Select style={{ width: '40%' }}>
-                                <Option value="day">Day</Option>
-                                <Option value="min">Min</Option>
+                                {timeList &&
+                                  timeList.map(col => {
+                                    return (
+                                      <Option key={col.value} value={col.value}>
+                                        {col.label}
+                                      </Option>
+                                    );
+                                  })}
                               </Select>
                             )}
                           </Input.Group>
@@ -393,9 +394,17 @@ class Data extends React.Component {
                                   message: 'Please enter off network amount.',
                                 },
                               ],
-                            })(<Input style={{ width: '60%' }} placeholder="On network amount" />)}
+                            })(
+                              <InputNumber
+                                min={1}
+                                max={100000}
+                                style={{ width: '60%' }}
+                                placeholder="Off network amount"
+                                onChange={this.selectHandle}
+                              />
+                            )}
                             {getFieldDecorator('offNetType', {
-                              defaultValue: 'day',
+                              initialValue: 'H',
                               rules: [
                                 {
                                   required: true,
@@ -404,8 +413,14 @@ class Data extends React.Component {
                               ],
                             })(
                               <Select style={{ width: '40%' }}>
-                                <Option value="day">Day</Option>
-                                <Option value="min">Min</Option>
+                                {timeList &&
+                                  timeList.map(col => {
+                                    return (
+                                      <Option key={col.value} value={col.value}>
+                                        {col.label}
+                                      </Option>
+                                    );
+                                  })}
                               </Select>
                             )}
                           </Input.Group>
@@ -417,10 +432,17 @@ class Data extends React.Component {
                             rules: [
                               {
                                 required: true,
-                                message: 'Please enter SMS amount.',
+                                message: 'Please enter SMS Count.',
                               },
                             ],
-                          })(<InputNumber style={{ width: '50%' }} min={1} max={100000} />)}
+                          })(
+                            <InputNumber
+                              placeholder="SMS Count"
+                              style={{ width: '50%' }}
+                              min={1}
+                              max={100000}
+                            />
+                          )}
                         </FormItem>
                       </Col>
                     </Row>
@@ -435,9 +457,16 @@ class Data extends React.Component {
                                   message: 'Please enter on data amount.',
                                 },
                               ],
-                            })(<Input style={{ width: '60%' }} placeholder="Data amount" />)}
+                            })(
+                              <InputNumber
+                                min={1}
+                                max={100000}
+                                style={{ width: '60%' }}
+                                placeholder="On Data amount"
+                              />
+                            )}
                             {getFieldDecorator('dataType', {
-                              defaultValue: 'mb',
+                              initialValue: 'MB',
                               rules: [
                                 {
                                   required: true,
@@ -446,8 +475,14 @@ class Data extends React.Component {
                               ],
                             })(
                               <Select style={{ width: '40%' }}>
-                                <Option value="mb">MB</Option>
-                                <Option value="gb">GB</Option>
+                                {sizeList &&
+                                  sizeList.map(col => {
+                                    return (
+                                      <Option key={col.value} value={col.value}>
+                                        {col.label}
+                                      </Option>
+                                    );
+                                  })}
                               </Select>
                             )}
                           </Input.Group>
@@ -464,9 +499,16 @@ class Data extends React.Component {
                                   message: 'Please enter valid period.',
                                 },
                               ],
-                            })(<Input style={{ width: '60%' }} placeholder="Valid Period Type" />)}
+                            })(
+                              <InputNumber
+                                min={1}
+                                max={100000}
+                                style={{ width: '60%' }}
+                                placeholder="Valid Period"
+                              />
+                            )}
                             {getFieldDecorator('validPeriodType', {
-                              defaultValue: 'day',
+                              initialValue: 'H',
                               rules: [
                                 {
                                   required: true,
@@ -475,14 +517,20 @@ class Data extends React.Component {
                               ],
                             })(
                               <Select style={{ width: '40%' }}>
-                                <Option value="day">Day</Option>
-                                <Option value="min">Min</Option>
+                                {timeList &&
+                                  timeList.map(col => {
+                                    return (
+                                      <Option key={col.value} value={col.value}>
+                                        {col.label}
+                                      </Option>
+                                    );
+                                  })}
                               </Select>
                             )}
                           </Input.Group>
                         </FormItem>
                       </Col>
-                      <Col span={8}>
+                      <Col span={4}>
                         <FormItem>
                           {getFieldDecorator('price', {
                             rules: [
@@ -491,7 +539,28 @@ class Data extends React.Component {
                                 message: 'Please enter the price.',
                               },
                             ],
-                          })(<InputNumber style={{ width: '50%' }} min={1} max={100000} />)}
+                          })(
+                            <InputNumber
+                              style={{ width: '100%' }}
+                              placeholder="Price"
+                              min={1}
+                              max={100000}
+                            />
+                          )}
+                        </FormItem>
+                      </Col>
+                      <Col span={4}>
+                        <FormItem>
+                          {getFieldDecorator('active', {
+                            valuePropName: 'checked',
+                            initialValue: true,
+                          })(
+                            <Switch
+                              checkedChildren="Active"
+                              unCheckedChildren="Inactive"
+                              style={{ width: '120px' }}
+                            />
+                          )}
                         </FormItem>
                       </Col>
                     </Row>
@@ -509,7 +578,7 @@ class Data extends React.Component {
                               Cancel
                             </Button>
                           )} */}
-                        <Button type="primary" className="float-right">
+                        <Button type="primary" className="float-right" onClick={this.submit}>
                           Create
                         </Button>
                       </Col>
@@ -523,26 +592,46 @@ class Data extends React.Component {
             <div className="box box-default">
               <div className="box-body">
                 <article className="article mt-2">
-                  {/* <Table dataSource={deviceVersionList}>
-                    <Column title="Version No" dataIndex="versionNo" key="versionNo" />
-                    <Column title="Version Name" dataIndex="versionName" key="versionName" />
+                  <Table dataSource={mockPackList} scroll={{ x: 1500, y: 400 }}>
+                    <Column title="Package Name" dataIndex="name" key="name" />
+                    <Column title="Package Code" dataIndex="code" key="code" />
+                    <Column title="Package Description" dataIndex="description" key="description" />
+                    <Column title="On Network time" dataIndex="onNet" key="onNet" />
+                    <Column
+                      title="On Network Type"
+                      key="onNetType"
+                      render={(text, record) => STATUS.PACKAGE_TIME[record.onNetType].label}
+                    />
+                    <Column title="Off Network time" dataIndex="offNet" key="offNet" />
+                    <Column
+                      title="Off Network Type"
+                      key="offNetType"
+                      render={(text, record) => STATUS.PACKAGE_TIME[record.offNetType].label}
+                    />
+                    <Column title="SMS" dataIndex="sms" key="sms" />
+                    <Column title="Data" dataIndex="data" key="data" />
+                    <Column
+                      title="Data Type"
+                      key="dataType"
+                      render={(text, record) => STATUS.PACKAGE_SIZE[record.dataType].label}
+                    />
+                    <Column title="Price" dataIndex="price" key="price" />
+                    <Column title="Valid Period" dataIndex="validPeriod" key="validPeriod" />
+                    <Column
+                      title="Valid Period Type"
+                      key="validPeriodType"
+                      render={(text, record) => STATUS.PACKAGE_TIME[record.validPeriodType].label}
+                    />
                     <Column
                       title="Status"
-                      dataIndex="status"
-                      key="status"
-                      render={status => (
-                        <Tag color={STATUS.COMMON_STATUS_ACTIVE_INACTIVE[status].color}>
-                          {STATUS.COMMON_STATUS_ACTIVE_INACTIVE[status].label}
+                      key="active"
+                      render={record => (
+                        <Tag color={STATUS.PACKAGE_STATUS[record.active].color}>
+                          {STATUS.PACKAGE_STATUS[record.active].label}
                         </Tag>
                       )}
                     />
-                    <Column
-                      title="Release Date"
-                      dataIndex="releaseDate"
-                      key="releaseDate"
-                      render={releaseDate => moment(releaseDate).format('MMMM DD YYYY, h:mm:ss a')}
-                    />
-                    <Column
+                    {/* <Column
                       title="Action"
                       key="action"
                       render={(text, record) => (
@@ -566,8 +655,8 @@ class Data extends React.Component {
                           </Tooltip>
                         </span>
                       )}
-                    />
-                  </Table> */}
+                    /> */}
+                  </Table>
                 </article>
               </div>
             </div>

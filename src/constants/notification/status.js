@@ -64,6 +64,19 @@ const STATUS = {
     true: { color: 'blue', label: 'Active' },
     false: { color: 'magenta', label: 'Inactive' },
   },
+  PACKAGE_TIME: {
+    MIN: { label: 'Minute', value: 'MIN' },
+    H: { label: 'Hour', value: 'H' },
+    D: { label: 'Day', value: 'D' },
+  },
+  PACKAGE_SIZE: {
+    MB: { label: 'MB', value: 'MB' },
+    GB: { label: 'GB', value: 'GB' },
+  },
+  PACKAGE_STATUS: {
+    true: { color: 'blue', label: 'Active' },
+    false: { color: 'magenta', label: 'Inactive' },
+  },
 };
 
 export default STATUS;
