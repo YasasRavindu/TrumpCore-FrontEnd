@@ -358,6 +358,7 @@ class Data extends React.Component {
                                 max={100000}
                                 style={{ width: '60%' }}
                                 placeholder="On network amount"
+                                onChange={this.selectHandle}
                               />
                             )}
                             {getFieldDecorator('onNetType', {
@@ -463,6 +464,7 @@ class Data extends React.Component {
                                 max={100000}
                                 style={{ width: '60%' }}
                                 placeholder="On Data amount"
+                                onChange={this.selectHandle}
                               />
                             )}
                             {getFieldDecorator('dataType', {
@@ -505,6 +507,7 @@ class Data extends React.Component {
                                 max={100000}
                                 style={{ width: '60%' }}
                                 placeholder="Valid Period"
+                                onChange={this.selectHandle}
                               />
                             )}
                             {getFieldDecorator('validPeriodType', {
